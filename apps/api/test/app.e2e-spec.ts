@@ -4,14 +4,24 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { configureApp } from './../src/app.setup';
+import { PrismaService } from './../src/prisma/prisma.service';
 
 describe('API (e2e)', () => {
   let app: INestApplication<App>;
+  // Las pruebas e2e no dependen de una base de datos real.
+  const prisma = {
+    estaDisponible: jest.fn<Promise<boolean>, []>(),
+    $disconnect: jest.fn(),
+  };
 
   beforeEach(async () => {
+    prisma.estaDisponible.mockResolvedValue(true);
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue(prisma)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     configureApp(app);
@@ -29,11 +39,23 @@ describe('API (e2e)', () => {
       .expect({ message: '¡Hola desde GymTrack UNAL API!' });
   });
 
-  it('GET /api/health responde ok', async () => {
+  it('GET /api/health responde ok con la base de datos disponible', async () => {
     const res = await request(app.getHttpServer())
       .get('/api/health')
       .expect(200);
-    expect(res.body).toMatchObject({ status: 'ok', service: 'gymtrack-api' });
+    expect(res.body).toMatchObject({
+      status: 'ok',
+      service: 'gymtrack-api',
+      database: 'ok',
+    });
+  });
+
+  it('GET /api/health responde 503 si la base de datos no responde', async () => {
+    prisma.estaDisponible.mockResolvedValue(false);
+    const res = await request(app.getHttpServer())
+      .get('/api/health')
+      .expect(503);
+    expect(res.body).toMatchObject({ status: 'error', database: 'error' });
   });
 
   it('GET /api/docs-json expone la especificación OpenAPI', async () => {

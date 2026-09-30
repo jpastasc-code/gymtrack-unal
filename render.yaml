@@ -18,3 +18,6 @@ services:
       # URL del frontend desplegado, p. ej. https://gymtrack-unal.vercel.app
       - key: CORS_ORIGINS
         sync: false
+      # Pooler de Supabase en modo transacción (puerto 6543), ver apps/api/.env.example
+      - key: DATABASE_URL
+        sync: false
