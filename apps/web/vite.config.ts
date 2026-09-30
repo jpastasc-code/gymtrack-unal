@@ -57,8 +57,8 @@ export default defineConfig({
         // En Codespaces la página llega por HTTPS en el puerto 443.
         hmr: process.env.CODESPACES === 'true' ? { clientPort: 443 } : undefined,
         proxy: {
-          '/api': 'http://localhost:3000',
-          '/auth/v1': 'http://localhost:54321',
+          '/api': 'http://127.0.0.1:3000',
+          '/auth/v1': 'http://127.0.0.1:54321',
         },
       }
     : undefined,
