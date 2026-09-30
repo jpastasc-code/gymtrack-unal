@@ -190,3 +190,17 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 **Implica:**
 - Los colores y las fuentes se cambian primero en `apps/web/src/index.css` y después se actualiza el sistema de diseño.
 - Los enlaces son privados hasta que se comparten desde el menú Share.
+
+## DT-10 · Modo demo local con un simulador de Supabase Auth
+
+**Decisión:** `pnpm demo` (`scripts/demo/`) levanta la app completa sin el proyecto de Supabase:
+- PostgreSQL local, en Docker o en Codespaces (`.devcontainer/`).
+- Un simulador mínimo de Supabase Auth que firma tokens HS256 con un secreto público de la demo. El API ya los acepta por la vía del secreto heredado (DT-05).
+- La web reenvía `/api` y `/auth/v1` para que todo funcione desde un solo puerto.
+
+**Por qué:** probar un PR o mostrar el avance exigía las credenciales de la base compartida. Además, cada prueba ensuciaba los datos que usa todo el equipo.
+
+**Implica:**
+- La demo no reemplaza probar contra Supabase antes de desplegar: el simulador implementa solo el inicio de sesión con contraseña, la renovación y el cierre de sesión.
+- Si la web empieza a usar otra función de Supabase Auth (p. ej. recuperar contraseña), hay que agregarla al simulador o la demo fallará en esa pantalla.
+- El secreto y la contraseña de la demo son públicos a propósito. El script se niega a correr contra una URL de Supabase.

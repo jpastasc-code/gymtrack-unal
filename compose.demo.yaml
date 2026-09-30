@@ -1,0 +1,21 @@
+# Base de datos local para `pnpm demo` (scripts/demo/iniciar.mjs). Solo para desarrollo.
+# Los datos quedan en un volumen: para empezar de cero,
+#   docker compose -f compose.demo.yaml down -v
+name: gymtrack-demo
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gymtrack_demo
+    ports:
+      - '127.0.0.1:54329:5432'
+    volumes:
+      - datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d gymtrack_demo']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+volumes:
+  datos:

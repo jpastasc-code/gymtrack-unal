@@ -1,5 +1,7 @@
 # GymTrack UNAL
 
+[![Abrir en GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/jpastasc-code/gymtrack-unal?quickstart=1)
+
 App web para el gimnasio de la Universidad Nacional.
 
 Monorepo con [pnpm workspaces](https://pnpm.io/workspaces):
@@ -20,7 +22,37 @@ El modelo de datos está documentado en [`docs/modelo-de-datos.md`](docs/modelo-
   Jest necesita Node ≥ 24.9 para cargar los paquetes ESM de NestJS 12.
 - **pnpm 12.6** (se descarga solo gracias al campo `packageManager`; también puedes usar `corepack enable`).
 
-## Primeros pasos
+## Probar la app en un minuto (modo demo)
+
+Levanta la app completa (base de datos, API y web) con datos de prueba, **sin credenciales de Supabase**. Sirve para revisar un PR, mostrar el avance del sprint o empezar a programar.
+
+**Opción A: en el navegador, sin instalar nada.** Pulsa el botón **Open in GitHub Codespaces** de arriba y luego **Create codespace**. La primera vez tarda unos 3 minutos en instalar todo; después la demo arranca sola y la app se abre en una pestaña (si no, abre el puerto **5173** en la pestaña *Ports*). Para probar otra rama, elígela en *Change options* antes de crear el codespace.
+
+> Las cuentas personales de GitHub tienen horas gratis de Codespaces al mes. Detén el codespace cuando termines (github.com/codespaces) para no gastarlas.
+
+**Opción B: en tu computador.** Necesitas Node.js 24.9+ y [Docker Desktop](https://www.docker.com/products/docker-desktop/) abierto:
+
+```bash
+pnpm install
+pnpm demo        # abre http://localhost:5173
+```
+
+Entra con cualquiera de estos usuarios, todos con la contraseña **`gymtrack-demo`**:
+
+| Correo                     | Para probar |
+| -------------------------- | ----------- |
+| `deportista@gymtrack.test` | Inicio, perfil, catálogo de ejercicios |
+| `instructor@gymtrack.test` | Evaluaciones físicas, crear y editar ejercicios |
+| `admin@gymtrack.test`      | Todo lo anterior |
+
+Cómo funciona:
+- **Base de datos:** un PostgreSQL 17 en Docker (`compose.demo.yaml`, puerto 54329) con las migraciones y el seed del repo. Los datos se conservan entre ejecuciones. Para empezar de cero: `docker compose -f compose.demo.yaml down -v`. Sin Docker puedes usar tu propio PostgreSQL con una base vacía: `DEMO_DATABASE_URL=postgresql://usuario:clave@localhost:5432/gymtrack_demo pnpm demo`.
+- **Inicio de sesión:** `scripts/demo/auth-local.mjs` imita Supabase Auth en local (ver DT-10 en la [wiki](docs/wiki/Decisiones-tecnicas.md)). Es solo para desarrollo; producción sigue usando Supabase.
+- **Un solo puerto:** la web (5173) reenvía `/api` al API (3000) y `/auth/v1` al simulador (54321). Swagger queda en http://localhost:5173/api/docs.
+- **Recarga en caliente:** API y web corren en modo desarrollo, así que los cambios en el código se ven al instante.
+- No lee ni modifica tus archivos `.env`, y se niega a correr contra una base de datos de Supabase.
+
+## Primeros pasos (con Supabase)
 
 ```bash
 pnpm install                                # también genera el cliente de Prisma
@@ -35,6 +67,7 @@ pnpm dev:web   # Frontend en http://localhost:5173
 
 | Script              | Qué hace                                         |
 | ------------------- | ------------------------------------------------ |
+| `pnpm demo`         | App completa en local con datos de prueba (ver [modo demo](#probar-la-app-en-un-minuto-modo-demo)) |
 | `pnpm lint`         | oxlint en el API y ESLint en el frontend         |
 | `pnpm typecheck`    | Verificación de tipos con `tsc` en ambos proyectos |
 | `pnpm test`         | Pruebas unitarias del API (Jest) y del frontend (Vitest) |

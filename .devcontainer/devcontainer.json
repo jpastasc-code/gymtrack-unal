@@ -1,0 +1,26 @@
+{
+  // Abre el repositorio en GitHub Codespaces (botón en el README) y la demo arranca sola.
+  "name": "GymTrack UNAL",
+  "dockerComposeFile": "compose.yaml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "containerEnv": {
+    "DEMO_DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/gymtrack_demo"
+  },
+  "postCreateCommand": "npm install -g pnpm@12.6.0 && pnpm install --frozen-lockfile",
+  "postAttachCommand": "pnpm demo",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": { "label": "GymTrack (web)", "onAutoForward": "openBrowser" },
+    "3000": { "label": "API", "onAutoForward": "silent" },
+    "54321": { "label": "Auth local", "onAutoForward": "silent" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "Prisma.prisma"]
+    },
+    "codespaces": {
+      "openFiles": ["README.md"]
+    }
+  }
+}

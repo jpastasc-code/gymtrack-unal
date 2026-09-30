@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "GymTrack UNAL: app web del gimnasio universitario",
   "scripts": {
+    "demo": "node scripts/demo/iniciar.mjs",
     "dev:api": "pnpm --filter api start:dev",
     "dev:web": "pnpm --filter web dev",
     "lint": "pnpm -r --if-present run lint",
