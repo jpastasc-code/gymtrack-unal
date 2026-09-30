@@ -4,7 +4,10 @@ import { PerfilPage } from '../features/auth/PerfilPage'
 import { RutaProtegida } from '../features/auth/RutaProtegida'
 import { CanchaPage } from '../features/cancha/CanchaPage'
 import { EntrenarPage } from '../features/entrenamiento/EntrenarPage'
+import { DeportistaEvaluacionesPage } from '../features/evaluacion/DeportistaEvaluacionesPage'
+import { EvaluarPage } from '../features/evaluacion/EvaluarPage'
 import { FichaFisicaPage } from '../features/evaluacion/FichaFisicaPage'
+import { NuevaEvaluacionPage } from '../features/evaluacion/NuevaEvaluacionPage'
 import { ReservasPage } from '../features/gimnasio/ReservasPage'
 import { InicioPage } from '../features/inicio/InicioPage'
 import { NutricionPage } from '../features/nutricion/NutricionPage'
@@ -41,11 +44,15 @@ export const rutas: RouteObject[] = [
       { path: 'progreso', element: <ProgresoPage /> },
       { path: 'ejercicios', element: <CatalogoPage /> },
       {
-        // Crear y editar ejercicios: solo instructores (GYMM-12).
+        // Pantallas de instructores: catálogo (GYMM-12) y evaluaciones (GYMM-13).
         element: <RutaProtegida roles={['INSTRUCTOR', 'ADMIN']} />,
         children: [
           { path: 'ejercicios/nuevo', element: <NuevoEjercicioPage /> },
           { path: 'ejercicios/:id/editar', element: <EditarEjercicioPage /> },
+          // Evaluaciones físicas (GYMM-13).
+          { path: 'evaluaciones', element: <EvaluarPage /> },
+          { path: 'evaluaciones/:id', element: <DeportistaEvaluacionesPage /> },
+          { path: 'evaluaciones/:id/nueva', element: <NuevaEvaluacionPage /> },
         ],
       },
     ],

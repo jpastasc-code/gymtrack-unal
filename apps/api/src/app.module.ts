@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EjerciciosModule } from './ejercicios/ejercicios.module';
+import { EvaluacionesModule } from './evaluaciones/evaluaciones.module';
 import { PerfilModule } from './perfil/perfil.module';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -14,6 +15,7 @@ import { PrismaModule } from './prisma/prisma.module';
     AuthModule,
     PerfilModule,
     EjerciciosModule,
+    EvaluacionesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

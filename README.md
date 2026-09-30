@@ -68,6 +68,10 @@ pnpm dev:web   # Frontend en http://localhost:5173
 | POST   | `/api/ejercicios` | Crea un ejercicio (instructores). Nombre único sin importar tildes ni mayúsculas. |
 | PATCH  | `/api/ejercicios/:id` | Edita, desactiva (`activo: false`) o reactiva un ejercicio (instructores). |
 | DELETE | `/api/ejercicios/:id` | Elimina un ejercicio que nadie usa (instructores). Si está en rutinas o registros responde 409: hay que desactivarlo. |
+| GET    | `/api/deportistas` | Busca deportistas activos por nombre, documento o correo (instructores). |
+| GET    | `/api/deportistas/:id` | Datos básicos de un deportista (instructores). |
+| GET    | `/api/deportistas/:id/evaluaciones` | Historial de evaluaciones, de la más reciente a la más antigua (instructores). |
+| POST   | `/api/deportistas/:id/evaluaciones` | Registra una evaluación nueva; nunca modifica las anteriores. Valida rangos de peso, talla, % de grasa y de cada medida; los errores de una medida llegan como `medidas.<i>.valor` (instructores). |
 
 Todas las rutas exigen `Authorization: Bearer <token de Supabase>` salvo las marcadas con `@Publico()` (`/api`, `/api/health`). Para restringir por rol usa `@Roles('INSTRUCTOR', …)`; el rol se lee de la tabla `usuario`. En Swagger, el botón **Authorize** acepta el token.
 
