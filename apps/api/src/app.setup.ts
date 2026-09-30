@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { crearValidationPipe } from './validacion';
 
 export const API_PREFIX = 'api';
 export const DOCS_PATH = `${API_PREFIX}/docs`;
@@ -23,6 +24,7 @@ export function parseCorsOrigins(value: string | undefined): string[] | true {
  */
 export function configureApp(app: INestApplication): void {
   app.setGlobalPrefix(API_PREFIX);
+  app.useGlobalPipes(crearValidationPipe());
   app.enableCors({ origin: parseCorsOrigins(process.env.CORS_ORIGINS) });
 
   const config = new DocumentBuilder()
