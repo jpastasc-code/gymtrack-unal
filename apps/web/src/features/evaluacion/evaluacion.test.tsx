@@ -65,6 +65,18 @@ describe('registro de evaluación (GYMM-13)', () => {
     expect(cuerpoPost(fetchMock)).toBeUndefined()
   })
 
+  it('pide el peso y la talla si faltan, y los ejemplos no parecen datos ya llenos', async () => {
+    const fetchMock = simularApi({ perfil: PERFIL_INSTRUCTOR })
+    renderApp('/evaluaciones/d1/nueva')
+    // El texto de ejemplo empieza por "Ej.:" para que no se confunda con un valor escrito.
+    expect(await screen.findByLabelText('Talla')).toHaveAttribute('placeholder', 'Ej.: 165')
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar evaluación' }))
+
+    expect(screen.getByText('Indica el peso.')).toBeInTheDocument()
+    expect(screen.getByText('Indica la talla.')).toBeInTheDocument()
+    expect(cuerpoPost(fetchMock)).toBeUndefined()
+  })
+
   it('guarda una evaluación nueva con solo las medidas llenas y la suma al historial', async () => {
     const fetchMock = simularApi({ perfil: PERFIL_INSTRUCTOR })
     const router = renderApp('/evaluaciones/d1/nueva')

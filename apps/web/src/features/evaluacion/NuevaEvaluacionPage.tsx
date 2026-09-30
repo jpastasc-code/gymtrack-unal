@@ -86,7 +86,7 @@ export function NuevaEvaluacionPage() {
       const r = RANGOS_BASICOS[campo]
       const valor = aNumero(basicos[campo])
       if (valor === null) {
-        if (campo !== 'porcentajeGrasa') e[campo] = `${r.nombre} es obligatorio.`
+        if (campo !== 'porcentajeGrasa') e[campo] = `Indica ${r.nombre.toLowerCase()}.`
       } else if (Number.isNaN(valor)) {
         e[campo] = `${r.nombre} debe ser un número con máximo 2 decimales.`
       } else if (valor < r.min || valor > r.max) {
@@ -160,7 +160,7 @@ export function NuevaEvaluacionPage() {
               etiqueta="Peso"
               inputMode="decimal"
               unidad="kg"
-              placeholder="62,5"
+              placeholder="Ej.: 62,5"
               value={basicos.pesoKg}
               onChange={(e) => cambiarBasico('pesoKg', e.target.value)}
               error={errores.pesoKg}
@@ -169,7 +169,7 @@ export function NuevaEvaluacionPage() {
               etiqueta="Talla"
               inputMode="decimal"
               unidad="cm"
-              placeholder="165"
+              placeholder="Ej.: 165"
               value={basicos.tallaCm}
               onChange={(e) => cambiarBasico('tallaCm', e.target.value)}
               error={errores.tallaCm}
@@ -179,7 +179,7 @@ export function NuevaEvaluacionPage() {
             etiqueta="Porcentaje de grasa (opcional)"
             inputMode="decimal"
             unidad="%"
-            placeholder="24,5"
+            placeholder="Ej.: 24,5"
             value={basicos.porcentajeGrasa}
             onChange={(e) => cambiarBasico('porcentajeGrasa', e.target.value)}
             ayuda="Con este dato, el cálculo nutricional usa la fórmula de Katch-McArdle."
