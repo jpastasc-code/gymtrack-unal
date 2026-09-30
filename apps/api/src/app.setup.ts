@@ -29,6 +29,12 @@ export function configureApp(app: INestApplication): void {
     .setTitle('GymTrack UNAL API')
     .setDescription('API del gimnasio de la Universidad Nacional')
     .setVersion(process.env.npm_package_version ?? '0.0.1')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      description: 'Token de acceso de Supabase Auth (session.access_token).',
+    })
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(DOCS_PATH, app, document);

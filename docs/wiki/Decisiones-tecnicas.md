@@ -14,7 +14,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 | DT-02 | Backend en NestJS con Swagger | Aceptada | 2026-09-29 |
 | DT-03 | Frontend en React + Vite + Tailwind como PWA | Aceptada | 2026-09-29 |
 | DT-04 | PostgreSQL en Supabase con Prisma como ORM | Aceptada | 2026-09-29 |
-| DT-05 | Autenticación con Supabase Auth, validada en el backend | Aceptada (implementación en GYMM-10) | 2026-09-29 |
+| DT-05 | Autenticación con Supabase Auth, validada en el backend | Aceptada | 2026-09-29 |
 | DT-06 | Simulación de las credenciales UNAL con una tabla precargada | Aceptada (implementación en GYMM-9) | 2026-09-23 |
 | DT-07 | Fórmulas nutricionales: Katch-McArdle y Mifflin-St Jeor | Aceptada; factores de objetivo y macros en **propuesta** | 2026-09-29 |
 | DT-08 | Despliegue en Render (API) y Vercel (web) | Aceptada | 2026-09-29 |
@@ -92,7 +92,17 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 **Implica:**
 - `usuario.id` es el mismo UUID que `auth.users.id` de Supabase.
 - El rol (`DEPORTISTA`, `INSTRUCTOR`, `PERSONAL_DEPORTES`, `ADMIN`) vive en `usuario.rol`. También se copia en `app_metadata.rol` del token, pero **la fuente de verdad es la tabla**.
-- El frontend ya tiene el punto de conexión: `configurarProveedorToken` en `apps/web/src/lib/api/client.ts`.
+- **Cómo funciona (GYMM-10):**
+  - En el API, un guard global (`apps/api/src/auth/auth.guard.ts`) exige un token válido en todas las rutas salvo las `@Publico()`.
+  - El guard verifica la firma, el emisor (`<SUPABASE_URL>/auth/v1`), la audiencia `authenticated` y la expiración.
+  - Luego carga el perfil de `usuario` y aplica `@Roles(...)`.
+  - Un perfil inexistente o inactivo responde 403.
+- **Claves de firma:**
+  - Si el proyecto usa claves asimétricas (ES256/RS256), el API las toma del JWKS público (`/auth/v1/.well-known/jwks.json`), sin compartir secretos.
+  - Si aún usa el secreto heredado (HS256), hay que definir `SUPABASE_JWT_SECRET`.
+- **En la web:**
+  - `SesionProvider` guarda la sesión en el navegador (persistente y con renovación automática), pasa el token a `apiFetch` y carga el perfil con `GET /api/auth/yo`.
+  - `RutaProtegida` manda al login a quien no tiene sesión y acepta `roles` para restringir pantallas.
 - La clave `service_role` de Supabase solo se usa en el backend y en el seed, nunca en el frontend ni en el repositorio.
 
 ## DT-06 · Simulación de las credenciales UNAL con una tabla precargada

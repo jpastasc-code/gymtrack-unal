@@ -1,23 +1,74 @@
-import { Link } from 'react-router'
+import { useState, type FormEvent } from 'react'
+import { Navigate, useLocation } from 'react-router'
+import { Boton } from '../../components/Boton'
+import { Campo } from '../../components/Campo'
+import { useSesion } from './sesion'
 
-/**
- * Inicio de sesión (GYMM-10). Se implementará con Supabase Auth; por ahora solo
- * reserva la ruta y el lugar fuera del layout con navegación.
- */
+/** Inicio de sesión con Supabase Auth (GYMM-10). */
 export function LoginPage() {
+  const { estado, iniciarSesion } = useSesion()
+  const location = useLocation()
+  const [correo, setCorreo] = useState('')
+  const [contrasena, setContrasena] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [enviando, setEnviando] = useState(false)
+
+  const desde = (location.state as { desde?: string } | null)?.desde
+  if (estado === 'con-sesion') {
+    return <Navigate to={desde && desde !== '/login' ? desde : '/'} replace />
+  }
+
+  async function enviar(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault()
+    if (!correo.trim() || !contrasena) {
+      setError('Escribe tu correo y tu contraseña.')
+      return
+    }
+    setEnviando(true)
+    setError(null)
+    const mensaje = await iniciarSesion(correo, contrasena)
+    setEnviando(false)
+    if (mensaje) setError(mensaje)
+  }
+
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-6 py-10">
-      <img src="/logo.svg" alt="" width={72} height={72} className="mb-6 rounded-2xl" />
-      <h1 className="font-display text-5xl leading-[0.95] font-bold tracking-tight">GymTrack UNAL</h1>
-      <p className="mt-2 text-lg text-gris">
-        Entra con tu cuenta para ver tu rutina y registrar tus entrenamientos.
+    <div className="mx-auto flex min-h-dvh w-full max-w-sm flex-col px-6 pt-16 pb-10">
+      <img src="/logo.svg" alt="" width={72} height={72} className="rounded-2xl" />
+      <h1 className="mt-6 font-display text-5xl leading-[0.95] font-bold tracking-tight">GymTrack UNAL</h1>
+      <p className="mt-2 text-lg text-gris">Entra con tu cuenta para ver tu rutina y registrar tus entrenamientos.</p>
+
+      <form className="mt-10 flex flex-col gap-5" onSubmit={(e) => void enviar(e)} noValidate>
+        <Campo
+          etiqueta="Correo institucional"
+          type="email"
+          name="correo"
+          autoComplete="email"
+          inputMode="email"
+          placeholder="tu.nombre@unal.edu.co"
+          value={correo}
+          onChange={(e) => setCorreo(e.target.value)}
+        />
+        <Campo
+          etiqueta="Contraseña"
+          type="password"
+          name="contrasena"
+          autoComplete="current-password"
+          value={contrasena}
+          onChange={(e) => setContrasena(e.target.value)}
+        />
+        {error && (
+          <p role="alert" className="rounded-xl bg-superficie p-4 font-medium text-alerta">
+            {error}
+          </p>
+        )}
+        <Boton type="submit" bloque grande disabled={enviando} className="mt-2">
+          {enviando ? 'Iniciando sesión…' : 'Iniciar sesión'}
+        </Boton>
+      </form>
+
+      <p className="mt-auto pt-10 text-center text-sm text-gris">
+        Tu sesión queda abierta en este celular hasta que la cierres desde Perfil.
       </p>
-      <p className="mt-8 rounded-2xl border-2 border-dashed border-linea bg-superficie p-5 text-gris">
-        El inicio de sesión está en construcción (GYMM-10).
-      </p>
-      <Link to="/" className="mt-6 font-semibold text-campus underline underline-offset-4">
-        Continuar sin iniciar sesión
-      </Link>
     </div>
   )
 }

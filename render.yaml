@@ -18,6 +18,12 @@ services:
       # URL del frontend desplegado, p. ej. https://gymtrack-unal.vercel.app
       - key: CORS_ORIGINS
         sync: false
+      # Validación de tokens de Supabase Auth (GYMM-10)
+      - key: SUPABASE_URL
+        value: https://ubijemneujcpxdzwoufk.supabase.co
+      # Solo si el proyecto firma con el secreto heredado (HS256)
+      - key: SUPABASE_JWT_SECRET
+        sync: false
       # Pooler de Supabase en modo transacción (puerto 6543), ver apps/api/.env.example
       - key: DATABASE_URL
         sync: false

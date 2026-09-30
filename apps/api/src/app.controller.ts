@@ -6,9 +6,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AppService } from './app.service';
+import { Publico } from './auth/auth.decorators';
 import type { HealthResponse, WelcomeResponse } from './app.service';
 
 @ApiTags('Sistema')
+@Publico()
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
