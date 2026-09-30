@@ -1,17 +1,27 @@
-   {
-     "name": "gymtrack-unal",
-     "private": true,
-     "version": "1.0.0",
-     "description": "GymTrack UNAL: app web del gimnasio universitario",
-     "scripts": {},
-     "devEngines": {
-       "packageManager": {
-         "name": "pnpm",
-         "version": "12.6.0",
-         "onFail": "download"
-       }
-     },
-     "packageManager": "pnpm@12.6.0",
-     "type": "module"
-   }
-   
+{
+  "name": "gymtrack-unal",
+  "private": true,
+  "version": "1.0.0",
+  "description": "GymTrack UNAL: app web del gimnasio universitario",
+  "scripts": {
+    "dev:api": "pnpm --filter api start:dev",
+    "dev:web": "pnpm --filter web dev",
+    "lint": "pnpm -r --if-present run lint",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "pnpm -r --if-present run test",
+    "test:e2e": "pnpm -r --if-present run test:e2e",
+    "build": "pnpm -r --if-present run build"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.6.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.6.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24.9"
+  }
+}

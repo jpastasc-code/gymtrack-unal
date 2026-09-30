@@ -1,0 +1,20 @@
+# Blueprint de Render para el backend (apps/api).
+# En Render: New > Blueprint > seleccionar este repositorio.
+services:
+  - type: web
+    name: gymtrack-api
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter api build
+    startCommand: pnpm --filter api start:prod
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      # URL del frontend desplegado, p. ej. https://gymtrack-unal.vercel.app
+      - key: CORS_ORIGINS
+        sync: false
