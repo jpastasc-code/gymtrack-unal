@@ -10,6 +10,8 @@ import { InicioPage } from '../features/inicio/InicioPage'
 import { NutricionPage } from '../features/nutricion/NutricionPage'
 import { ProgresoPage } from '../features/progreso/ProgresoPage'
 import { MiRutinaPage } from '../features/rutinas/MiRutinaPage'
+import { CatalogoPage } from '../features/rutinas/ejercicios/CatalogoPage'
+import { EditarEjercicioPage, NuevoEjercicioPage } from '../features/rutinas/ejercicios/EjercicioFormPage'
 import { AppLayout } from './AppLayout'
 import { ErrorRuta } from './ErrorRuta'
 
@@ -37,6 +39,15 @@ export const rutas: RouteObject[] = [
       { path: 'ficha', element: <FichaFisicaPage /> },
       { path: 'nutricion', element: <NutricionPage /> },
       { path: 'progreso', element: <ProgresoPage /> },
+      { path: 'ejercicios', element: <CatalogoPage /> },
+      {
+        // Crear y editar ejercicios: solo instructores (GYMM-12).
+        element: <RutaProtegida roles={['INSTRUCTOR', 'ADMIN']} />,
+        children: [
+          { path: 'ejercicios/nuevo', element: <NuevoEjercicioPage /> },
+          { path: 'ejercicios/:id/editar', element: <EditarEjercicioPage /> },
+        ],
+      },
     ],
   },
 ]

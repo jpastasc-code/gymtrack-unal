@@ -6,6 +6,7 @@ const SECCIONES = [
   { a: '/ficha', titulo: 'Ficha física', detalle: 'Tus evaluaciones con el instructor' },
   { a: '/nutricion', titulo: 'Nutrición', detalle: 'Calorías y macronutrientes para tu objetivo' },
   { a: '/progreso', titulo: 'Progreso', detalle: 'Cómo han cambiado tus cargas y medidas' },
+  { a: '/ejercicios', titulo: 'Catálogo de ejercicios', detalle: 'Cómo se hace cada ejercicio, por grupo muscular' },
 ] as const
 
 function saludo(fecha: Date): string {

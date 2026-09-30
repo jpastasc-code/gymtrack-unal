@@ -63,6 +63,11 @@ pnpm dev:web   # Frontend en http://localhost:5173
 | GET    | `/api/auth/yo`    | Perfil y rol del usuario con sesión (requiere token) |
 | GET    | `/api/perfil`     | Mi perfil completo (datos personales, institucionales y de entrenamiento) |
 | PATCH  | `/api/perfil`     | Actualiza mis datos personales, objetivo y nivel de actividad. Documento, correo y rol no se pueden editar. |
+| GET    | `/api/ejercicios` | Catálogo de ejercicios. `?q=` busca en nombre y descripción sin importar tildes; `?grupo=ESPALDA` filtra por grupo muscular; `?incluirInactivos=true` (solo instructores) muestra los desactivados. |
+| GET    | `/api/ejercicios/:id` | Detalle de un ejercicio. |
+| POST   | `/api/ejercicios` | Crea un ejercicio (instructores). Nombre único sin importar tildes ni mayúsculas. |
+| PATCH  | `/api/ejercicios/:id` | Edita, desactiva (`activo: false`) o reactiva un ejercicio (instructores). |
+| DELETE | `/api/ejercicios/:id` | Elimina un ejercicio que nadie usa (instructores). Si está en rutinas o registros responde 409: hay que desactivarlo. |
 
 Todas las rutas exigen `Authorization: Bearer <token de Supabase>` salvo las marcadas con `@Publico()` (`/api`, `/api/health`). Para restringir por rol usa `@Roles('INSTRUCTOR', …)`; el rol se lee de la tabla `usuario`. En Swagger, el botón **Authorize** acepta el token.
 
