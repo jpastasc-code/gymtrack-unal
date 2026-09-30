@@ -12,6 +12,8 @@ Monorepo con [pnpm workspaces](https://pnpm.io/workspaces):
 Base de datos y autenticación en **Supabase** (PostgreSQL + Supabase Auth), con **Prisma** como ORM.
 El modelo de datos está documentado en [`docs/modelo-de-datos.md`](docs/modelo-de-datos.md).
 
+**Antes de contribuir, lee la [wiki del equipo](docs/wiki/Home.md):** Definition of Done, convenciones de ramas, commits y PRs, decisiones técnicas y proceso de sprint.
+
 ## Requisitos
 
 - **Node.js 24.9 o superior** (la versión está en `.nvmrc`; con nvm: `nvm use`).
