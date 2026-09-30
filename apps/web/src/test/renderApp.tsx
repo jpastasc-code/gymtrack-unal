@@ -7,6 +7,7 @@ import { rutas } from '../app/rutas'
 import { SesionProvider } from '../features/auth/SesionProvider'
 import type { Perfil } from '../features/auth/perfil'
 import type { PerfilSesion } from '../features/auth/tipos'
+import type { DeportistaResumen, Evaluacion } from '../features/evaluacion/api'
 import type { Ejercicio } from '../features/rutinas/ejercicios/api'
 
 export const PERFIL_DEPORTISTA: PerfilSesion = {
@@ -42,6 +43,27 @@ export const EJERCICIOS_BASE: Ejercicio[] = [
   { id: 'e4', nombre: 'Curl femoral acostado', grupoMuscular: 'ISQUIOTIBIALES', descripcion: null, activo: false },
 ]
 
+export const DEPORTISTAS: DeportistaResumen[] = [
+  { id: 'd1', nombres: 'Daniela', apellidos: 'Deportista Prueba', documento: '1000000001', correo: 'deportista@gymtrack.test' },
+  { id: 'd2', nombres: 'Santiago', apellidos: 'Deportista Prueba', documento: '1000000002', correo: 'deportista2@gymtrack.test' },
+]
+
+export const EVALUACION_INICIAL: Evaluacion = {
+  id: 'ev1',
+  fecha: '2026-09-22T15:00:00.000Z',
+  pesoKg: 62.5,
+  tallaCm: 165,
+  porcentajeGrasa: 24.5,
+  imc: 23,
+  nivelActividad: 'MODERADO',
+  observaciones: 'Evaluación inicial de prueba.',
+  instructor: { id: 'i1', nombres: 'Iván', apellidos: 'Instructor Prueba' },
+  medidas: [
+    { tipo: 'PERIMETRO', nombre: 'Cintura', valor: 72, unidad: 'cm' },
+    { tipo: 'TEST_FISICO', nombre: 'Flexiones en 1 minuto', valor: 18, unidad: 'rep' },
+  ],
+}
+
 const sinTildes = (t: string) => t.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 
 interface OpcionesApi {
@@ -53,6 +75,8 @@ interface OpcionesApi {
   respuestaPatchPerfil?: (cambios: Record<string, unknown>) => Response
   /** Ids de ejercicios que están en rutinas (DELETE responde 409). */
   ejerciciosEnUso?: string[]
+  /** Respuesta de POST /api/deportistas/:id/evaluaciones: por defecto la guarda. */
+  respuestaPostEvaluacion?: (datos: Record<string, unknown>) => Response
 }
 
 /** Simula el API: responde /auth/yo y /health según las opciones. */
@@ -61,7 +85,9 @@ export function simularApi({
   saludOk = true,
   respuestaPatchPerfil,
   ejerciciosEnUso = [],
+  respuestaPostEvaluacion,
 }: OpcionesApi = {}) {
+  const evaluaciones: Record<string, Evaluacion[]> = { d1: [EVALUACION_INICIAL] }
   let perfilCompleto: Perfil = { ...PERFIL_COMPLETO }
   let ejercicios = EJERCICIOS_BASE.map((e) => ({ ...e }))
   const json = (datos: unknown, status = 200) => new Response(JSON.stringify(datos), { status })
@@ -89,6 +115,30 @@ export function simularApi({
       const nuevo = { ...datos, id: `e${ejercicios.length + 1}`, activo: true }
       ejercicios.push(nuevo)
       return json(nuevo, 201)
+    }
+    if (pathname === '/api/deportistas') {
+      const q = sinTildes(searchParams.get('q') ?? '')
+      return json(DEPORTISTAS.filter((d) => sinTildes(`${d.nombres} ${d.apellidos} ${d.documento} ${d.correo}`).includes(q)))
+    }
+    const deportista = pathname.match(/^\/api\/deportistas\/([^/]+)(\/evaluaciones)?$/)
+    if (deportista) {
+      const d = DEPORTISTAS.find((x) => x.id === deportista[1])
+      if (!d) return json({ message: 'Ese deportista no existe o no está activo.' }, 404)
+      if (!deportista[2]) return json(d)
+      if (metodo === 'POST') {
+        const datos = JSON.parse(String(init?.body)) as Record<string, unknown>
+        if (respuestaPostEvaluacion) return respuestaPostEvaluacion(datos)
+        const nueva = {
+          ...EVALUACION_INICIAL,
+          ...datos,
+          id: `ev-${Date.now()}`,
+          fecha: (datos.fecha as string | undefined) ?? '2026-09-29T20:00:00.000Z',
+          imc: 22.1,
+        } as Evaluacion
+        evaluaciones[d.id] = [nueva, ...(evaluaciones[d.id] ?? [])]
+        return json(nueva, 201)
+      }
+      return json(evaluaciones[d.id] ?? [])
     }
     const detalle = pathname.match(/^\/api\/ejercicios\/([^/]+)$/)
     if (detalle) {
