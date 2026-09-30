@@ -9,7 +9,8 @@
   },
   "postCreateCommand": "npm install -g pnpm@12.6.0 && pnpm install --frozen-lockfile",
   "postAttachCommand": "pnpm demo",
-  "forwardPorts": [5173],
+  // Sin "forwardPorts": con varios contenedores, el reenvío declarado de antemano daba 502.
+  // Codespaces detecta el puerto cuando la web arranca y abre el navegador (onAutoForward).
   "portsAttributes": {
     "5173": { "label": "GymTrack (web)", "onAutoForward": "openBrowser" },
     "3000": { "label": "API", "onAutoForward": "silent" },
