@@ -60,6 +60,9 @@ pnpm dev:web   # Frontend en http://localhost:5173
 | GET    | `/api/health`     | Salud del API y de la BD; 503 si la BD no responde (lo usa Render) |
 | GET    | `/api/docs`       | Documentación Swagger UI               |
 | GET    | `/api/docs-json`  | Especificación OpenAPI en JSON         |
+| GET    | `/api/auth/yo`    | Perfil y rol del usuario con sesión (requiere token) |
+
+Todas las rutas exigen `Authorization: Bearer <token de Supabase>` salvo las marcadas con `@Publico()` (`/api`, `/api/health`). Para restringir por rol usa `@Roles('INSTRUCTOR', …)`; el rol se lee de la tabla `usuario`. En Swagger, el botón **Authorize** acepta el token.
 
 ## Variables de entorno
 
@@ -73,7 +76,8 @@ Nunca subas archivos `.env` al repositorio; usa los `.env.example` como plantill
 | `CORS_ORIGINS` | En producción | *(vacío = cualquier origen)* | Orígenes permitidos separados por coma, p. ej. `https://gymtrack-unal.vercel.app,http://localhost:5173`. |
 | `DATABASE_URL` | Sí          | —           | Conexión de Supabase por el pooler en **modo transacción** (puerto 6543, con `?pgbouncer=true`). La usa el API. |
 | `DIRECT_URL`   | Para migrar y sembrar | — | Conexión de Supabase por el pooler en **modo sesión** (puerto 5432). La usan `prisma migrate` y el seed. |
-| `SUPABASE_URL` | Para el seed | — | `https://ubijemneujcpxdzwoufk.supabase.co` |
+| `SUPABASE_URL` | Sí          | — | `https://ubijemneujcpxdzwoufk.supabase.co`. El API valida los tokens de sesión con las claves públicas de este proyecto; sin ella, toda ruta protegida responde 401. |
+| `SUPABASE_JWT_SECRET` | Solo con secreto heredado | — | Si Supabase aún firma los tokens con el secreto JWT heredado (HS256), cópialo de Project Settings → JWT Keys. **Solo backend.** |
 | `SUPABASE_SERVICE_ROLE_KEY` | Para el seed | — | Clave secreta de Supabase (Project Settings → API Keys). **Solo backend, nunca en el frontend ni en el repo.** |
 | `SEED_PASSWORD` | Para el seed | — | Contraseña de los usuarios de prueba (mín. 10 caracteres). |
 
