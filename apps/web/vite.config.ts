@@ -7,6 +7,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 const COLOR_CAMPUS = '#1D6B55'
 const COLOR_CONCRETO = '#F3F5F2'
 
+// `pnpm demo` (scripts/demo/iniciar.mjs): la web reenvía /api y /auth/v1 al API y al simulador
+// de auth locales, así la app completa se usa desde un solo puerto (también en GitHub Codespaces).
+const DEMO = process.env.GYMTRACK_DEMO === '1'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -45,6 +49,19 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
+  server: DEMO
+    ? {
+        port: 5173,
+        strictPort: true,
+        allowedHosts: ['.app.github.dev'],
+        // En Codespaces la página llega por HTTPS en el puerto 443.
+        hmr: process.env.CODESPACES === 'true' ? { clientPort: 443 } : undefined,
+        proxy: {
+          '/api': 'http://localhost:3000',
+          '/auth/v1': 'http://localhost:54321',
+        },
+      }
+    : undefined,
   test: {
     environment: 'jsdom',
     globals: true,

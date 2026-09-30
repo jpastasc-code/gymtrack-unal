@@ -1,0 +1,21 @@
+# Entorno de GitHub Codespaces / Dev Containers: Node 24 + PostgreSQL 17 para `pnpm demo`.
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/javascript-node:1-24-bookworm
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    # Comparte la red con la base de datos: dentro del contenedor, PostgreSQL está en localhost:5432.
+    network_mode: service:db
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gymtrack_demo
+    volumes:
+      - datos:/var/lib/postgresql/data
+
+volumes:
+  datos:
