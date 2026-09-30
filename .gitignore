@@ -34,3 +34,6 @@ desktop.ini
 
 # TypeScript
 *.tsbuildinfo
+
+# Cliente de Prisma generado (se regenera con `pnpm --filter api db:generate`)
+apps/api/src/generated/

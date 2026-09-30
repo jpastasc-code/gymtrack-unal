@@ -1,0 +1,372 @@
+// Esquema de datos de GymTrack UNAL (GYMM-16).
+// Base de datos: PostgreSQL en Supabase. La conexión se configura en prisma.config.ts.
+// Convención: modelos y campos en español (PascalCase / camelCase) mapeados a tablas
+// y columnas en snake_case con @@map / @map.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Enums ─────────────────────────────
+
+enum Rol {
+  DEPORTISTA
+  INSTRUCTOR
+  PERSONAL_DEPORTES
+  ADMIN
+
+  @@map("rol")
+}
+
+enum Sexo {
+  MASCULINO
+  FEMENINO
+
+  @@map("sexo")
+}
+
+enum Objetivo {
+  MANTENER
+  GANAR_MASA_MUSCULAR
+  PERDER_GRASA
+
+  @@map("objetivo")
+}
+
+enum NivelActividad {
+  SEDENTARIO
+  LIGERO
+  MODERADO
+  ALTO
+  MUY_ALTO
+
+  @@map("nivel_actividad")
+}
+
+enum TipoMedida {
+  PERIMETRO
+  PLIEGUE
+  TEST_FISICO
+
+  @@map("tipo_medida")
+}
+
+enum GrupoMuscular {
+  PECHO
+  ESPALDA
+  HOMBROS
+  BICEPS
+  TRICEPS
+  ANTEBRAZOS
+  CUADRICEPS
+  ISQUIOTIBIALES
+  GLUTEOS
+  PANTORRILLAS
+  ABDOMEN
+  CUERPO_COMPLETO
+  CARDIO
+
+  @@map("grupo_muscular")
+}
+
+enum MetodoEntrenamiento {
+  TRADICIONAL
+  PIRAMIDE
+  PIRAMIDE_INVERSA
+  SERIES_DESCENDENTES
+  SUPERSERIE
+  CIRCUITO
+
+  @@map("metodo_entrenamiento")
+}
+
+enum EstadoReserva {
+  CONFIRMADA
+  CANCELADA
+
+  @@map("estado_reserva")
+}
+
+// ───────────────────────── Usuarios y perfil ─────────────────────────
+
+/// Perfil de la aplicación. El `id` es el mismo UUID del usuario en Supabase Auth
+/// (auth.users.id); la autenticación la maneja Supabase y aquí vive el resto del perfil.
+model Usuario {
+  id              String          @id @db.Uuid
+  documento       String          @unique @db.VarChar(20)
+  correo          String          @unique @db.VarChar(255)
+  nombres         String          @db.VarChar(100)
+  apellidos       String          @db.VarChar(100)
+  telefono        String?         @db.VarChar(20)
+  fechaNacimiento DateTime?       @map("fecha_nacimiento") @db.Date
+  sexo            Sexo?
+  rol             Rol             @default(DEPORTISTA)
+  objetivo        Objetivo?
+  nivelActividad  NivelActividad? @map("nivel_actividad")
+  activo          Boolean         @default(true)
+  creadoEn        DateTime        @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn   DateTime        @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  evaluaciones       Evaluacion[]      @relation("EvaluacionDeportista")
+  evaluacionesHechas Evaluacion[]      @relation("EvaluacionInstructor")
+  ejerciciosCreados  Ejercicio[]
+  rutinas            Rutina[]          @relation("RutinaDeportista")
+  rutinasCreadas     Rutina[]          @relation("RutinaInstructor")
+  sesiones           Sesion[]
+  reservasGimnasio   ReservaGimnasio[]
+  registrosAcceso    RegistroAcceso[]
+  reservasCancha     ReservaCancha[]
+
+  @@index([rol])
+  @@map("usuario")
+}
+
+// ─────────────────────── Evaluación física ───────────────────────
+
+/// Evaluación registrada por un instructor. Nunca se sobrescribe: cada toma es una fila nueva.
+model Evaluacion {
+  id              String          @id @default(uuid()) @db.Uuid
+  usuarioId       String          @map("usuario_id") @db.Uuid
+  instructorId    String          @map("instructor_id") @db.Uuid
+  fecha           DateTime        @default(now()) @db.Timestamptz(3)
+  pesoKg          Decimal         @map("peso_kg") @db.Decimal(5, 2)
+  tallaCm         Decimal         @map("talla_cm") @db.Decimal(5, 2)
+  porcentajeGrasa Decimal?        @map("porcentaje_grasa") @db.Decimal(4, 2)
+  nivelActividad  NivelActividad? @map("nivel_actividad")
+  observaciones   String?
+  creadoEn        DateTime        @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  usuario    Usuario  @relation("EvaluacionDeportista", fields: [usuarioId], references: [id], onDelete: Cascade)
+  instructor Usuario  @relation("EvaluacionInstructor", fields: [instructorId], references: [id], onDelete: Restrict)
+  medidas    Medida[]
+
+  @@index([usuarioId, fecha(sort: Desc)])
+  @@index([instructorId])
+  @@map("evaluacion")
+}
+
+/// Medida o resultado de test asociado a una evaluación (perímetros, pliegues, tests físicos).
+model Medida {
+  id           String     @id @default(uuid()) @db.Uuid
+  evaluacionId String     @map("evaluacion_id") @db.Uuid
+  tipo         TipoMedida
+  nombre       String     @db.VarChar(60)
+  valor        Decimal    @db.Decimal(8, 2)
+  unidad       String     @db.VarChar(15)
+
+  evaluacion Evaluacion @relation(fields: [evaluacionId], references: [id], onDelete: Cascade)
+
+  @@unique([evaluacionId, tipo, nombre])
+  @@map("medida")
+}
+
+// ─────────────────────── Ejercicios y rutinas ───────────────────────
+
+model Ejercicio {
+  id            String        @id @default(uuid()) @db.Uuid
+  nombre        String        @unique @db.VarChar(100)
+  grupoMuscular GrupoMuscular @map("grupo_muscular")
+  descripcion   String?
+  activo        Boolean       @default(true)
+  creadoPorId   String?       @map("creado_por_id") @db.Uuid
+  creadoEn      DateTime      @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime      @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  creadoPor         Usuario?          @relation(fields: [creadoPorId], references: [id], onDelete: SetNull)
+  rutinaEjercicios  RutinaEjercicio[]
+  seriesRegistradas SerieRegistrada[]
+
+  @@index([grupoMuscular])
+  @@index([creadoPorId])
+  @@map("ejercicio")
+}
+
+/// Rutina asignada por un instructor a un deportista. Solo una rutina vigente por usuario
+/// (índice único parcial creado en la migración).
+model Rutina {
+  id              String   @id @default(uuid()) @db.Uuid
+  nombre          String   @db.VarChar(100)
+  descripcion     String?
+  usuarioId       String   @map("usuario_id") @db.Uuid
+  instructorId    String   @map("instructor_id") @db.Uuid
+  vigente         Boolean  @default(true)
+  fechaAsignacion DateTime @default(now()) @map("fecha_asignacion") @db.Timestamptz(3)
+  creadoEn        DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn   DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  usuario    Usuario           @relation("RutinaDeportista", fields: [usuarioId], references: [id], onDelete: Cascade)
+  instructor Usuario           @relation("RutinaInstructor", fields: [instructorId], references: [id], onDelete: Restrict)
+  ejercicios RutinaEjercicio[]
+  sesiones   Sesion[]
+
+  @@index([usuarioId, vigente])
+  @@index([instructorId])
+  @@map("rutina")
+}
+
+model RutinaEjercicio {
+  id                   String              @id @default(uuid()) @db.Uuid
+  rutinaId             String              @map("rutina_id") @db.Uuid
+  ejercicioId          String              @map("ejercicio_id") @db.Uuid
+  orden                Int                 @db.SmallInt
+  series               Int                 @db.SmallInt
+  repeticionesObjetivo String              @map("repeticiones_objetivo") @db.VarChar(30) /// p. ej. "12", "12-10-8" o "8-12"
+  metodo               MetodoEntrenamiento @default(TRADICIONAL)
+  descansoSegundos     Int?                @map("descanso_segundos") @db.SmallInt
+  notas                String?
+
+  rutina    Rutina    @relation(fields: [rutinaId], references: [id], onDelete: Cascade)
+  ejercicio Ejercicio @relation(fields: [ejercicioId], references: [id], onDelete: Restrict)
+
+  @@unique([rutinaId, orden])
+  @@index([ejercicioId])
+  @@map("rutina_ejercicio")
+}
+
+// ─────────────────────── Sesiones de entrenamiento ───────────────────────
+
+model Sesion {
+  id        String    @id @default(uuid()) @db.Uuid
+  usuarioId String    @map("usuario_id") @db.Uuid
+  rutinaId  String?   @map("rutina_id") @db.Uuid
+  inicio    DateTime  @default(now()) @db.Timestamptz(3)
+  fin       DateTime? @db.Timestamptz(3)
+  notas     String?
+
+  usuario Usuario           @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  rutina  Rutina?           @relation(fields: [rutinaId], references: [id], onDelete: SetNull)
+  series  SerieRegistrada[]
+
+  @@index([usuarioId, inicio(sort: Desc)])
+  @@index([rutinaId])
+  @@map("sesion")
+}
+
+/// Serie real hecha por el deportista. Guarda el ejercicio para consultar el histórico
+/// y precargar la última carga/repeticiones aunque la rutina cambie.
+model SerieRegistrada {
+  id           String   @id @default(uuid()) @db.Uuid
+  sesionId     String   @map("sesion_id") @db.Uuid
+  ejercicioId  String   @map("ejercicio_id") @db.Uuid
+  numeroSerie  Int      @map("numero_serie") @db.SmallInt
+  cargaKg      Decimal  @map("carga_kg") @db.Decimal(6, 2)
+  repeticiones Int      @db.SmallInt
+  registradaEn DateTime @default(now()) @map("registrada_en") @db.Timestamptz(3)
+
+  sesion    Sesion    @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+  ejercicio Ejercicio @relation(fields: [ejercicioId], references: [id], onDelete: Restrict)
+
+  @@unique([sesionId, ejercicioId, numeroSerie])
+  @@index([ejercicioId, registradaEn(sort: Desc)])
+  @@map("serie_registrada")
+}
+
+// ─────────────────────── Aforo y reservas del gimnasio ───────────────────────
+
+/// Franja horaria semanal del gimnasio (plantilla que se repite cada semana).
+model FranjaGimnasio {
+  id         String   @id @default(uuid()) @db.Uuid
+  diaSemana  Int      @map("dia_semana") @db.SmallInt /// 1 = lunes … 7 = domingo (ISO 8601)
+  horaInicio DateTime @map("hora_inicio") @db.Time(0)
+  horaFin    DateTime @map("hora_fin") @db.Time(0)
+  cupoMaximo Int      @map("cupo_maximo") @db.SmallInt
+  activa     Boolean  @default(true)
+
+  reservas ReservaGimnasio[]
+
+  @@unique([diaSemana, horaInicio])
+  @@map("franja_gimnasio")
+}
+
+/// Reserva de un cupo en una franja para una fecha concreta.
+model ReservaGimnasio {
+  id          String        @id @default(uuid()) @db.Uuid
+  usuarioId   String        @map("usuario_id") @db.Uuid
+  franjaId    String        @map("franja_id") @db.Uuid
+  fecha       DateTime      @db.Date
+  estado      EstadoReserva @default(CONFIRMADA)
+  creadoEn    DateTime      @default(now()) @map("creado_en") @db.Timestamptz(3)
+  canceladaEn DateTime?     @map("cancelada_en") @db.Timestamptz(3)
+
+  usuario Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  franja  FranjaGimnasio   @relation(fields: [franjaId], references: [id], onDelete: Restrict)
+  accesos RegistroAcceso[]
+
+  @@index([franjaId, fecha, estado])
+  @@index([usuarioId, fecha])
+  @@map("reserva_gimnasio")
+}
+
+/// Check-in / check-out. Un registro sin `salida` significa que la persona está dentro
+/// (base del aforo en tiempo real).
+model RegistroAcceso {
+  id               String    @id @default(uuid()) @db.Uuid
+  usuarioId        String    @map("usuario_id") @db.Uuid
+  reservaId        String?   @map("reserva_id") @db.Uuid
+  entrada          DateTime  @default(now()) @db.Timestamptz(3)
+  salida           DateTime? @db.Timestamptz(3)
+  salidaAutomatica Boolean   @default(false) @map("salida_automatica")
+
+  usuario Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  reserva ReservaGimnasio? @relation(fields: [reservaId], references: [id], onDelete: SetNull)
+
+  @@index([salida])
+  @@index([usuarioId, entrada(sort: Desc)])
+  @@index([reservaId])
+  @@map("registro_acceso")
+}
+
+// ─────────────────────── Cancha sintética ───────────────────────
+
+model Cancha {
+  id          String  @id @default(uuid()) @db.Uuid
+  nombre      String  @unique @db.VarChar(60)
+  descripcion String?
+  activa      Boolean @default(true)
+
+  franjas  FranjaCancha[]
+  reservas ReservaCancha[]
+
+  @@map("cancha")
+}
+
+/// Franjas semanales habilitadas por el personal de deportes para reservar la cancha.
+model FranjaCancha {
+  id         String   @id @default(uuid()) @db.Uuid
+  canchaId   String   @map("cancha_id") @db.Uuid
+  diaSemana  Int      @map("dia_semana") @db.SmallInt /// 1 = lunes … 7 = domingo (ISO 8601)
+  horaInicio DateTime @map("hora_inicio") @db.Time(0)
+  horaFin    DateTime @map("hora_fin") @db.Time(0)
+  activa     Boolean  @default(true)
+
+  cancha Cancha @relation(fields: [canchaId], references: [id], onDelete: Cascade)
+
+  @@unique([canchaId, diaSemana, horaInicio])
+  @@map("franja_cancha")
+}
+
+/// Reserva de la cancha. Una restricción de exclusión (btree_gist) creada en la migración
+/// impide dos reservas CONFIRMADAS que se solapen en la misma cancha.
+model ReservaCancha {
+  id          String        @id @default(uuid()) @db.Uuid
+  canchaId    String        @map("cancha_id") @db.Uuid
+  usuarioId   String        @map("usuario_id") @db.Uuid
+  inicio      DateTime      @db.Timestamptz(3)
+  fin         DateTime      @db.Timestamptz(3)
+  estado      EstadoReserva @default(CONFIRMADA)
+  creadoEn    DateTime      @default(now()) @map("creado_en") @db.Timestamptz(3)
+  canceladaEn DateTime?     @map("cancelada_en") @db.Timestamptz(3)
+
+  cancha  Cancha  @relation(fields: [canchaId], references: [id], onDelete: Restrict)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([canchaId, inicio])
+  @@index([usuarioId, inicio])
+  @@map("reserva_cancha")
+}
