@@ -1,7 +1,7 @@
 # Entorno de GitHub Codespaces / Dev Containers: Node 24 + PostgreSQL 17 para `pnpm demo`.
 services:
   app:
-    image: mcr.microsoft.com/devcontainers/javascript-node:1-24-bookworm
+    image: mcr.microsoft.com/devcontainers/javascript-node:5-24-bookworm
     volumes:
       - ../..:/workspaces:cached
     command: sleep infinity

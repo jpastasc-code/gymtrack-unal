@@ -20,7 +20,7 @@ const PUERTOS = { web: 5173, api: 3000, auth: 54321 }
 const CONTRASENA = 'gymtrack-demo'
 // Secreto fijo y público a propósito: solo firma tokens del simulador local.
 const SECRETO_JWT = 'secreto-publico-solo-para-la-demo-local-de-gymtrack'
-const BD_DOCKER = 'postgresql://postgres:postgres@localhost:54329/gymtrack_demo'
+const BD_DOCKER = 'postgresql://postgres:postgres@127.0.0.1:54329/gymtrack_demo'
 
 const COLORES = { auth: 35, api: 36, web: 32, bd: 33, demo: 1 }
 const log = (quien, texto) => console.log(`\x1b[${COLORES[quien] ?? 0}m[${quien}]\x1b[0m ${texto}`)
