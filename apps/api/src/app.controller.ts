@@ -1,5 +1,10 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import {
+  ApiOkResponse,
+  ApiOperation,
+  ApiServiceUnavailableResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AppService } from './app.service';
 import type { HealthResponse, WelcomeResponse } from './app.service';
 
@@ -16,9 +21,16 @@ export class AppController {
   }
 
   @Get('health')
-  @ApiOperation({ summary: 'Chequeo de salud para el despliegue' })
-  @ApiOkResponse({ description: 'El servicio responde correctamente.' })
-  getHealth(): HealthResponse {
-    return this.appService.getHealth();
+  @ApiOperation({ summary: 'Chequeo de salud del API y de la base de datos' })
+  @ApiOkResponse({ description: 'El API y la base de datos responden.' })
+  @ApiServiceUnavailableResponse({
+    description: 'La base de datos no responde.',
+  })
+  async getHealth(): Promise<HealthResponse> {
+    const health = await this.appService.getHealth();
+    if (health.status !== 'ok') {
+      throw new ServiceUnavailableException(health);
+    }
+    return health;
   }
 }

@@ -42,3 +42,52 @@ jobs:
 
       - name: Build
         run: pnpm run build
+
+  database:
+    name: Migraciones y seed (PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/gymtrack
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gymtrack
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gymtrack_shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Crear bases de datos de prueba
+        run: |
+          psql postgresql://postgres:postgres@localhost:5432/postgres -c 'CREATE DATABASE gymtrack'
+          psql postgresql://postgres:postgres@localhost:5432/postgres -c 'CREATE DATABASE gymtrack_shadow'
+
+      - name: El esquema Prisma coincide con las migraciones
+        working-directory: apps/api
+        run: pnpm exec prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --exit-code
+
+      - name: Aplicar migraciones
+        working-directory: apps/api
+        run: pnpm run db:migrate
+
+      - name: Seed (dos veces para comprobar que es idempotente)
+        working-directory: apps/api
+        run: |
+          pnpm run db:seed
+          pnpm run db:seed
