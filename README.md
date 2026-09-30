@@ -35,7 +35,7 @@ pnpm dev:web   # Frontend en http://localhost:5173
 | ------------------- | ------------------------------------------------ |
 | `pnpm lint`         | oxlint en el API y ESLint en el frontend         |
 | `pnpm typecheck`    | Verificación de tipos con `tsc` en ambos proyectos |
-| `pnpm test`         | Pruebas unitarias (Jest) del API                 |
+| `pnpm test`         | Pruebas unitarias del API (Jest) y del frontend (Vitest) |
 | `pnpm test:e2e`     | Pruebas end-to-end del API (Jest + Supertest)    |
 | `pnpm build`        | Build de producción de ambos proyectos           |
 
@@ -84,6 +84,17 @@ Nunca subas archivos `.env` al repositorio; usa los `.env.example` como plantill
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Sí | `sb_publishable_…` | Clave publicable; es segura en el navegador porque RLS bloquea el acceso directo a las tablas. |
 
 > Las variables de Vite se incrustan en el build: si cambias `VITE_API_URL` en Vercel hay que volver a desplegar.
+
+## Frontend (`apps/web`)
+
+- **Stack:** React 19 + TypeScript + Vite, Tailwind CSS 4, React Router, TanStack Query y `vite-plugin-pwa`.
+- **Estructura por funcionalidad:** cada épica tiene su carpeta en `src/features/<épica>/` (`auth`, `evaluacion`, `rutinas`, `entrenamiento`, `nutricion`, `gimnasio`, `cancha`, `progreso`, además de `inicio`).
+  La configuración de la app (rutas, layout, TanStack Query) está en `src/app/`, los componentes compartidos en `src/components/` y el cliente HTTP en `src/lib/api/`.
+- **Rutas:** se declaran en `src/app/rutas.tsx`. `/login` va fuera del layout; el resto usa el layout móvil con barra de navegación inferior (Inicio, Rutina, Entrenar, Reservas, Perfil).
+- **Llamadas al API:** usa `apiFetch` (`src/lib/api/client.ts`) dentro de hooks de TanStack Query; toma `VITE_API_URL`, envía el token de sesión cuando exista (lo conectará GYMM-10) y convierte los errores en `ApiError`.
+- **Diseño:** los colores y tipografías son tokens de Tailwind en `src/index.css` (`bg-campus`, `text-gris`, `font-display`…). El amarillo `seguridad` se reserva para la acción principal, Entrenar.
+- **PWA:** la app se puede instalar desde el navegador del celular ("Agregar a pantalla de inicio") y abre sin conexión. Cuando se publica una versión nueva, muestra un aviso para actualizar en lugar de recargar a mitad de un entrenamiento. Los íconos se generan desde `public/logo.svg` con `pnpm --filter web generate-pwa-assets`.
+- **Pruebas:** Vitest + Testing Library (`pnpm --filter web test`).
 
 ## Base de datos (Supabase)
 

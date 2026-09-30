@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Logo de GymTrack UNAL: disco de pesas sobre fondo verde campus. -->
+  <rect width="512" height="512" rx="112" fill="#1D6B55"/>
+  <rect x="64" y="236" width="384" height="40" rx="20" fill="#F3F5F2"/>
+  <circle cx="256" cy="256" r="138" fill="#F5C518"/>
+  <circle cx="256" cy="256" r="138" fill="none" stroke="#134A3B" stroke-width="10" stroke-opacity=".35"/>
+  <circle cx="256" cy="256" r="96" fill="none" stroke="#134A3B" stroke-width="14"/>
+  <circle cx="256" cy="256" r="34" fill="#134A3B"/>
+  <circle cx="256" cy="256" r="16" fill="#F3F5F2"/>
+</svg>
