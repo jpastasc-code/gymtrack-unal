@@ -61,8 +61,12 @@ pnpm dev:web   # Frontend en http://localhost:5173
 | GET    | `/api/docs`       | Documentación Swagger UI               |
 | GET    | `/api/docs-json`  | Especificación OpenAPI en JSON         |
 | GET    | `/api/auth/yo`    | Perfil y rol del usuario con sesión (requiere token) |
+| GET    | `/api/perfil`     | Mi perfil completo (datos personales, institucionales y de entrenamiento) |
+| PATCH  | `/api/perfil`     | Actualiza mis datos personales, objetivo y nivel de actividad. Documento, correo y rol no se pueden editar. |
 
 Todas las rutas exigen `Authorization: Bearer <token de Supabase>` salvo las marcadas con `@Publico()` (`/api`, `/api/health`). Para restringir por rol usa `@Roles('INSTRUCTOR', …)`; el rol se lee de la tabla `usuario`. En Swagger, el botón **Authorize** acepta el token.
+
+Los errores de validación responden `400` con `{ message, errores: { campo: "mensaje en español" } }`, para que la web muestre cada error junto a su campo.
 
 ## Variables de entorno
 
