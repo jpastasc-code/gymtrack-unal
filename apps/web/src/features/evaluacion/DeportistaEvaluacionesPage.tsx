@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router'
+import { AVISO_EXITO, ENLACE_PRIMARIO } from '../../components/estilos'
 import { Pantalla } from '../../components/Pantalla'
 import { OPCIONES_ACTIVIDAD } from '../auth/perfil'
 import { useDeportista, useHistorialEvaluaciones, type Evaluacion, type Medida } from './api'
@@ -23,41 +24,41 @@ export function DeportistaEvaluacionesPage() {
   const nombre = deportista.data ? `${deportista.data.nombres} ${deportista.data.apellidos}` : 'Deportista'
 
   return (
-    <Pantalla titulo={nombre} volverA="/evaluaciones">
+    <Pantalla titulo={nombre} volverA="/evaluaciones" estrecha>
       {deportista.isError && (
-        <p role="alert" className="rounded-2xl bg-superficie p-5 font-medium text-alerta">
+        <p role="alert" className="rounded-xl bg-hueso p-5 font-medium text-alerta">
           {deportista.error.message}
         </p>
       )}
 
       {deportista.data && (
         <>
-          <p className="-mt-3 mb-5 text-gris">Documento {deportista.data.documento}</p>
+          <p className="-mt-3 mb-5 text-grafito">Documento {deportista.data.documento}</p>
           {recienGuardada && (
-            <p role="status" className="mb-4 rounded-xl bg-campus-claro p-4 font-semibold text-campus-oscuro">
+            <p role="status" className={`mb-4 ${AVISO_EXITO}`}>
               Evaluación guardada.
             </p>
           )}
           <Link
             to={`/evaluaciones/${id}/nueva`}
-            className="mb-6 flex min-h-14 items-center justify-center rounded-xl bg-campus px-5 text-lg font-semibold text-concreto hover:bg-campus-oscuro"
+            className={`mb-6 ${ENLACE_PRIMARIO}`}
           >
             Registrar evaluación
           </Link>
 
-          {historial.isPending && <p className="text-gris" role="status">Cargando evaluaciones…</p>}
+          {historial.isPending && <p className="text-grafito" role="status">Cargando evaluaciones…</p>}
           {historial.isError && (
             <p role="alert" className="font-medium text-alerta">
               {historial.error.message}
             </p>
           )}
           {historial.data?.length === 0 && (
-            <p className="rounded-2xl border-2 border-dashed border-linea bg-superficie p-5 text-lg">
+            <p className="rounded-xl border-2 border-dashed border-linea p-5 text-lg">
               Aún no tiene evaluaciones. La primera que registres será su punto de partida.
             </p>
           )}
           {historial.data && historial.data.length > 0 && (
-            <ol aria-label="Evaluaciones" className="flex flex-col gap-3">
+            <ol aria-label="Evaluaciones" className="flex flex-col gap-10">
               {historial.data.map((e, i) => (
                 <li key={e.id}>
                   <TarjetaEvaluacion evaluacion={e} inicial={i === historial.data.length - 1} />
@@ -78,11 +79,11 @@ function TarjetaEvaluacion({ evaluacion: e, inicial }: { evaluacion: Evaluacion;
     .filter((g) => g.medidas.length > 0)
 
   return (
-    <article className="rounded-2xl bg-superficie p-5">
-      <h2 className="font-display text-2xl font-semibold">
+    <article className="border-t-2 border-negro pt-5">
+      <h2 className="titular text-3xl">
         {inicial ? 'Evaluación inicial' : 'Evaluación'}, {fechaLarga.format(new Date(e.fecha))}
       </h2>
-      <p className="text-sm text-gris">
+      <p className="text-sm text-grafito">
         Con {e.instructor.nombres} {e.instructor.apellidos}
         {actividad ? `. Actividad: ${actividad.toLowerCase()}` : ''}
       </p>
@@ -100,7 +101,7 @@ function TarjetaEvaluacion({ evaluacion: e, inicial }: { evaluacion: Evaluacion;
           <dl>
             {g.medidas.map((m) => (
               <div key={m.nombre} className="flex justify-between border-b border-linea py-2">
-                <dt className="text-gris">{m.nombre}</dt>
+                <dt className="text-grafito">{m.nombre}</dt>
                 <dd className="font-semibold">
                   {numero(m.valor)} {m.unidad}
                 </dd>
@@ -110,16 +111,16 @@ function TarjetaEvaluacion({ evaluacion: e, inicial }: { evaluacion: Evaluacion;
         </div>
       ))}
 
-      {e.observaciones && <p className="mt-4 text-gris">{e.observaciones}</p>}
+      {e.observaciones && <p className="mt-4 text-grafito">{e.observaciones}</p>}
     </article>
   )
 }
 
 function Dato({ nombre, valor }: { nombre: string; valor: string }) {
   return (
-    <div className="rounded-xl bg-concreto p-3">
-      <dt className="text-sm text-gris">{nombre}</dt>
-      <dd className="font-display text-2xl leading-tight font-semibold">{valor}</dd>
+    <div className="rounded-xl bg-hueso p-3">
+      <dt className="text-sm text-grafito">{nombre}</dt>
+      <dd className="titular mt-1 text-4xl normal-case">{valor}</dd>
     </div>
   )
 }

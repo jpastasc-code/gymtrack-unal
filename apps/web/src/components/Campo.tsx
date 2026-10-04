@@ -21,25 +21,25 @@ export function Campo({ etiqueta, ayuda, error, unidad, id, className = '', ...r
         {etiqueta}
       </label>
       <div
-        className={`flex min-h-11 items-center rounded-xl border-2 bg-superficie focus-within:border-campus focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-campus ${
-          error ? 'border-alerta' : 'border-borde-control'
+        className={`flex min-h-13 items-center rounded-xl border bg-hueso focus-within:border-negro focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-negro ${
+          error ? 'border-2 border-alerta' : 'border-borde-control'
         }`}
       >
         <input
           id={idCampo}
           aria-invalid={error ? true : undefined}
           aria-describedby={mensaje ? idMensaje : undefined}
-          className="min-w-0 flex-1 rounded-xl bg-transparent px-4 py-2 text-lg text-tinta outline-none placeholder:text-gris"
+          className="min-w-0 flex-1 rounded-xl bg-transparent px-4 py-2 text-lg text-negro outline-none placeholder:text-grafito"
           {...resto}
         />
         {unidad && (
-          <span className="pr-4 text-gris" aria-hidden="true">
+          <span className="pr-4 text-grafito" aria-hidden="true">
             {unidad}
           </span>
         )}
       </div>
       {mensaje && (
-        <p id={idMensaje} className={`text-sm ${error ? 'font-medium text-alerta' : 'text-gris'}`}>
+        <p id={idMensaje} className={`text-sm ${error ? 'font-medium text-alerta' : 'text-grafito'}`}>
           {mensaje}
         </p>
       )}

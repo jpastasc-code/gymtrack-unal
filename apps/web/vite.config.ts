@@ -4,8 +4,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-const COLOR_CAMPUS = '#1D6B55'
-const COLOR_CONCRETO = '#F3F5F2'
+const COLOR_BLANCO = '#FFFFFF'
 
 // `pnpm demo` (scripts/demo/iniciar.mjs): la web reenvía /api y /auth/v1 al API y al simulador
 // de auth locales, así la app completa se usa desde un solo puerto (también en GitHub Codespaces).
@@ -30,9 +29,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        orientation: 'portrait',
-        theme_color: COLOR_CAMPUS,
-        background_color: COLOR_CONCRETO,
+        theme_color: COLOR_BLANCO,
+        background_color: COLOR_BLANCO,
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -41,7 +39,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,ico,woff2}'],
         // Las rutas del cliente (p. ej. /rutina) funcionan sin conexión; /api nunca se sirve desde caché.
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],

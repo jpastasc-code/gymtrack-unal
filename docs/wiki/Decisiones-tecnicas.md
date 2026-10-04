@@ -19,6 +19,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 | DT-07 | Fórmulas nutricionales: Katch-McArdle y Mifflin-St Jeor | Aceptada; factores de objetivo y macros en **propuesta** | 2026-09-29 |
 | DT-08 | Despliegue en Render (API) y Vercel (web) | Aceptada | 2026-09-29 |
 | DT-09 | Diseño en Claude Design en lugar de Figma | Aceptada | 2026-09-29 |
+| DT-11 | Rediseño visual minimalista y app responsive | Aceptada | 2026-10-04 |
 
 ---
 
@@ -204,3 +205,19 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 - La demo no reemplaza probar contra Supabase antes de desplegar: el simulador implementa solo el inicio de sesión con contraseña, la renovación y el cierre de sesión.
 - Si la web empieza a usar otra función de Supabase Auth (p. ej. recuperar contraseña), hay que agregarla al simulador o la demo fallará en esa pantalla.
 - El secreto y la contraseña de la demo son públicos a propósito. El script se niega a correr contra una URL de Supabase.
+
+## DT-11 · Rediseño visual minimalista y app responsive
+
+**Decisión:**
+- Paleta en blanco y negro con un solo acento: el verde del logo de la universidad (`#94B43B`). Se usa para Entrenar y para lo que la persona eligió, siempre con texto negro encima (el blanco no alcanza el contraste mínimo).
+- Tipografía Archivo (variable, con eje de ancho) en lugar de Barlow. Los titulares son estrechos, gruesos y en mayúsculas (utilidad `titular` de `index.css`); el texto va a ancho normal.
+- La app es responsive: la barra de navegación va abajo en el celular y sube a una barra superior desde 1024 px. El manifest de la PWA ya no fija la orientación vertical.
+- Ícono de la PWA: GYMTRACK en blanco sobre negro (`apps/web/public/logo.svg`, con las letras convertidas a trazos). Dentro de la app se usa el logo de la Universidad Nacional (`apps/web/src/assets/logo-unal.webp`).
+
+**Por qué:** el equipo pidió un estilo minimalista y profesional, al estilo de las apps de Nike o Adidas, y que la app también sirva en computador.
+
+**Implica:**
+- Hay que actualizar el sistema de diseño en Claude Design con los tokens nuevos (DT-09).
+- Los campos de formulario conservan un borde fino con contraste 3:1 para que se distingan del fondo.
+- El uso del logo de la universidad debe seguir su manual de identidad visual.
+- Cada pantalla se prueba a 390 px (celular) y a 1280 px (computador).

@@ -6,24 +6,28 @@ interface Props {
   titulo: string
   /** Ruta a la que vuelve el botón de atrás (pantallas secundarias). */
   volverA?: string
+  /** Formularios y fichas: en pantallas anchas el contenido no pasa de una columna cómoda de leer. */
+  estrecha?: boolean
   children: ReactNode
 }
 
-/** Estructura común de una pantalla: título grande y contenido. */
-export function Pantalla({ titulo, volverA, children }: Props) {
+/** Estructura común de una pantalla: titular grande y contenido. */
+export function Pantalla({ titulo, volverA, estrecha, children }: Props) {
   return (
-    <div className="mx-auto w-full max-w-lg px-4 pt-4 pb-6">
-      <header className="mb-5 flex items-center gap-2">
+    <div
+      className={`mx-auto w-full max-w-lg px-5 pt-6 pb-8 lg:px-10 lg:pt-10 ${estrecha ? 'lg:max-w-2xl' : 'lg:max-w-6xl'}`}
+    >
+      <header className="mb-6 flex items-center gap-1 lg:mb-8">
         {volverA && (
           <Link
             to={volverA}
-            className="-ml-2 grid size-11 place-items-center rounded-full text-campus-oscuro hover:bg-campus-claro"
+            className="-ml-3 grid size-11 shrink-0 place-items-center rounded-full text-negro hover:bg-hueso"
             aria-label="Volver"
           >
             <IconoAtras />
           </Link>
         )}
-        <h1 className="font-display text-4xl leading-none font-bold tracking-tight">{titulo}</h1>
+        <h1 className="titular text-5xl lg:text-7xl">{titulo}</h1>
       </header>
       {children}
     </div>

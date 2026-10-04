@@ -29,7 +29,7 @@ export function RutaProtegida({ roles, children }: Props) {
   if (errorPerfil?.status === 403) {
     return (
       <PantallaMensaje titulo="Tu cuenta no tiene acceso">
-        <p className="mt-3 text-gris">{errorPerfil.message}</p>
+        <p className="mt-4 text-grafito">{errorPerfil.message}</p>
         <Boton variante="secundario" bloque className="mt-6" onClick={() => void cerrarSesion()}>
           Cerrar sesión
         </Boton>
@@ -42,14 +42,14 @@ export function RutaProtegida({ roles, children }: Props) {
       // Sin conexión no podemos confirmar el rol; no mostramos datos de otro rol.
       return (
         <PantallaMensaje titulo="No pudimos comprobar tu rol">
-          <p className="mt-3 text-gris">Revisa tu conexión a internet y vuelve a abrir esta pantalla.</p>
+          <p className="mt-4 text-grafito">Revisa tu conexión a internet y vuelve a abrir esta pantalla.</p>
         </PantallaMensaje>
       )
     }
     if (!roles.includes(perfil.rol)) {
       return (
         <PantallaMensaje titulo="No tienes permiso para ver esta pantalla">
-          <p className="mt-3 text-gris">Si crees que es un error, habla con el personal del gimnasio.</p>
+          <p className="mt-4 text-grafito">Si crees que es un error, habla con el personal del gimnasio.</p>
         </PantallaMensaje>
       )
     }
@@ -62,7 +62,7 @@ export function RutaProtegida({ roles, children }: Props) {
 function PantallaMensaje({ titulo, children }: { titulo: string; children?: ReactNode }) {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-6" role="status">
-      <h1 className="font-display text-4xl leading-none font-bold">{titulo}</h1>
+      <h1 className="titular text-5xl">{titulo}</h1>
       {children}
     </div>
   )

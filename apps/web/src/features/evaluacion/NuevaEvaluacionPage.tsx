@@ -135,16 +135,16 @@ export function NuevaEvaluacionPage() {
   const numErrores = Object.keys(errores).filter((k) => k !== 'general').length
 
   return (
-    <Pantalla titulo="Nueva evaluación" volverA={`/evaluaciones/${id}`}>
+    <Pantalla titulo="Nueva evaluación" volverA={`/evaluaciones/${id}`} estrecha>
       {deportista.data && (
-        <p className="-mt-3 mb-5 text-lg text-gris">
+        <p className="-mt-3 mb-5 text-lg text-grafito">
           {deportista.data.nombres} {deportista.data.apellidos}
         </p>
       )}
 
       <form ref={formulario} className="flex flex-col gap-8" onSubmit={guardar} noValidate>
         <section className="flex flex-col gap-5" aria-labelledby="titulo-basicos">
-          <h2 id="titulo-basicos" className="font-display text-2xl font-semibold">
+          <h2 id="titulo-basicos" className="titular text-3xl">
             Medidas básicas
           </h2>
           <Campo
@@ -186,8 +186,8 @@ export function NuevaEvaluacionPage() {
             error={errores.porcentajeGrasa}
           />
           {imc !== null && (
-            <p className="rounded-xl bg-superficie p-4" role="status">
-              IMC: <strong className="font-display text-2xl">{imc.toLocaleString('es-CO')}</strong> kg/m²
+            <p className="rounded-xl bg-hueso p-4" role="status">
+              IMC: <strong className="titular text-3xl">{imc.toLocaleString('es-CO')}</strong> kg/m²
             </p>
           )}
           <Selector
@@ -210,8 +210,8 @@ export function NuevaEvaluacionPage() {
           onChange={(k, v) => setMedidas((m) => ({ ...m, [k]: v }))}
         />
 
-        <details className="group rounded-2xl bg-superficie p-5 open:pb-6">
-          <summary className="flex min-h-11 cursor-pointer items-center font-display text-2xl font-semibold">
+        <details className="group rounded-xl bg-hueso p-5 open:pb-6">
+          <summary className="flex min-h-11 cursor-pointer items-center titular text-3xl">
             Pliegues cutáneos (opcional)
           </summary>
           <div className="mt-4">
@@ -244,12 +244,12 @@ export function NuevaEvaluacionPage() {
 
         <div className="flex flex-col gap-3">
           {(numErrores > 0 || errores.general) && (
-            <p ref={aviso} tabIndex={-1} role="alert" className="rounded-xl bg-superficie p-4 font-medium text-alerta focus:outline-none">
+            <p ref={aviso} tabIndex={-1} role="alert" className="rounded-xl bg-hueso p-4 font-medium text-alerta focus:outline-none">
               {errores.general ??
                 (numErrores === 1 ? 'Revisa el campo marcado.' : `Revisa los ${numErrores} campos marcados.`)}
             </p>
           )}
-          <p className="text-sm text-gris">
+          <p className="text-sm text-grafito">
             Se guarda como una evaluación nueva: las anteriores no se modifican.
           </p>
           <Boton type="submit" bloque grande disabled={registrar.isPending}>
@@ -274,8 +274,8 @@ interface PropsGrupo {
 function GrupoMedidas({ titulo, ayuda, medidas, valores, errores, onChange, unaColumna }: PropsGrupo) {
   return (
     <section className="flex flex-col gap-3" aria-label={titulo}>
-      {titulo && <h2 className="font-display text-2xl font-semibold">{titulo}</h2>}
-      {ayuda && <p className="-mt-2 text-sm text-gris">{ayuda}</p>}
+      {titulo && <h2 className="titular text-3xl">{titulo}</h2>}
+      {ayuda && <p className="-mt-2 text-sm text-grafito">{ayuda}</p>}
       <div className={unaColumna ? 'flex flex-col gap-3' : 'grid grid-cols-2 gap-3'}>
         {medidas.map((m) => (
           <Campo

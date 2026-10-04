@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Boton } from '../../components/Boton'
 import { Campo } from '../../components/Campo'
+import { AVISO, AVISO_EXITO } from '../../components/estilos'
 import { GrupoOpciones } from '../../components/GrupoOpciones'
 import { Pantalla } from '../../components/Pantalla'
 import { ApiError } from '../../lib/api/client'
@@ -22,11 +23,11 @@ export function PerfilPage() {
   const { data: perfil, isPending, isError, error, refetch } = usePerfil()
 
   return (
-    <Pantalla titulo="Perfil">
-      {isPending && <p className="text-gris" role="status">Cargando tu perfil…</p>}
+    <Pantalla titulo="Perfil" estrecha>
+      {isPending && <p className="text-grafito" role="status">Cargando tu perfil…</p>}
 
       {isError && (
-        <section className="rounded-2xl bg-superficie p-5" role="alert">
+        <section className={AVISO} role="alert">
           <p className="font-medium text-alerta">{error.message}</p>
           <Boton variante="secundario" className="mt-4" onClick={() => void refetch()}>
             Intentar de nuevo
@@ -97,37 +98,37 @@ function FormularioPerfil({ perfil }: { perfil: Perfil }) {
 
   return (
     <>
-      <section className="rounded-2xl bg-superficie p-5">
-        <h2 className="font-display text-2xl font-semibold">
+      <section className="border-b border-linea pb-6">
+        <h2 className="text-2xl font-semibold tracking-tight">
           {perfil.nombres} {perfil.apellidos}
         </h2>
-        <p className="mt-2 inline-block rounded-full bg-campus-claro px-3 py-1 text-sm font-semibold text-campus-oscuro">
+        <p className="mt-2 inline-block rounded-full bg-hueso px-3 py-1 text-sm font-semibold">
           {NOMBRE_ROL[perfil.rol]}
         </p>
       </section>
 
-      <section className="mt-3 rounded-2xl bg-superficie p-5" aria-labelledby="titulo-institucional">
-        <h2 id="titulo-institucional" className="font-display text-2xl font-semibold">
+      <section className="border-b border-linea py-6" aria-labelledby="titulo-institucional">
+        <h2 id="titulo-institucional" className="titular text-3xl">
           Datos institucionales
         </h2>
         <dl className="mt-3">
           <div className="flex flex-col border-b border-linea py-2">
-            <dt className="text-sm text-gris">Documento</dt>
+            <dt className="text-sm text-grafito">Documento</dt>
             <dd className="text-lg font-semibold">{perfil.documento}</dd>
           </div>
           <div className="flex flex-col py-2">
-            <dt className="text-sm text-gris">Correo</dt>
+            <dt className="text-sm text-grafito">Correo</dt>
             <dd className="text-lg font-semibold break-all">{perfil.correo}</dd>
           </div>
         </dl>
-        <p className="mt-2 text-sm text-gris">
+        <p className="mt-2 text-sm text-grafito">
           Estos datos vienen de la universidad y no se pueden editar. Si hay un error, habla con el personal del gimnasio.
         </p>
       </section>
 
-      <form className="mt-6 flex flex-col gap-8" onSubmit={guardar} noValidate>
+      <form className="mt-8 flex flex-col gap-10" onSubmit={guardar} noValidate>
         <section className="flex flex-col gap-5" aria-labelledby="titulo-personales">
-          <h2 id="titulo-personales" className="font-display text-2xl font-semibold">
+          <h2 id="titulo-personales" className="titular text-3xl">
             Datos personales
           </h2>
           <Campo
@@ -175,7 +176,7 @@ function FormularioPerfil({ perfil }: { perfil: Perfil }) {
         </section>
 
         <section className="flex flex-col gap-5" aria-labelledby="titulo-entrenamiento">
-          <h2 id="titulo-entrenamiento" className="font-display text-2xl font-semibold">
+          <h2 id="titulo-entrenamiento" className="titular text-3xl">
             Entrenamiento
           </h2>
           <GrupoOpciones
@@ -198,7 +199,7 @@ function FormularioPerfil({ perfil }: { perfil: Perfil }) {
 
         <div className="flex flex-col gap-3">
           {errorGeneral && (
-            <p role="alert" className="rounded-xl bg-superficie p-4 font-medium text-alerta">
+            <p role="alert" className={`${AVISO} font-medium text-alerta`}>
               {errorGeneral}
             </p>
           )}
@@ -208,7 +209,7 @@ function FormularioPerfil({ perfil }: { perfil: Perfil }) {
             </p>
           )}
           {guardado && !hayCambios && (
-            <p role="status" className="rounded-xl bg-campus-claro p-4 font-semibold text-campus-oscuro">
+            <p role="status" className={AVISO_EXITO}>
               Cambios guardados.
             </p>
           )}
