@@ -36,7 +36,7 @@ export function LoginPage() {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pt-10 pb-10 lg:justify-center lg:pt-16">
       <img src={logoUnal} alt="Universidad Nacional de Colombia" width={112} height={112} className="-ml-1.5 size-28" />
-      <h1 className="titular mt-8 text-7xl">GymTrack UNAL</h1>
+      <h1 className="titular mt-8 text-6xl sm:text-7xl">GymTrack UNAL</h1>
       <p className="mt-4 text-lg text-grafito">Entra con tu cuenta para ver tu rutina y registrar tus entrenamientos.</p>
 
       <form className="mt-10 flex flex-col gap-5" onSubmit={(e) => void enviar(e)} noValidate>
