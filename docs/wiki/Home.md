@@ -13,7 +13,8 @@ Documentación viva del equipo. Vive en el repositorio (`docs/wiki/`) para que c
 Otros recursos:
 
 - [README](../../README.md): cómo instalar, correr, probar y desplegar.
-- Diseño (GYMM-17): wireframes de las pantallas clave y sistema de diseño en Claude Design. Pide los enlaces al equipo; se comparten desde el menú Share de cada página.
+- [Sistema de diseño en Claude Design](https://claude.ai/artifact/J4Mv4BJRYuAwKbgdz5eWkw): colores, tipografía, componentes y logos del rediseño (DT-11). Si no te abre, pide acceso: se comparte desde el menú Share.
+- Wireframes de GYMM-17 en Claude Design: pide el enlace al equipo.
 - Jira: proyecto **GYMM** en `unal-team-vx4fggk3.atlassian.net`.
 
 Para cambiar algo de esta wiki, abre un PR como con cualquier otro cambio (ver [Convenciones](Convenciones.md)).
