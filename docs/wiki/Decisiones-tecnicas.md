@@ -221,7 +221,7 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 **Por qué:** el equipo pidió un estilo minimalista y profesional, al estilo de las apps de Nike o Adidas, y que la app también sirva en computador.
 
 **Implica:**
-- Hay que actualizar el sistema de diseño en Claude Design con los tokens nuevos (DT-09).
+- El sistema de diseño en Claude Design se rehízo con los tokens nuevos (DT-09). El enlace está en el [inicio de la wiki](Home.md).
 - Los campos de formulario conservan un borde fino con contraste 3:1 para que se distingan del fondo.
 - El uso del logo de la universidad debe seguir su manual de identidad visual.
 - Cada pantalla se prueba a 390 px (celular), 768 px (tableta) y 1280 px (computador).
