@@ -27,7 +27,7 @@ export function CatalogoPage() {
   return (
     <Pantalla titulo="Ejercicios" volverA="/">
       {puedeEditar && (
-        <Link to="/ejercicios/nuevo" className={`mb-6 ${ENLACE_PRIMARIO} lg:w-fit`}>
+        <Link to="/ejercicios/nuevo" className={`mb-6 ${ENLACE_PRIMARIO} md:w-fit`}>
           Agregar ejercicio
         </Link>
       )}
@@ -41,13 +41,13 @@ export function CatalogoPage() {
         placeholder="Buscar por nombre o descripción"
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
-        className={`${BUSCADOR} lg:max-w-xl`}
+        className={`${BUSCADOR} md:max-w-xl`}
       />
 
       <div
         role="group"
         aria-label="Filtrar por grupo muscular"
-        className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-2 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0"
+        className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-2 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
       >
         <Chip activo={grupo === null} onClick={() => setGrupo(null)}>
           Todos
@@ -108,7 +108,7 @@ export function CatalogoPage() {
                 )}
               </div>
             ) : (
-              <ul aria-label="Ejercicios del catálogo" className="border-t border-linea lg:grid lg:grid-cols-2 lg:gap-x-10">
+              <ul aria-label="Ejercicios del catálogo" className="border-t border-linea md:grid md:grid-cols-2 md:gap-x-8 lg:gap-x-10">
                 {ejercicios.map((e) => (
                   <li key={e.id} className="border-b border-linea">
                     <FilaEjercicio ejercicio={e} editable={puedeEditar} />

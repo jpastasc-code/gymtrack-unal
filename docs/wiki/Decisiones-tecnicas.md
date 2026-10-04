@@ -211,7 +211,11 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 **Decisión:**
 - Paleta en blanco y negro con un solo acento: el verde del logo de la universidad (`#94B43B`). Se usa para Entrenar y para lo que la persona eligió, siempre con texto negro encima (el blanco no alcanza el contraste mínimo).
 - Tipografía Archivo (variable, con eje de ancho) en lugar de Barlow. Los titulares son estrechos, gruesos y en mayúsculas (utilidad `titular` de `index.css`); el texto va a ancho normal.
-- La app es responsive: la barra de navegación va abajo en el celular y sube a una barra superior desde 1024 px. El manifest de la PWA ya no fija la orientación vertical.
+- La app es responsive, con tres tamaños de referencia (prefijos de Tailwind):
+  - Celular (menos de 768 px): una columna y barra de navegación abajo.
+  - Tableta (`md:`, desde 768 px): más ancho y listas en dos columnas; la barra sigue abajo.
+  - Computador (`lg:`, desde 1024 px): barra superior con el logo de la universidad.
+  - El manifest de la PWA ya no fija la orientación vertical.
 - Ícono de la PWA: GYMTRACK en blanco sobre negro (`apps/web/public/logo.svg`, con las letras convertidas a trazos). Dentro de la app se usa el logo de la Universidad Nacional (`apps/web/src/assets/logo-unal.webp`).
 
 **Por qué:** el equipo pidió un estilo minimalista y profesional, al estilo de las apps de Nike o Adidas, y que la app también sirva en computador.
@@ -220,4 +224,4 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 - Hay que actualizar el sistema de diseño en Claude Design con los tokens nuevos (DT-09).
 - Los campos de formulario conservan un borde fino con contraste 3:1 para que se distingan del fondo.
 - El uso del logo de la universidad debe seguir su manual de identidad visual.
-- Cada pantalla se prueba a 390 px (celular) y a 1280 px (computador).
+- Cada pantalla se prueba a 390 px (celular), 768 px (tableta) y 1280 px (computador).

@@ -24,7 +24,7 @@ export function EvaluarPage() {
         placeholder="Nombre, documento o correo"
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
-        className={`${BUSCADOR} lg:max-w-xl`}
+        className={`${BUSCADOR} md:max-w-xl`}
       />
 
       <div className="mt-4">

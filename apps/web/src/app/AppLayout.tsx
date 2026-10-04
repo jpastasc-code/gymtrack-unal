@@ -19,7 +19,7 @@ const PESTANAS = [
 
 /**
  * Layout responsive con una sola barra de navegación:
- * - En el celular (menos de 1024 px) va fija abajo, al alcance del pulgar.
+ * - En el celular y la tableta (menos de 1024 px) va fija abajo, al alcance del pulgar.
  * - Desde 1024 px sube a una barra superior con el logo de la universidad.
  * "Entrenar" es la acción principal y por eso es el único elemento en verde.
  */

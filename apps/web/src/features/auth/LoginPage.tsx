@@ -34,7 +34,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pt-10 pb-10 lg:justify-center lg:pt-16">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pt-10 pb-10 md:justify-center md:pt-16">
       <img src={logoUnal} alt="Universidad Nacional de Colombia" width={112} height={112} className="-ml-1.5 size-28" />
       <h1 className="titular mt-8 text-6xl sm:text-7xl">GymTrack UNAL</h1>
       <p className="mt-4 text-lg text-grafito">Entra con tu cuenta para ver tu rutina y registrar tus entrenamientos.</p>
@@ -68,7 +68,7 @@ export function LoginPage() {
         </Boton>
       </form>
 
-      <p className="mt-auto pt-10 text-sm text-grafito lg:mt-10">
+      <p className="mt-auto pt-10 text-sm text-grafito md:mt-10">
         Tu sesión queda abierta en este celular hasta que la cierres desde Perfil.
       </p>
     </div>

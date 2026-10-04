@@ -34,10 +34,10 @@ export function InicioPage() {
   }).format(hoy)
 
   return (
-    <div className="mx-auto w-full max-w-lg pb-6 lg:max-w-6xl lg:px-10 lg:pt-10">
-      <header className="px-5 pt-6 pb-5 lg:px-0 lg:pb-8">
+    <div className="mx-auto w-full max-w-lg pb-6 md:max-w-3xl md:px-8 md:pt-8 lg:max-w-6xl lg:px-10 lg:pt-10">
+      <header className="px-5 pt-6 pb-5 md:px-0 md:pb-6 lg:pb-8">
         <p className="text-grafito first-letter:uppercase">{fecha}</p>
-        <h1 className="mt-0.5 text-2xl font-semibold tracking-tight lg:text-3xl">
+        <h1 className="mt-0.5 text-2xl font-semibold tracking-tight md:text-3xl">
           {saludo(hoy)}
           {perfil ? `, ${perfil.nombres.split(' ')[0]}` : ''}
         </h1>
@@ -46,21 +46,21 @@ export function InicioPage() {
       <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-10">
         <Link
           to="/rutina"
-          className="flex flex-col gap-6 bg-negro px-5 pt-7 pb-6 text-blanco hover:bg-negro-suave lg:col-span-7 lg:min-h-96 lg:justify-between lg:p-9"
+          className="flex flex-col gap-6 bg-negro px-5 pt-7 pb-6 text-blanco hover:bg-negro-suave md:p-8 lg:col-span-7 lg:min-h-96 lg:justify-between lg:p-9"
         >
-          <h2 className="titular text-6xl lg:text-[7rem]">Tu rutina de hoy</h2>
+          <h2 className="titular text-6xl md:text-7xl lg:text-[7rem]">Tu rutina de hoy</h2>
           <span className="flex items-end gap-4 text-blanco/75">
             <span className="max-w-[30ch] flex-1">Revisa los ejercicios antes de empezar y luego pulsa Entrenar.</span>
             <IconoFlecha width={28} height={28} className="shrink-0 text-verde" />
           </span>
         </Link>
 
-        <div className="lg:col-span-5">
+        <div className="md:mt-8 lg:col-span-5 lg:mt-0">
           <nav aria-label="Más secciones">
-            <ul className="divide-y divide-linea border-b border-linea lg:border-t">
+            <ul className="md:grid md:grid-cols-2 md:gap-x-8 md:border-t md:border-linea lg:block">
               {secciones.map((s) => (
-                <li key={s.a}>
-                  <Link to={s.a} className="flex min-h-16 items-center gap-3 px-5 py-4 hover:bg-hueso lg:px-1">
+                <li key={s.a} className="border-b border-linea">
+                  <Link to={s.a} className="flex min-h-16 items-center gap-3 px-5 py-4 hover:bg-hueso md:px-1">
                     <div className="flex-1">
                       <p className="text-lg font-semibold">{s.titulo}</p>
                       <p className="text-sm text-grafito">{s.detalle}</p>
@@ -72,7 +72,7 @@ export function InicioPage() {
             </ul>
           </nav>
 
-          <div className="px-5 lg:px-1">
+          <div className="px-5 md:px-1">
             <EstadoServidor />
           </div>
         </div>
