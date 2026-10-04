@@ -8,9 +8,9 @@ interface Props {
 /** Marcador para pantallas cuyo contenido llega en una historia posterior. */
 export function EnConstruccion({ historia, descripcion }: Props) {
   return (
-    <section className="rounded-2xl border-2 border-dashed border-linea bg-superficie p-5">
+    <section className="rounded-xl border-2 border-dashed border-linea p-5">
       <p className="text-lg leading-snug">{descripcion}</p>
-      <p className="mt-3 text-sm text-gris">
+      <p className="mt-3 text-sm text-grafito">
         Pantalla en construcción ({historia}).
       </p>
     </section>

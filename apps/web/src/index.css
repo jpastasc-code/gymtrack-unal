@@ -1,26 +1,28 @@
 @import 'tailwindcss';
 
 /*
-  Tokens de diseño de GymTrack UNAL.
-  - concreto: fondo, como el piso y los muros del gimnasio.
-  - campus: color de marca (verde de la universidad).
-  - seguridad: amarillo de las marcas de los discos; se reserva para la acción principal (Entrenar).
+  Tokens de diseño de GymTrack UNAL: minimalista, en blanco y negro, con un solo acento.
+  - blanco / negro: la base. Las acciones principales son negras.
+  - verde: el verde del logo de la universidad. Se reserva para Entrenar y para lo que la
+    persona eligió (filtro activo, opción marcada). Encima siempre va texto negro: el blanco
+    no alcanza el contraste mínimo sobre este verde.
+  - hueso: rellenos suaves (campos, avisos, filas al pasar el cursor).
 */
 @theme {
-  --color-concreto: #f3f5f2;
-  --color-superficie: #ffffff;
-  --color-tinta: #17201d;
-  --color-gris: #5f6a66;
-  --color-linea: #d8ddd9;
-  --color-borde-control: #7a8581;
-  --color-campus: #1d6b55;
-  --color-campus-oscuro: #134a3b;
-  --color-campus-claro: #e3efe9;
-  --color-seguridad: #f5c518;
+  --color-blanco: #ffffff;
+  --color-negro: #000000;
+  --color-negro-suave: #2b2b29;
+  --color-grafito: #5d5d59;
+  --color-hueso: #f2f2ef;
+  --color-linea: #e3e3df;
+  --color-borde-control: #8a8a84;
+  --color-verde: #94b43b;
+  --color-verde-claro: #eef4dd;
+  --color-verde-tinta: #26300f;
   --color-alerta: #b3261e;
 
-  --font-sans: 'Barlow', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Barlow Condensed', 'Barlow', ui-sans-serif, sans-serif;
+  --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Archivo Variable', 'Arial Narrow', ui-sans-serif, sans-serif;
 }
 
 @layer base {
@@ -29,12 +31,12 @@
   }
 
   body {
-    @apply bg-concreto font-sans text-tinta antialiased;
+    @apply bg-blanco font-sans text-negro antialiased;
     min-height: 100dvh;
   }
 
   :focus-visible {
-    @apply outline-3 outline-offset-2 outline-campus;
+    @apply outline-3 outline-offset-2 outline-negro;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -45,4 +47,15 @@
       animation-duration: 0.01ms !important;
     }
   }
+}
+
+/* Titulares: la misma familia, estrecha, gruesa y en mayúsculas. */
+@utility titular {
+  font-family: var(--font-display);
+  font-stretch: 62%;
+  font-weight: 850;
+  text-transform: uppercase;
+  line-height: 0.88;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
 }

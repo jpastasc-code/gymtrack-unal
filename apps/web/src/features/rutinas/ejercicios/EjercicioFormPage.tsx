@@ -23,7 +23,7 @@ export function NuevoEjercicioPage() {
   const navigate = useNavigate()
   const crear = useCrearEjercicio()
   return (
-    <Pantalla titulo="Nuevo ejercicio" volverA="/ejercicios">
+    <Pantalla titulo="Nuevo ejercicio" volverA="/ejercicios" estrecha>
       <FormularioEjercicio
         textoGuardar="Agregar al catálogo"
         guardando={crear.isPending}
@@ -40,10 +40,10 @@ export function EditarEjercicioPage() {
   const { data: ejercicio, isPending, isError, error } = useEjercicio(id)
 
   return (
-    <Pantalla titulo="Editar ejercicio" volverA="/ejercicios">
-      {isPending && <p className="text-gris" role="status">Cargando ejercicio…</p>}
+    <Pantalla titulo="Editar ejercicio" volverA="/ejercicios" estrecha>
+      {isPending && <p className="text-grafito" role="status">Cargando ejercicio…</p>}
       {isError && (
-        <p role="alert" className="rounded-2xl bg-superficie p-5 font-medium text-alerta">
+        <p role="alert" className="rounded-xl bg-hueso p-5 font-medium text-alerta">
           {error.message}
         </p>
       )}
@@ -68,7 +68,7 @@ function EdicionEjercicio({ ejercicio }: { ejercicio: Ejercicio }) {
   return (
     <>
       {!ejercicio.activo && (
-        <p className="mb-5 rounded-xl bg-superficie p-4 text-gris">
+        <p className="mb-5 rounded-xl bg-hueso p-4 text-grafito">
           Este ejercicio está desactivado: no aparece en el catálogo ni se puede agregar a rutinas nuevas.
         </p>
       )}
@@ -89,7 +89,7 @@ function EdicionEjercicio({ ejercicio }: { ejercicio: Ejercicio }) {
         >
           {ejercicio.activo ? 'Desactivar ejercicio' : 'Activar ejercicio'}
         </Boton>
-        <p className="text-sm text-gris">
+        <p className="text-sm text-grafito">
           Desactivar lo oculta del catálogo sin borrarlo de las rutinas ni del historial de entrenamiento.
         </p>
 
@@ -107,7 +107,7 @@ function EdicionEjercicio({ ejercicio }: { ejercicio: Ejercicio }) {
             tabIndex={-1}
             role="alertdialog"
             aria-labelledby="titulo-eliminar"
-            className="mt-2 scroll-mb-28 rounded-2xl bg-superficie p-5 focus:outline-3 focus:outline-offset-2 focus:outline-campus"
+            className="mt-2 scroll-mb-28 rounded-xl bg-hueso p-5 focus:outline-3 focus:outline-offset-2 focus:outline-negro"
           >
             <p id="titulo-eliminar" className="font-semibold">
               ¿Eliminar “{ejercicio.nombre}”? Esta acción no se puede deshacer.
@@ -118,7 +118,7 @@ function EdicionEjercicio({ ejercicio }: { ejercicio: Ejercicio }) {
                 type="button"
                 disabled={eliminar.isPending}
                 onClick={() => eliminar.mutate(undefined, { onSuccess: volver })}
-                className="min-h-11 rounded-xl bg-alerta px-5 font-semibold text-superficie disabled:opacity-50"
+                className="min-h-11 rounded-full bg-alerta px-6 font-semibold text-blanco disabled:opacity-50"
               >
                 {eliminar.isPending ? 'Eliminando…' : 'Sí, eliminar'}
               </button>
@@ -193,7 +193,7 @@ function FormularioEjercicio({ inicial, textoGuardar, guardando, error, onGuarda
         error={errores.descripcion}
       />
       {errorGeneral && (
-        <p role="alert" className="rounded-xl bg-superficie p-4 font-medium text-alerta">
+        <p role="alert" className="rounded-xl bg-hueso p-4 font-medium text-alerta">
           {errorGeneral}
         </p>
       )}

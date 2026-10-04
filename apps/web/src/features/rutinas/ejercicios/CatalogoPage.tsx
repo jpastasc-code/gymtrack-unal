@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { useState } from 'react'
+import { AVISO, BUSCADOR, ENLACE_PRIMARIO, VACIO } from '../../../components/estilos'
 import { IconoFlecha } from '../../../components/iconos'
 import { Pantalla } from '../../../components/Pantalla'
 import { useRetardado } from '../../../lib/useRetardado'
@@ -26,10 +27,7 @@ export function CatalogoPage() {
   return (
     <Pantalla titulo="Ejercicios" volverA="/">
       {puedeEditar && (
-        <Link
-          to="/ejercicios/nuevo"
-          className="mb-5 flex min-h-14 items-center justify-center rounded-xl bg-campus px-5 text-lg font-semibold text-concreto hover:bg-campus-oscuro"
-        >
+        <Link to="/ejercicios/nuevo" className={`mb-6 ${ENLACE_PRIMARIO} md:w-fit`}>
           Agregar ejercicio
         </Link>
       )}
@@ -43,13 +41,13 @@ export function CatalogoPage() {
         placeholder="Buscar por nombre o descripción"
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
-        className="min-h-12 w-full rounded-xl border-2 border-borde-control bg-superficie px-4 text-lg placeholder:text-gris focus:border-campus focus:outline-3 focus:outline-offset-2 focus:outline-campus"
+        className={`${BUSCADOR} md:max-w-xl`}
       />
 
       <div
         role="group"
         aria-label="Filtrar por grupo muscular"
-        className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none]"
+        className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-2 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
       >
         <Chip activo={grupo === null} onClick={() => setGrupo(null)}>
           Todos
@@ -62,24 +60,24 @@ export function CatalogoPage() {
       </div>
 
       {puedeEditar && (
-        <label className="mt-2 flex min-h-11 items-center gap-3 text-gris">
+        <label className="mt-2 flex min-h-11 items-center gap-3 text-grafito">
           <input
             type="checkbox"
             checked={verDesactivados}
             onChange={(e) => setVerDesactivados(e.target.checked)}
-            className="size-5 accent-campus"
+            className="size-5 accent-negro"
           />
           Mostrar ejercicios desactivados
         </label>
       )}
 
-      <div className="mt-3" aria-busy={isPlaceholderData}>
-        {isPending && <p className="text-gris" role="status">Cargando ejercicios…</p>}
+      <div className="mt-4" aria-busy={isPlaceholderData}>
+        {isPending && <p className="text-grafito" role="status">Cargando ejercicios…</p>}
 
         {isError && (
-          <div role="alert" className="rounded-2xl bg-superficie p-5">
+          <div role="alert" className={AVISO}>
             <p className="font-medium text-alerta">{error.message}</p>
-            <button type="button" onClick={() => void refetch()} className="mt-3 min-h-11 font-semibold text-campus underline">
+            <button type="button" onClick={() => void refetch()} className="mt-3 min-h-11 font-semibold underline underline-offset-4">
               Intentar de nuevo
             </button>
           </div>
@@ -87,13 +85,13 @@ export function CatalogoPage() {
 
         {ejercicios && (
           <>
-            <p className="mb-2 text-sm text-gris" role="status">
+            <p className="mb-3 text-sm text-grafito" role="status">
               {ejercicios.length === 1 ? '1 ejercicio' : `${ejercicios.length} ejercicios`}
               {grupo ? ` de ${NOMBRE_GRUPO[grupo].toLowerCase()}` : ''}
             </p>
             {ejercicios.length === 0 ? (
-              <div className="rounded-2xl border-2 border-dashed border-linea bg-superficie p-5">
-                <p className="text-lg">
+              <div className={VACIO}>
+                <p>
                   {hayFiltros ? 'Ningún ejercicio coincide con la búsqueda.' : 'El catálogo aún no tiene ejercicios.'}
                 </p>
                 {hayFiltros && (
@@ -103,16 +101,16 @@ export function CatalogoPage() {
                       setTexto('')
                       setGrupo(null)
                     }}
-                    className="mt-3 min-h-11 font-semibold text-campus underline"
+                    className="mt-3 min-h-11 text-base font-semibold underline underline-offset-4"
                   >
                     Quitar filtros
                   </button>
                 )}
               </div>
             ) : (
-              <ul aria-label="Ejercicios del catálogo" className="divide-y divide-linea overflow-hidden rounded-2xl bg-superficie">
+              <ul aria-label="Ejercicios del catálogo" className="border-t border-linea md:grid md:grid-cols-2 md:gap-x-8 lg:gap-x-10">
                 {ejercicios.map((e) => (
-                  <li key={e.id}>
+                  <li key={e.id} className="border-b border-linea">
                     <FilaEjercicio ejercicio={e} editable={puedeEditar} />
                   </li>
                 ))}
@@ -131,8 +129,8 @@ function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => v
       type="button"
       aria-pressed={activo}
       onClick={onClick}
-      className={`min-h-11 shrink-0 rounded-full border-2 px-4 font-semibold whitespace-nowrap ${
-        activo ? 'border-campus bg-campus text-concreto' : 'border-borde-control bg-superficie text-tinta'
+      className={`min-h-11 shrink-0 rounded-full border-[1.5px] px-4 font-semibold whitespace-nowrap ${
+        activo ? 'border-verde bg-verde text-negro' : 'border-borde-control bg-blanco text-negro hover:bg-hueso'
       }`}
     >
       {children}
@@ -144,29 +142,27 @@ function FilaEjercicio({ ejercicio: e, editable }: { ejercicio: Ejercicio; edita
   const contenido = (
     <div className="flex-1">
       <p className="text-lg font-semibold">{e.nombre}</p>
-      <p className="mt-1 flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-campus-claro px-2.5 py-0.5 text-xs font-semibold text-campus-oscuro">
-          {NOMBRE_GRUPO[e.grupoMuscular]}
-        </span>
+      <p className="mt-0.5 flex flex-wrap items-center gap-2">
+        <span className="text-sm font-semibold">{NOMBRE_GRUPO[e.grupoMuscular]}</span>
         {!e.activo && (
-          <span className="rounded-full border border-borde-control px-2.5 py-0.5 text-xs font-semibold text-gris">
+          <span className="rounded-full border border-borde-control px-2.5 py-0.5 text-xs font-semibold text-grafito">
             Desactivado
           </span>
         )}
       </p>
-      {e.descripcion && <p className="mt-1 text-sm text-gris">{e.descripcion}</p>}
+      {e.descripcion && <p className="mt-1 text-sm text-grafito">{e.descripcion}</p>}
     </div>
   )
 
-  if (!editable) return <div className="px-5 py-4">{contenido}</div>
+  if (!editable) return <div className="py-4">{contenido}</div>
   return (
     <Link
       to={`/ejercicios/${e.id}/editar`}
-      className="flex items-center gap-3 px-5 py-4 hover:bg-campus-claro"
+      className="-mx-2 flex items-center gap-3 px-2 py-4 hover:bg-hueso"
       aria-label={`Editar ${e.nombre}`}
     >
       {contenido}
-      <IconoFlecha className="shrink-0 text-campus" />
+      <IconoFlecha className="shrink-0" />
     </Link>
   )
 }

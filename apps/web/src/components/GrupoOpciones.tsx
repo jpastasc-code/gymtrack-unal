@@ -37,8 +37,8 @@ export function GrupoOpciones<T extends string>({
           return (
             <label
               key={o.valor}
-              className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border-2 px-4 py-3 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-campus ${
-                activa ? 'border-campus bg-campus-claro' : 'border-borde-control bg-superficie'
+              className={`flex min-h-13 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-negro ${
+                activa ? 'border-verde bg-verde text-negro' : 'border-borde-control bg-hueso hover:bg-linea'
               }`}
             >
               <input
@@ -47,11 +47,11 @@ export function GrupoOpciones<T extends string>({
                 value={o.valor}
                 checked={activa}
                 onChange={() => onChange(o.valor)}
-                className="size-5 accent-campus"
+                className="size-5 accent-negro"
               />
               <span className="flex flex-col">
                 <span className="font-semibold">{o.titulo}</span>
-                {o.detalle && <span className="text-sm text-gris">{o.detalle}</span>}
+                {o.detalle && <span className={`text-sm ${activa ? 'text-verde-tinta' : 'text-grafito'}`}>{o.detalle}</span>}
               </span>
             </label>
           )

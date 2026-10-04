@@ -1,13 +1,13 @@
 import { useId, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 
 const BASE =
-  'rounded-xl border-2 bg-superficie px-4 py-2 text-lg text-tinta focus:border-campus focus:outline-3 focus:outline-offset-2 focus:outline-campus'
+  'rounded-xl bg-hueso px-4 py-2 text-lg text-negro focus:border-negro focus:outline-3 focus:outline-offset-2 focus:outline-negro'
 
 function Mensaje({ id, ayuda, error }: { id: string; ayuda?: string; error?: string }) {
   const texto = error ?? ayuda
   if (!texto) return null
   return (
-    <p id={id} className={`text-sm ${error ? 'font-medium text-alerta' : 'text-gris'}`}>
+    <p id={id} className={`text-sm ${error ? 'font-medium text-alerta' : 'text-grafito'}`}>
       {texto}
     </p>
   )
@@ -33,7 +33,7 @@ export function Selector({ etiqueta, opciones, ayuda, error, id, ...resto }: Pro
         id={idCampo}
         aria-invalid={error ? true : undefined}
         aria-describedby={error || ayuda ? `${idCampo}-mensaje` : undefined}
-        className={`min-h-11 ${BASE} ${error ? 'border-alerta' : 'border-borde-control'}`}
+        className={`min-h-13 ${BASE} ${error ? 'border-2 border-alerta' : 'border border-borde-control'}`}
         {...resto}
       >
         {opciones.map((o) => (
@@ -67,7 +67,7 @@ export function AreaTexto({ etiqueta, ayuda, error, id, ...resto }: PropsAreaTex
         rows={4}
         aria-invalid={error ? true : undefined}
         aria-describedby={error || ayuda ? `${idCampo}-mensaje` : undefined}
-        className={`${BASE} ${error ? 'border-alerta' : 'border-borde-control'}`}
+        className={`${BASE} ${error ? 'border-2 border-alerta' : 'border border-borde-control'}`}
         {...resto}
       />
       <Mensaje id={`${idCampo}-mensaje`} ayuda={ayuda} error={error} />
