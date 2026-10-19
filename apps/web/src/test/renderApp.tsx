@@ -108,6 +108,8 @@ interface OpcionesApi {
   rutinas?: Record<string, Rutina[]>
   /** Respuesta de POST /api/deportistas/:id/rutinas: por defecto la asigna y la anterior deja de estar vigente. */
   respuestaPostRutina?: (datos: NuevaRutina) => Response
+  /** Respuesta de GET /api/perfil/evaluaciones (mi ficha física): por defecto, ninguna. */
+  miFicha?: Evaluacion[]
 }
 
 /** Simula el API: responde /auth/yo y /health según las opciones. */
@@ -119,6 +121,7 @@ export function simularApi({
   respuestaPostEvaluacion,
   rutinas: rutinasIniciales = {},
   respuestaPostRutina,
+  miFicha = [],
 }: OpcionesApi = {}) {
   const evaluaciones: Record<string, Evaluacion[]> = { d1: [EVALUACION_INICIAL] }
   const rutinas: Record<string, Rutina[]> = Object.fromEntries(
@@ -203,6 +206,7 @@ export function simularApi({
       }
       return json(evaluaciones[d.id] ?? [])
     }
+    if (pathname === '/api/perfil/evaluaciones') return json(miFicha)
     const detalle = pathname.match(/^\/api\/ejercicios\/([^/]+)$/)
     if (detalle) {
       const actual = ejercicios.find((e) => e.id === detalle[1])

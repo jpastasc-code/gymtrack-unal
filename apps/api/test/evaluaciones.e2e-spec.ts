@@ -224,4 +224,65 @@ describe('Evaluaciones (e2e)', () => {
       .set('Authorization', 'Bearer instructor')
       .expect(404);
   });
+
+  describe('GET /api/perfil/evaluaciones (mi ficha, GYMM-23)', () => {
+    const miFicha = (quien: string) =>
+      request(app.getHttpServer())
+        .get('/api/perfil/evaluaciones')
+        .set('Authorization', `Bearer ${quien}`);
+
+    it('exige sesión', async () => {
+      await request(app.getHttpServer())
+        .get('/api/perfil/evaluaciones')
+        .expect(401);
+    });
+
+    it('devuelve solo las evaluaciones propias, de la más reciente a la más antigua', async () => {
+      guardadas.push(
+        {
+          ...guardadas[0],
+          id: 'ev-propia-inicial',
+          usuarioId: 'u-deportista',
+          fecha: new Date('2026-08-01T15:00:00Z'),
+          pesoKg: 70,
+        },
+        {
+          ...guardadas[0],
+          id: 'ev-propia-reciente',
+          usuarioId: 'u-deportista',
+          fecha: new Date('2026-10-01T15:00:00Z'),
+          pesoKg: 68,
+        },
+      );
+
+      const res = await miFicha('deportista').expect(200);
+      // La evaluación 'ev-anterior' es de otro deportista (D1) y no aparece.
+      expect(res.body.map((e: { id: string }) => e.id)).toEqual([
+        'ev-propia-reciente',
+        'ev-propia-inicial',
+      ]);
+      expect(res.body[0]).toMatchObject({
+        pesoKg: 68,
+        tallaCm: 165,
+        imc: 25,
+        instructor: { nombres: 'Iván' },
+      });
+    });
+
+    it('lista vacía si aún no tiene evaluaciones', async () => {
+      const res = await miFicha('deportista').expect(200);
+      expect(res.body).toEqual([]);
+    });
+
+    it('no acepta el id de otra persona', async () => {
+      await miFicha('deportista')
+        .query({ usuarioId: D1 })
+        .expect(200)
+        .expect([]);
+      await request(app.getHttpServer())
+        .get(`/api/perfil/evaluaciones/${D1}`)
+        .set('Authorization', 'Bearer deportista')
+        .expect(404);
+    });
+  });
 });

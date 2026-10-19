@@ -63,6 +63,14 @@ export function useHistorialEvaluaciones(id: string) {
   })
 }
 
+/** Ficha física del usuario con sesión iniciada (GYMM-23): solo sus propias evaluaciones. */
+export function useMiFicha() {
+  return useQuery({
+    queryKey: ['evaluaciones', 'mia'],
+    queryFn: ({ signal }) => apiFetch<Evaluacion[]>('/perfil/evaluaciones', { signal }),
+  })
+}
+
 export function useRegistrarEvaluacion(id: string) {
   const queryClient = useQueryClient()
   return useMutation({
