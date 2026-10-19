@@ -7,6 +7,7 @@ import { Pantalla } from '../../../components/Pantalla'
 import { ApiError } from '../../../lib/api/client'
 import {
   GRUPOS,
+  NOMBRE_GRUPO,
   useActualizarEjercicio,
   useCrearEjercicio,
   useEjercicio,
@@ -180,7 +181,12 @@ function FormularioEjercicio({ inicial, textoGuardar, guardando, error, onGuarda
         etiqueta="Grupo muscular"
         value={grupo}
         onChange={(e) => setGrupo(e.target.value as GrupoMuscular)}
-        opciones={[{ valor: '', nombre: 'Elige un grupo' }, ...GRUPOS.map((g) => ({ valor: g.valor, nombre: g.nombre }))]}
+        opciones={[
+          { valor: '', nombre: 'Elige un grupo' },
+          ...GRUPOS.map((g) => ({ valor: g.valor, nombre: g.nombre })),
+          // Un ejercicio antiguo puede tener un grupo que ya no se ofrece (p. ej. "Cuerpo completo").
+          ...(grupo && !GRUPOS.some((g) => g.valor === grupo) ? [{ valor: grupo, nombre: NOMBRE_GRUPO[grupo] }] : []),
+        ]}
         error={errores.grupoMuscular}
       />
       <AreaTexto
