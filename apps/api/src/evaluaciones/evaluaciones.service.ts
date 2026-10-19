@@ -120,8 +120,20 @@ export class EvaluacionesService {
   /** Evaluaciones del deportista, de la más reciente a la más antigua. */
   async historial(deportistaId: string): Promise<EvaluacionVista[]> {
     await this.deportista(deportistaId);
+    return this.evaluacionesDe(deportistaId);
+  }
+
+  /**
+   * Ficha física del usuario con sesión iniciada (GYMM-23). Recibe siempre el id
+   * del token, nunca uno de la URL, para que nadie pueda ver la ficha de otro.
+   */
+  miFicha(usuarioId: string): Promise<EvaluacionVista[]> {
+    return this.evaluacionesDe(usuarioId);
+  }
+
+  private async evaluacionesDe(usuarioId: string): Promise<EvaluacionVista[]> {
     const evaluaciones = await this.prisma.evaluacion.findMany({
-      where: { usuarioId: deportistaId },
+      where: { usuarioId },
       orderBy: { fecha: 'desc' },
       include: {
         medidas: true,
