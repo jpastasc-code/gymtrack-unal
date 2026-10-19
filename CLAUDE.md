@@ -9,7 +9,7 @@ App web (PWA) del gimnasio de la Universidad Nacional. Monorepo con pnpm: `apps/
 
 ## Diseño de la interfaz
 
-Antes de crear o cambiar una pantalla, lee [docs/wiki/Sistema-de-diseno.md](docs/wiki/Sistema-de-diseno.md) y síguelo. Lo esencial:
+Antes de crear o cambiar una pantalla, lee [docs/wiki/Sistema-de-diseno.md](docs/wiki/Sistema-de-diseno.md) y síguelo. La referencia visual de las pantallas es el artifact [Rediseño GymTrack UNAL](https://claude.ai/artifact/2VMdDupNQX1ruBPaSKT166). Si no coincide con la guía o con los componentes, mandan la guía y los componentes. Lo esencial:
 
 - La app ya tiene un sistema de diseño. **No propongas una estética nueva**: nada de otra paleta, otra fuente ni otro estilo de tarjetas. Las pautas genéricas de diseño (por ejemplo, la skill `frontend-design`) solo valen aquí en lo que no contradiga esta guía.
 - Blanco y negro con un solo acento, `verde`, reservado para Entrenar y para lo que la persona eligió. Siempre con texto negro encima.

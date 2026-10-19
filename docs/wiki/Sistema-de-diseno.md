@@ -1,6 +1,14 @@
 # Sistema de diseño
 
-Guía para que todas las pantallas de GymTrack se vean y se sientan como la misma app. La decisión de fondo está en [DT-11](Decisiones-tecnicas.md#dt-11--rediseño-visual-minimalista-y-app-responsive). La versión visual (colores, tipografía, componentes y logos) está en el [sistema de diseño en Claude Design](https://claude.ai/artifact/J4Mv4BJRYuAwKbgdz5eWkw).
+Guía para que todas las pantallas de GymTrack se vean y se sientan como la misma app. La decisión de fondo está en [DT-11](Decisiones-tecnicas.md#dt-11--rediseño-visual-minimalista-y-app-responsive).
+
+## Referencia visual
+
+**[Rediseño GymTrack UNAL](https://claude.ai/artifact/2VMdDupNQX1ruBPaSKT166)** es la referencia de cómo se ve la app. Muestra Inicio, Catálogo de ejercicios, Perfil e Iniciar sesión en un celular de 390 px, y Inicio y Catálogo en computador. Cada pantalla se puede comparar con la versión anterior al rediseño. Ábrela antes de diseñar una pantalla nueva y busca la que más se parezca.
+
+Los colores, la tipografía, los componentes y los logos también están en el [sistema de diseño en Claude Design](https://claude.ai/artifact/J4Mv4BJRYuAwKbgdz5eWkw).
+
+La referencia fue la propuesta. Al pasarla al código se ajustaron algunos detalles, sobre todo de accesibilidad: los campos y chips llevan un borde `borde-control` para que se distingan del fondo, y los títulos de sección usan `titular`. **Si la referencia y esta guía no coinciden, mandan esta guía y los componentes.**
 
 > **Regla de oro:** las pantallas se arman con los componentes de `apps/web/src/components/` y los tokens de `apps/web/src/index.css`. Si falta algo, se agrega ahí (con un PR que lo explique), no en la pantalla.
 
@@ -21,7 +29,7 @@ Se usan solo como clases de Tailwind (`bg-negro`, `text-grafito`, `border-linea`
 | `blanco` | `#ffffff` | Fondo de la app y texto sobre negro. |
 | `negro` | `#000000` | Texto principal y acciones principales (botón primario). |
 | `negro-suave` | `#2b2b29` | Hover del botón primario. |
-| `grafito` | `#5d5d59` | Texto secundario: ayudas, contadores, "Cargando…". |
+| `grafito` | `#5d5d59` | Texto secundario: ayudas, contadores, "Cargando…". Contraste 6.6:1 sobre blanco. |
 | `hueso` | `#f2f2ef` | Rellenos suaves: campos, avisos, hover de filas. |
 | `linea` | `#e3e3df` | Divisores de listas y bordes de estados vacíos. |
 | `borde-control` | `#8a8a84` | Borde de campos, chips y opciones sin marcar. |
@@ -31,16 +39,17 @@ Se usan solo como clases de Tailwind (`bg-negro`, `text-grafito`, `border-linea`
 | `alerta` | `#b3261e` | Errores: borde del campo con error y mensaje. |
 
 Reglas del verde:
-- Encima del verde el texto va **siempre en negro**. El blanco no alcanza el contraste mínimo.
-- No se usa el verde para botones normales, enlaces, íconos ni para decorar. Una acción principal que no es Entrenar va en negro.
+- Encima del verde el texto va **siempre en negro**: negro sobre verde da 8.8:1, blanco sobre verde solo 2.4:1.
+- El verde marca dos cosas: el camino a Entrenar (la pestaña, el botón de la barra superior, la flecha del bloque "Tu rutina de hoy") y lo que la persona eligió (filtro activo, opción marcada). Fuera de eso solo aparece en estados positivos (el punto de "Conectado al servidor", `verde-claro` en avisos de éxito).
+- No se usa el verde para botones normales, enlaces ni para decorar. Una acción principal que no es Entrenar va en negro.
 
 ## Tipografía
 
 - Una sola familia: **Archivo** (variable). No se agregan otras fuentes.
-- **Titulares:** la utilidad `titular` (estrecha, peso 850, mayúsculas). Tamaños en uso:
+- **Titulares:** la utilidad `titular` (62 % de ancho, peso 850, mayúsculas). Tamaños en uso:
   - Título de pantalla: lo pone `Pantalla` (`text-5xl md:text-6xl lg:text-7xl`).
   - Título de sección: `titular text-3xl`.
-- **Texto:** ancho normal. `text-lg` para el contenido principal y los controles; `text-sm` para ayudas y datos secundarios. Las etiquetas van en `font-semibold`.
+- **Texto:** ancho normal (100 %) y pesos de 400 a 650. `text-lg` para el contenido principal y los controles; `text-sm` para ayudas y datos secundarios. Las etiquetas van en `font-semibold`.
 - No se ponen en mayúsculas las etiquetas ni el texto corriente: las mayúsculas son de los titulares.
 
 ## Componentes
@@ -77,6 +86,16 @@ Pantallas de referencia para copiar: [`CatalogoPage`](../../apps/web/src/feature
 - **Vacío:** `VACIO`, con una frase que explica por qué está vacío y, si se puede, la acción para salir de ahí ("Quitar filtros").
 - **Listas:** filas separadas por `border-b border-linea` dentro de una `ul` con `border-t border-linea`. Desde la tableta pasan a dos columnas (`md:grid md:grid-cols-2`).
 - **Formularios:** `Pantalla estrecha`, campos en columna con `gap`, y el botón de guardar `bloque grande` al final. Mientras guarda dice "Guardando…" y queda deshabilitado.
+
+### Pantalla por pantalla
+
+Lo que muestra la [referencia visual](https://claude.ai/artifact/2VMdDupNQX1ruBPaSKT166) y que conviene repetir en pantallas parecidas:
+
+- **Inicio:** arriba, la fecha en `grafito` y el saludo. El acceso a la rutina es un bloque negro a todo el ancho, con el titular grande y una flecha verde. Las demás secciones van como filas (nombre en negrita, una línea de descripción en `grafito`, flecha a la derecha) separadas por líneas finas.
+- **Catálogo:** sin tarjetas ni etiquetas de color. Buscador en `hueso`, chips de filtro con el activo en verde, el conteo ("27 ejercicios") y filas con separadores finos. En computador, la lista pasa a dos columnas.
+- **Perfil:** secciones separadas por una línea (datos institucionales, datos personales, objetivo). Los datos que no se editan van como pares etiqueta/valor, con una ayuda que explica por qué no se pueden cambiar. Las opciones excluyentes usan `GrupoOpciones`, con la elegida en verde y texto negro.
+- **Iniciar sesión:** el logo de la Universidad Nacional en sus colores originales (no el ícono de la app), el titular "GymTrack UNAL", una frase que dice para qué entrar, los campos y el botón principal en negro.
+- **Computador (desde 1024 px):** la barra de abajo sube a una barra superior con el logo y la pestaña activa subrayada en negro. Entrenar queda como botón verde a la derecha y el contenido aprovecha el ancho en dos columnas.
 
 ## Responsive
 

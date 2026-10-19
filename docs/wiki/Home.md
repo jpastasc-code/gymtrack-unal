@@ -14,6 +14,7 @@ Documentación viva del equipo. Vive en el repositorio (`docs/wiki/`) para que c
 Otros recursos:
 
 - [README](../../README.md): cómo instalar, correr, probar y desplegar.
+- [Rediseño GymTrack UNAL](https://claude.ai/artifact/2VMdDupNQX1ruBPaSKT166): referencia visual de las pantallas en celular y computador, comparadas con la versión anterior. La guía para aplicarla está en [Sistema de diseño](Sistema-de-diseno.md).
 - [Sistema de diseño en Claude Design](https://claude.ai/artifact/J4Mv4BJRYuAwKbgdz5eWkw): colores, tipografía, componentes y logos del rediseño (DT-11). Si no te abre, pide acceso: se comparte desde el menú Share.
 - Wireframes de GYMM-17 en Claude Design: pide el enlace al equipo.
 - Jira: proyecto **GYMM** en `unal-team-vx4fggk3.atlassian.net`.
