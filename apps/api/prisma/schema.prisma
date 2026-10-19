@@ -214,7 +214,8 @@ model RutinaEjercicio {
   id                   String              @id @default(uuid()) @db.Uuid
   rutinaId             String              @map("rutina_id") @db.Uuid
   ejercicioId          String              @map("ejercicio_id") @db.Uuid
-  orden                Int                 @db.SmallInt
+  dia                  Int                 @default(1) @db.SmallInt /// Día de la rutina (Día 1, Día 2…), como en la ficha del gimnasio
+  orden                Int                 @db.SmallInt /// Orden dentro de toda la rutina; los días se muestran en este orden
   series               Int                 @db.SmallInt
   repeticionesObjetivo String              @map("repeticiones_objetivo") @db.VarChar(30) /// p. ej. "12", "12-10-8" o "8-12"
   metodo               MetodoEntrenamiento @default(TRADICIONAL)

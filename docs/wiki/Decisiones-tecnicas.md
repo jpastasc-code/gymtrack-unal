@@ -20,6 +20,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 | DT-08 | Despliegue en Render (API) y Vercel (web) | Aceptada | 2026-09-29 |
 | DT-09 | Diseño en Claude Design en lugar de Figma | Aceptada | 2026-09-29 |
 | DT-11 | Rediseño visual minimalista y app responsive | Aceptada | 2026-10-04 |
+| DT-12 | Rutinas por días y catálogo de la ficha del gimnasio | Aceptada | 2026-10-18 |
 
 ---
 
@@ -225,3 +226,19 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 - Los campos de formulario conservan un borde fino con contraste 3:1 para que se distingan del fondo.
 - El uso del logo de la universidad debe seguir su manual de identidad visual.
 - Cada pantalla se prueba a 390 px (celular), 768 px (tableta) y 1280 px (computador).
+
+## DT-12 · Rutinas por días y catálogo de la ficha del gimnasio
+
+**Decisión:**
+- Cada ejercicio de una rutina lleva un `dia` (1 a 7) y la rutina se arma por días (Día 1, Día 2…), igual que la ficha de entrenamiento personalizado del Centro de Acondicionamiento: el número que el instructor escribe junto a cada ejercicio es el día en que se hace ("3-1" = días 3 y 1).
+- Un ejercicio puede repetirse en días distintos, pero no dos veces el mismo día.
+- El catálogo del seed son los 71 ejercicios de la ficha, con sus nombres. Las zonas de la ficha se asignan al grupo muscular más cercano: Muslo → cuádriceps o isquiotibiales, Cadera → glúteos.
+- "Cuerpo completo" ya no se ofrece en los filtros ni al crear ejercicios; sigue en la base solo por ejercicios antiguos.
+- Al asignar una rutina nueva, la anterior deja de estar vigente en la misma transacción (GYMM-21).
+
+**Por qué:** que la app lleve las mismas rutinas que el gimnasio ya usa en papel.
+
+**Implica:**
+- Los días van seguidos desde el 1: el API rechaza una rutina con huecos (p. ej. días 1 y 3 sin el 2).
+- Los ejercicios del catálogo de prueba anterior quedan desactivados, no borrados.
+- Algunos ejercicios con nombre propio del gimnasio (Voladora, Copa, Cabina pecho…) no tienen descripción: la escribe un instructor desde el catálogo.
