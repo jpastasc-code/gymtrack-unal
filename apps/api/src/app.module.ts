@@ -7,6 +7,7 @@ import { EjerciciosModule } from './ejercicios/ejercicios.module';
 import { EvaluacionesModule } from './evaluaciones/evaluaciones.module';
 import { PerfilModule } from './perfil/perfil.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RutinasModule } from './rutinas/rutinas.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PerfilModule,
     EjerciciosModule,
     EvaluacionesModule,
+    RutinasModule,
   ],
   controllers: [AppController],
   providers: [AppService],
