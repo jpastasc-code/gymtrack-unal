@@ -6,6 +6,7 @@ Documentación viva del equipo. Vive en el repositorio (`docs/wiki/`) para que c
 | ------ | -------------- |
 | [Definition of Done](Definition-of-Done.md) | Cuándo una historia o tarea está terminada de verdad. |
 | [Convenciones](Convenciones.md) | Nombres de ramas, commits (Conventional Commits), Pull Requests y estilo de código. |
+| [Sistema de diseño](Sistema-de-diseno.md) | La estética de la app: colores, tipografía, componentes, patrones de pantalla y qué no hacer. |
 | [Decisiones técnicas](Decisiones-tecnicas.md) | Registro de decisiones: stack, Supabase Auth, Prisma, fórmulas nutricionales, credenciales UNAL… |
 | [Proceso de sprint](Proceso-de-sprint.md) | Estimación, inicio y cierre de sprint, y registro de la velocidad. |
 | [Modelo de datos](../modelo-de-datos.md) | Diagrama entidad-relación y reglas de la base de datos. |
@@ -13,6 +14,7 @@ Documentación viva del equipo. Vive en el repositorio (`docs/wiki/`) para que c
 Otros recursos:
 
 - [README](../../README.md): cómo instalar, correr, probar y desplegar.
+- [Rediseño GymTrack UNAL](https://claude.ai/artifact/2VMdDupNQX1ruBPaSKT166): referencia visual de las pantallas en celular y computador, comparadas con la versión anterior. La guía para aplicarla está en [Sistema de diseño](Sistema-de-diseno.md).
 - [Sistema de diseño en Claude Design](https://claude.ai/artifact/J4Mv4BJRYuAwKbgdz5eWkw): colores, tipografía, componentes y logos del rediseño (DT-11). Si no te abre, pide acceso: se comparte desde el menú Share.
 - Wireframes de GYMM-17 en Claude Design: pide el enlace al equipo.
 - Jira: proyecto **GYMM** en `unal-team-vx4fggk3.atlassian.net`.

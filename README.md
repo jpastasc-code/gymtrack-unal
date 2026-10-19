@@ -144,7 +144,7 @@ Nunca subas archivos `.env` al repositorio; usa los `.env.example` como plantill
   La configuración de la app (rutas, layout, TanStack Query) está en `src/app/`, los componentes compartidos en `src/components/` y el cliente HTTP en `src/lib/api/`.
 - **Rutas:** se declaran en `src/app/rutas.tsx`. `/login` va fuera del layout; el resto usa el layout móvil con barra de navegación inferior (Inicio, Rutina, Entrenar, Reservas, Perfil).
 - **Llamadas al API:** usa `apiFetch` (`src/lib/api/client.ts`) dentro de hooks de TanStack Query; toma `VITE_API_URL`, envía el token de sesión cuando exista (lo conectará GYMM-10) y convierte los errores en `ApiError`.
-- **Diseño:** los colores y tipografías son tokens de Tailwind en `src/index.css` (`bg-campus`, `text-gris`, `font-display`…). El amarillo `seguridad` se reserva para la acción principal, Entrenar.
+- **Diseño:** minimalista en blanco y negro con un solo acento, el verde UNAL. Los colores y la tipografía son tokens de Tailwind en `src/index.css` y las piezas reutilizables están en `src/components/`. Antes de hacer una pantalla lee el [Sistema de diseño](docs/wiki/Sistema-de-diseno.md).
 - **PWA:** la app se puede instalar desde el navegador del celular ("Agregar a pantalla de inicio") y abre sin conexión. Cuando se publica una versión nueva, muestra un aviso para actualizar en lugar de recargar a mitad de un entrenamiento. Los íconos se generan desde `public/logo.svg` con `pnpm --filter web generate-pwa-assets`.
 - **Pruebas:** Vitest + Testing Library (`pnpm --filter web test`).
 
