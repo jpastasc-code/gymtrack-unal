@@ -74,7 +74,7 @@ Refs: GYMM-<número>
 - **Frontend:**
   - Cada pantalla va en `apps/web/src/features/<épica>/`.
   - Las llamadas al API se hacen con `apiFetch` dentro de hooks de TanStack Query.
-  - Los estilos usan los tokens de Tailwind (`bg-campus`, `text-gris`…), no colores sueltos.
+  - Las pantallas siguen el [Sistema de diseño](Sistema-de-diseno.md): se arman con los componentes de `src/components/` y los tokens de `src/index.css` (`bg-negro`, `text-grafito`, `bg-verde`…), nunca con colores sueltos (`#333`, `bg-[#...]`, `text-gray-500`).
 - **API:**
   - Un módulo de NestJS por épica.
   - DTOs validados.

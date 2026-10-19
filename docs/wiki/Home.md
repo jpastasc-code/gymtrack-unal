@@ -6,6 +6,7 @@ Documentación viva del equipo. Vive en el repositorio (`docs/wiki/`) para que c
 | ------ | -------------- |
 | [Definition of Done](Definition-of-Done.md) | Cuándo una historia o tarea está terminada de verdad. |
 | [Convenciones](Convenciones.md) | Nombres de ramas, commits (Conventional Commits), Pull Requests y estilo de código. |
+| [Sistema de diseño](Sistema-de-diseno.md) | La estética de la app: colores, tipografía, componentes, patrones de pantalla y qué no hacer. |
 | [Decisiones técnicas](Decisiones-tecnicas.md) | Registro de decisiones: stack, Supabase Auth, Prisma, fórmulas nutricionales, credenciales UNAL… |
 | [Proceso de sprint](Proceso-de-sprint.md) | Estimación, inicio y cierre de sprint, y registro de la velocidad. |
 | [Modelo de datos](../modelo-de-datos.md) | Diagrama entidad-relación y reglas de la base de datos. |

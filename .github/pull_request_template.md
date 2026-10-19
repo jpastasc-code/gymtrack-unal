@@ -15,6 +15,8 @@ Historia: GYMM-
 - [ ] Cumple los criterios de aceptación de la historia en Jira
 - [ ] Pruebas nuevas o actualizadas (unitarias, e2e o de pantalla, según aplique)
 - [ ] Probado en un celular o en una vista de 390 px
+- [ ] Sigue el [Sistema de diseño](../docs/wiki/Sistema-de-diseno.md): usa los componentes de `src/components/` y los tokens de `index.css`, sin colores sueltos (`#...`, `bg-[#...]`, `gray-500`)
+- [ ] Si cambia una pantalla: captura a 390 px (y en computador si cambia el layout)
 - [ ] Endpoints documentados en Swagger / variables nuevas en `.env.example` y README
 - [ ] Migración incluida (si cambia el esquema) y `docs/modelo-de-datos.md` actualizado
 - [ ] Decisiones técnicas nuevas registradas en `docs/wiki/Decisiones-tecnicas.md`

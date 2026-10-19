@@ -8,7 +8,7 @@ Una historia está **Lista** cuando se cumple todo esto:
 
 **Funcionalidad**
 - [ ] Se cumplen todos los criterios de aceptación de la historia en Jira, y otra persona del equipo los verificó.
-- [ ] Funciona en un celular de 390 px de ancho y respeta el sistema de diseño (tokens de `apps/web/src/index.css`).
+- [ ] Funciona en un celular de 390 px de ancho y respeta el [sistema de diseño](Sistema-de-diseno.md) (componentes de `apps/web/src/components/` y tokens de `apps/web/src/index.css`).
 - [ ] Hay estados de carga, error y vacío con mensajes que dicen qué pasó y cómo seguir.
 
 **Calidad**
