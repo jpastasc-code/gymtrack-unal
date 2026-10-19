@@ -8,6 +8,7 @@ import { SesionProvider } from '../features/auth/SesionProvider'
 import type { Perfil } from '../features/auth/perfil'
 import type { PerfilSesion } from '../features/auth/tipos'
 import type { DeportistaResumen, Evaluacion } from '../features/evaluacion/api'
+import type { NuevaRutina, Rutina } from '../features/rutinas/api'
 import type { Ejercicio } from '../features/rutinas/ejercicios/api'
 
 export const PERFIL_DEPORTISTA: PerfilSesion = {
@@ -64,6 +65,32 @@ export const EVALUACION_INICIAL: Evaluacion = {
   ],
 }
 
+export const RUTINA_VIGENTE: Rutina = {
+  id: 'r1',
+  nombre: 'Fase 1',
+  descripcion: '3 series de 10 a 12 repeticiones.',
+  vigente: true,
+  fechaAsignacion: '2026-09-22T15:00:00.000Z',
+  instructor: { id: 'i1', nombres: 'Iván', apellidos: 'Instructor Prueba' },
+  dias: [
+    {
+      dia: 1,
+      ejercicios: [
+        {
+          id: 're1',
+          orden: 1,
+          ejercicio: { id: 'e3', nombre: 'Sentadilla con barra', grupoMuscular: 'CUADRICEPS' },
+          series: 3,
+          repeticionesObjetivo: '10-12',
+          metodo: 'TRADICIONAL',
+          descansoSegundos: 60,
+          notas: null,
+        },
+      ],
+    },
+  ],
+}
+
 const sinTildes = (t: string) => t.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 
 interface OpcionesApi {
@@ -77,6 +104,10 @@ interface OpcionesApi {
   ejerciciosEnUso?: string[]
   /** Respuesta de POST /api/deportistas/:id/evaluaciones: por defecto la guarda. */
   respuestaPostEvaluacion?: (datos: Record<string, unknown>) => Response
+  /** Rutinas iniciales de cada deportista (por defecto, ninguna). */
+  rutinas?: Record<string, Rutina[]>
+  /** Respuesta de POST /api/deportistas/:id/rutinas: por defecto la asigna y la anterior deja de estar vigente. */
+  respuestaPostRutina?: (datos: NuevaRutina) => Response
 }
 
 /** Simula el API: responde /auth/yo y /health según las opciones. */
@@ -86,8 +117,13 @@ export function simularApi({
   respuestaPatchPerfil,
   ejerciciosEnUso = [],
   respuestaPostEvaluacion,
+  rutinas: rutinasIniciales = {},
+  respuestaPostRutina,
 }: OpcionesApi = {}) {
   const evaluaciones: Record<string, Evaluacion[]> = { d1: [EVALUACION_INICIAL] }
+  const rutinas: Record<string, Rutina[]> = Object.fromEntries(
+    Object.entries(rutinasIniciales).map(([id, lista]) => [id, lista.map((r) => ({ ...r }))]),
+  )
   let perfilCompleto: Perfil = { ...PERFIL_COMPLETO }
   let ejercicios = EJERCICIOS_BASE.map((e) => ({ ...e }))
   const json = (datos: unknown, status = 200) => new Response(JSON.stringify(datos), { status })
@@ -119,6 +155,33 @@ export function simularApi({
     if (pathname === '/api/deportistas') {
       const q = sinTildes(searchParams.get('q') ?? '')
       return json(DEPORTISTAS.filter((d) => sinTildes(`${d.nombres} ${d.apellidos} ${d.documento} ${d.correo}`).includes(q)))
+    }
+    const rutinasDe = pathname.match(/^\/api\/deportistas\/([^/]+)\/rutinas$/)
+    if (rutinasDe) {
+      const lista = rutinas[rutinasDe[1]] ?? []
+      if (metodo !== 'POST') return json(lista)
+      const datos = JSON.parse(String(init?.body)) as NuevaRutina
+      if (respuestaPostRutina) return respuestaPostRutina(datos)
+      const numeros = [...new Set(datos.ejercicios.map((e) => e.dia))].sort((a, b) => a - b)
+      const nueva: Rutina = {
+        id: `r-${lista.length + 1}`,
+        nombre: datos.nombre,
+        descripcion: datos.descripcion,
+        vigente: true,
+        fechaAsignacion: '2026-10-18T15:00:00.000Z',
+        instructor: { id: 'i1', nombres: 'Iván', apellidos: 'Instructor Prueba' },
+        dias: numeros.map((dia) => ({
+          dia,
+          ejercicios: datos.ejercicios
+            .filter((e) => e.dia === dia)
+            .map((e, i) => {
+              const { id, nombre, grupoMuscular } = ejercicios.find((x) => x.id === e.ejercicioId)!
+              return { ...e, id: `re-${dia}-${i}`, orden: i + 1, ejercicio: { id, nombre, grupoMuscular }, notas: null }
+            }),
+        })),
+      }
+      rutinas[rutinasDe[1]] = [nueva, ...lista.map((r) => ({ ...r, vigente: false }))]
+      return json(nueva, 201)
     }
     const deportista = pathname.match(/^\/api\/deportistas\/([^/]+)(\/evaluaciones)?$/)
     if (deportista) {

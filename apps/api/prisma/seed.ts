@@ -1,6 +1,6 @@
 /**
- * Seed de GymTrack UNAL: usuarios de prueba de cada rol, catálogo de ejercicios,
- * franjas del gimnasio y de la cancha, y una evaluación + rutina de ejemplo.
+ * Seed de GymTrack UNAL: usuarios de prueba de cada rol, catálogo de ejercicios del
+ * gimnasio, franjas del gimnasio y de la cancha, y una evaluación + rutina de ejemplo.
  *
  * Uso:  pnpm --filter api db:seed
  *
@@ -17,6 +17,7 @@ import {
   CUPO_GIMNASIO,
   DEPORTISTA_ID,
   EJERCICIOS,
+  EJERCICIOS_RETIRADOS,
   EVALUACION_DEMO,
   FRANJAS_CANCHA,
   FRANJAS_GIMNASIO,
@@ -109,10 +110,21 @@ async function main(): Promise<void> {
     await prisma.ejercicio.upsert({
       where: { nombre: e.nombre },
       create: { ...e, creadoPorId: INSTRUCTOR_ID },
-      update: { grupoMuscular: e.grupoMuscular, descripcion: e.descripcion },
+      update: {
+        grupoMuscular: e.grupoMuscular,
+        descripcion: e.descripcion,
+        activo: true,
+      },
     });
   }
-  console.log(`  ${EJERCICIOS.length} ejercicios`);
+  const retirados = await prisma.ejercicio.updateMany({
+    where: { nombre: { in: EJERCICIOS_RETIRADOS }, activo: true },
+    data: { activo: false },
+  });
+  console.log(
+    `  ${EJERCICIOS.length} ejercicios de la ficha del gimnasio` +
+      (retirados.count ? ` (${retirados.count} de prueba desactivados)` : ''),
+  );
 
   for (const f of FRANJAS_GIMNASIO) {
     const horaInicio = hora(f.horaInicio);

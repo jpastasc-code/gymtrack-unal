@@ -12,6 +12,7 @@ const SECCIONES = [
 
 /** Solo para instructores y administradores. */
 const SECCIONES_INSTRUCTOR = [
+  { a: '/rutinas', titulo: 'Rutinas', detalle: 'Arma la rutina de un deportista y asígnasela' },
   { a: '/evaluaciones', titulo: 'Evaluaciones', detalle: 'Registra las medidas y los tests de un deportista' },
 ]
 

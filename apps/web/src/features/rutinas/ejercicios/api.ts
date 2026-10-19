@@ -16,7 +16,7 @@ export type GrupoMuscular =
   | 'CUERPO_COMPLETO'
   | 'CARDIO'
 
-export const GRUPOS: { valor: GrupoMuscular; nombre: string }[] = [
+const TODOS_LOS_GRUPOS: { valor: GrupoMuscular; nombre: string }[] = [
   { valor: 'PECHO', nombre: 'Pecho' },
   { valor: 'ESPALDA', nombre: 'Espalda' },
   { valor: 'HOMBROS', nombre: 'Hombros' },
@@ -32,7 +32,14 @@ export const GRUPOS: { valor: GrupoMuscular; nombre: string }[] = [
   { valor: 'CARDIO', nombre: 'Cardio' },
 ]
 
-export const NOMBRE_GRUPO = Object.fromEntries(GRUPOS.map((g) => [g.valor, g.nombre])) as Record<GrupoMuscular, string>
+/**
+ * Grupos que se ofrecen para filtrar el catálogo y clasificar ejercicios nuevos.
+ * "Cuerpo completo" no se usa en el gimnasio: sigue en la base solo por ejercicios antiguos.
+ */
+export const GRUPOS = TODOS_LOS_GRUPOS.filter((g) => g.valor !== 'CUERPO_COMPLETO')
+
+/** Incluye todos los grupos, para mostrar bien también los ejercicios antiguos. */
+export const NOMBRE_GRUPO = Object.fromEntries(TODOS_LOS_GRUPOS.map((g) => [g.valor, g.nombre])) as Record<GrupoMuscular, string>
 
 export interface Ejercicio {
   id: string

@@ -5,7 +5,8 @@ import { IconoFlecha } from '../../../components/iconos'
 import { Pantalla } from '../../../components/Pantalla'
 import { useRetardado } from '../../../lib/useRetardado'
 import { useSesion } from '../../auth/sesion'
-import { GRUPOS, NOMBRE_GRUPO, ROLES_EDITORES, useEjercicios, type Ejercicio, type GrupoMuscular } from './api'
+import { NOMBRE_GRUPO, ROLES_EDITORES, useEjercicios, type Ejercicio, type GrupoMuscular } from './api'
+import { FiltroGrupos } from './FiltroGrupos'
 
 /** Catálogo de ejercicios (GYMM-12): todos lo consultan, los instructores lo editan. */
 export function CatalogoPage() {
@@ -44,20 +45,7 @@ export function CatalogoPage() {
         className={`${BUSCADOR} md:max-w-xl`}
       />
 
-      <div
-        role="group"
-        aria-label="Filtrar por grupo muscular"
-        className="-mx-5 mt-3 flex gap-2 overflow-x-auto px-5 pb-2 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
-      >
-        <Chip activo={grupo === null} onClick={() => setGrupo(null)}>
-          Todos
-        </Chip>
-        {GRUPOS.map((g) => (
-          <Chip key={g.valor} activo={grupo === g.valor} onClick={() => setGrupo(grupo === g.valor ? null : g.valor)}>
-            {g.nombre}
-          </Chip>
-        ))}
-      </div>
+      <FiltroGrupos valor={grupo} onChange={setGrupo} margen="pagina" className="mt-3" />
 
       {puedeEditar && (
         <label className="mt-2 flex min-h-11 items-center gap-3 text-grafito">
@@ -120,21 +108,6 @@ export function CatalogoPage() {
         )}
       </div>
     </Pantalla>
-  )
-}
-
-function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => void; children: string }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={activo}
-      onClick={onClick}
-      className={`min-h-11 shrink-0 rounded-full border-[1.5px] px-4 font-semibold whitespace-nowrap ${
-        activo ? 'border-verde bg-verde text-negro' : 'border-borde-control bg-blanco text-negro hover:bg-hueso'
-      }`}
-    >
-      {children}
-    </button>
   )
 }
 

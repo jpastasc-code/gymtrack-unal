@@ -82,6 +82,7 @@ erDiagram
         uuid id PK
         uuid rutina_id FK
         uuid ejercicio_id FK
+        smallint dia "1…7: Día 1, Día 2… de la ficha"
         smallint orden "único dentro de la rutina"
         smallint series
         varchar repeticiones_objetivo "12 | 12-10-8 | 45 s"
@@ -167,6 +168,7 @@ Prisma no puede expresarlas en `schema.prisma`, así que están en SQL dentro de
 | ----- | -------- | ----------------- |
 | Dos reservas confirmadas de la cancha no se pueden solapar | GYMM-28 | Restricción de exclusión `reserva_cancha_sin_solapamiento` (btree_gist + `tstzrange`) |
 | Solo una rutina vigente por usuario | GYMM-21 | Índice único parcial `rutina_una_vigente_por_usuario` |
+| Una rutina se reparte en máximo 7 días | GYMM-21 | Restricción `CHECK` `rutina_ejercicio_dia_chk` |
 | Un usuario no reserva dos veces la misma franja y fecha | GYMM-27 | Índice único parcial sobre reservas `CONFIRMADA` |
 | Nadie tiene dos entradas abiertas al gimnasio | GYMM-32 | Índice único parcial sobre `registro_acceso` sin `salida` |
 | Rangos razonables de peso, talla y % de grasa | GYMM-13 | Restricciones `CHECK` |

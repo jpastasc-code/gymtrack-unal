@@ -13,6 +13,9 @@ import { InicioPage } from '../features/inicio/InicioPage'
 import { NutricionPage } from '../features/nutricion/NutricionPage'
 import { ProgresoPage } from '../features/progreso/ProgresoPage'
 import { MiRutinaPage } from '../features/rutinas/MiRutinaPage'
+import { AsignarRutinasPage } from '../features/rutinas/asignar/AsignarRutinasPage'
+import { DeportistaRutinasPage } from '../features/rutinas/asignar/DeportistaRutinasPage'
+import { NuevaRutinaPage } from '../features/rutinas/asignar/NuevaRutinaPage'
 import { CatalogoPage } from '../features/rutinas/ejercicios/CatalogoPage'
 import { EditarEjercicioPage, NuevoEjercicioPage } from '../features/rutinas/ejercicios/EjercicioFormPage'
 import { AppLayout } from './AppLayout'
@@ -44,7 +47,7 @@ export const rutas: RouteObject[] = [
       { path: 'progreso', element: <ProgresoPage /> },
       { path: 'ejercicios', element: <CatalogoPage /> },
       {
-        // Pantallas de instructores: catálogo (GYMM-12) y evaluaciones (GYMM-13).
+        // Pantallas de instructores: catálogo (GYMM-12), evaluaciones (GYMM-13) y rutinas (GYMM-21).
         element: <RutaProtegida roles={['INSTRUCTOR', 'ADMIN']} />,
         children: [
           { path: 'ejercicios/nuevo', element: <NuevoEjercicioPage /> },
@@ -53,6 +56,10 @@ export const rutas: RouteObject[] = [
           { path: 'evaluaciones', element: <EvaluarPage /> },
           { path: 'evaluaciones/:id', element: <DeportistaEvaluacionesPage /> },
           { path: 'evaluaciones/:id/nueva', element: <NuevaEvaluacionPage /> },
+          // Armar y asignar rutinas (GYMM-21).
+          { path: 'rutinas', element: <AsignarRutinasPage /> },
+          { path: 'rutinas/:id', element: <DeportistaRutinasPage /> },
+          { path: 'rutinas/:id/nueva', element: <NuevaRutinaPage /> },
         ],
       },
     ],
