@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EjerciciosModule } from './ejercicios/ejercicios.module';
 import { EvaluacionesModule } from './evaluaciones/evaluaciones.module';
+import { NutricionModule } from './nutricion/nutricion.module';
 import { PerfilModule } from './perfil/perfil.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RutinasModule } from './rutinas/rutinas.module';
@@ -18,6 +19,7 @@ import { RutinasModule } from './rutinas/rutinas.module';
     EjerciciosModule,
     EvaluacionesModule,
     RutinasModule,
+    NutricionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
