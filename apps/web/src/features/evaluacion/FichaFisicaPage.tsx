@@ -15,9 +15,12 @@ export function FichaFisicaPage() {
         </p>
       )}
       {ficha.isError && (
-        <p role="alert" className={`${AVISO} font-medium text-alerta`}>
-          {ficha.error.message}
-        </p>
+        <div role="alert" className={AVISO}>
+          <p className="font-medium text-alerta">{ficha.error.message}</p>
+          <button type="button" onClick={() => void ficha.refetch()} className="mt-3 min-h-11 font-semibold underline underline-offset-4">
+            Intentar de nuevo
+          </button>
+        </div>
       )}
       {ficha.data?.length === 0 && (
         <p className={VACIO}>
