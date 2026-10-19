@@ -43,6 +43,8 @@ export function useActualizarPerfil() {
       queryClient.setQueryData(CLAVE_PERFIL, perfil)
       // El nombre también se muestra desde la sesión (GET /auth/yo).
       void queryClient.invalidateQueries({ queryKey: ['auth', 'yo'] })
+      // El objetivo, la actividad, el sexo y la fecha de nacimiento cambian el cálculo (GYMM-25).
+      void queryClient.invalidateQueries({ queryKey: ['perfil', 'requerimiento-calorico'] })
     },
   })
 }
