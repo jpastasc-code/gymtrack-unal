@@ -16,7 +16,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 | DT-04 | PostgreSQL en Supabase con Prisma como ORM | Aceptada | 2026-09-29 |
 | DT-05 | Autenticación con Supabase Auth, validada en el backend | Aceptada | 2026-09-29 |
 | DT-06 | Simulación de las credenciales UNAL con una tabla precargada | Aceptada (implementación en GYMM-9) | 2026-09-23 |
-| DT-07 | Fórmulas nutricionales: Katch-McArdle y Mifflin-St Jeor | Aceptada; factores de objetivo y macros en **propuesta** | 2026-09-29 |
+| DT-07 | Fórmulas nutricionales: Katch-McArdle y Mifflin-St Jeor | Aceptada (implementación en GYMM-25); factores de objetivo y macros en **propuesta** | 2026-09-29 |
 | DT-08 | Despliegue en Render (API) y Vercel (web) | Aceptada | 2026-09-29 |
 | DT-09 | Diseño en Claude Design en lugar de Figma | Aceptada | 2026-09-29 |
 | DT-11 | Rediseño visual minimalista y app responsive | Aceptada | 2026-10-04 |
@@ -170,6 +170,16 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 - Las fórmulas van en `packages/shared` con pruebas unitarias (GYMM-25 y GYMM-30).
 - Mifflin-St Jeor necesita el sexo y la fecha de nacimiento. Si faltan, la app pide completar el perfil en lugar de adivinar.
 - La pantalla siempre muestra el aviso: el cálculo no reemplaza la valoración de un profesional en nutrición.
+
+**Cómo quedó en el código (GYMM-25):**
+- `packages/shared/src/nutricion.ts` tiene las fórmulas, los factores de actividad y de objetivo, y `datosFaltantes`. Los factores de objetivo (×1,00, +10 %, −20 %) son los de la tabla de arriba y siguen **pendientes de validar** con un profesional en nutrición: si cambian, se cambian solo ahí y en sus pruebas.
+- `GET /api/perfil/requerimiento-calorico` calcula el del usuario del token:
+  - Peso, talla y % de grasa salen de su **evaluación más reciente**.
+  - Edad (desde la fecha de nacimiento), sexo y objetivo salen del **perfil**.
+  - El nivel de actividad sale del perfil; si la persona no lo ha elegido, se usa el que anotó el instructor en la evaluación.
+  - Si falta algo responde **422** con `faltantes` (p. ej. `["sexo", "objetivo"]`) y un mensaje que los nombra. Con % de grasa no se piden talla, edad ni sexo, porque Katch-McArdle no los usa.
+- Las kcal se redondean al entero solo al final. Por eso el ejemplo de arriba da 2.369 kcal (TMB 1.389, gasto con actividad 2.153).
+- La pantalla Nutrición muestra el resultado y cómo se llegó a él (fórmula, factor de actividad y ajuste por objetivo), para que la persona entienda de dónde sale el número.
 
 ## DT-08 · Despliegue en Render (API) y Vercel (web)
 

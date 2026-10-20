@@ -10,6 +10,7 @@ Monorepo con [pnpm workspaces](https://pnpm.io/workspaces):
 | ---------- | ---------------------------------------- | ---------------------------------- |
 | `apps/api` | Backend REST, documentado con Swagger    | NestJS + TypeScript                |
 | `apps/web` | Frontend                                 | React + Vite + TypeScript          |
+| `packages/shared` | Código que usan el API y la web: fórmulas nutricionales (DT-07) | TypeScript + Vitest |
 
 Base de datos y autenticación en **Supabase** (PostgreSQL + Supabase Auth), con **Prisma** como ORM.
 El modelo de datos está documentado en [`docs/modelo-de-datos.md`](docs/modelo-de-datos.md).
@@ -136,6 +137,12 @@ Nunca subas archivos `.env` al repositorio; usa los `.env.example` como plantill
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Sí | `sb_publishable_…` | Clave publicable; es segura en el navegador porque RLS bloquea el acceso directo a las tablas. |
 
 > Las variables de Vite se incrustan en el build: si cambias `VITE_API_URL` en Vercel hay que volver a desplegar.
+
+## Código compartido (`packages/shared`)
+
+- Lo importan el API y la web como `@gymtrack/shared`. Por ahora tiene las fórmulas nutricionales de [DT-07](docs/wiki/Decisiones-tecnicas.md#dt-07--fórmulas-nutricionales), con sus pruebas (`pnpm --filter @gymtrack/shared test`).
+- Se compila a `packages/shared/dist/` al hacer `pnpm install`. Si lo cambias, vuelve a compilarlo con `pnpm --filter @gymtrack/shared build` (o déjalo compilando con `pnpm --filter @gymtrack/shared dev`) para que el API y la web vean el cambio.
+- No depende de NestJS, React ni Prisma: solo lógica que funcione igual en el servidor y en el navegador.
 
 ## Frontend (`apps/web`)
 

@@ -1,0 +1,29 @@
+{
+  "name": "@gymtrack/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Código compartido entre el API y la web: fórmulas nutricionales (DT-07).",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "postinstall": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "lint": "oxlint src/",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "oxlint": "^1.58.0",
+    "typescript": "^6.0.2",
+    "vitest": "^5.0.2"
+  }
+}
