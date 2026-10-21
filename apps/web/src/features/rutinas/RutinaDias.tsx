@@ -1,8 +1,17 @@
 import { NOMBRE_GRUPO } from './ejercicios/api'
 import { NOMBRE_METODO, type Rutina } from './api'
 
+interface Props {
+  rutina: Rutina
+  /**
+   * Muestra el método también cuando es "Tradicional". El deportista lo necesita para
+   * saber cómo hacer cada ejercicio (GYMM-22); al instructor le basta ver los distintos.
+   */
+  metodoSiempre?: boolean
+}
+
 /** Detalle de una rutina por días: cada ejercicio con sus series, repeticiones y método. */
-export function RutinaDias({ rutina }: { rutina: Rutina }) {
+export function RutinaDias({ rutina, metodoSiempre = false }: Props) {
   return (
     <div className="flex flex-col gap-6">
       {rutina.dias.map(({ dia, ejercicios }) => (
@@ -23,7 +32,7 @@ export function RutinaDias({ rutina }: { rutina: Rutina }) {
                   <p className="font-semibold">{e.ejercicio.nombre}</p>
                   <p className="text-sm text-grafito">
                     {NOMBRE_GRUPO[e.ejercicio.grupoMuscular]}
-                    {e.metodo !== 'TRADICIONAL' && ` · ${NOMBRE_METODO[e.metodo]}`}
+                    {(metodoSiempre || e.metodo !== 'TRADICIONAL') && ` · ${NOMBRE_METODO[e.metodo]}`}
                     {e.descansoSegundos !== null && ` · descanso ${e.descansoSegundos} s`}
                   </p>
                   {e.notas && <p className="mt-1 text-sm text-grafito">{e.notas}</p>}

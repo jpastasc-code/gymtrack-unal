@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiFetch } from '../../lib/api/client'
+import { ApiError, apiFetch } from '../../lib/api/client'
 import type { GrupoMuscular } from './ejercicios/api'
 
 export type Metodo = 'TRADICIONAL' | 'PIRAMIDE' | 'PIRAMIDE_INVERSA' | 'SERIES_DESCENDENTES' | 'SUPERSERIE' | 'CIRCUITO'
@@ -65,5 +65,23 @@ export function useAsignarRutina(id: string) {
   return useMutation({
     mutationFn: (datos: NuevaRutina) => apiFetch<Rutina>(`/deportistas/${id}/rutinas`, { method: 'POST', body: datos }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rutinas', 'deportista', id] }),
+  })
+}
+
+/**
+ * Mi rutina vigente (GYMM-22). Devuelve null si aún no tengo una asignada: el API
+ * responde 404 en ese caso, que aquí es un estado vacío y no un error.
+ */
+export function useMiRutina() {
+  return useQuery({
+    queryKey: ['rutinas', 'mia'],
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiFetch<Rutina>('/rutinas/mia', { signal })
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) return null
+        throw error
+      }
+    },
   })
 }
