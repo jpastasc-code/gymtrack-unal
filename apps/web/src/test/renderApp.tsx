@@ -7,6 +7,7 @@ import { rutas } from '../app/rutas'
 import { SesionProvider } from '../features/auth/SesionProvider'
 import type { Perfil } from '../features/auth/perfil'
 import type { PerfilSesion } from '../features/auth/tipos'
+import { sumarDias, type DisponibilidadSemana, type Franja } from '../features/cancha/api'
 import type { DeportistaResumen, Evaluacion } from '../features/evaluacion/api'
 import type { NuevaRutina, Rutina } from '../features/rutinas/api'
 import type { Ejercicio } from '../features/rutinas/ejercicios/api'
@@ -35,6 +36,62 @@ export const PERFIL_INSTRUCTOR: PerfilSesion = {
   nombres: 'Iván',
   apellidos: 'Instructor Prueba',
   rol: 'INSTRUCTOR',
+}
+
+export const PERFIL_DEPORTES: PerfilSesion = {
+  id: 'id-deportes@gymtrack.test',
+  correo: 'deportes@gymtrack.test',
+  nombres: 'Paula',
+  apellidos: 'Deportes Prueba',
+  rol: 'PERSONAL_DEPORTES',
+}
+
+/** Franjas de la cancha de las pruebas: lunes y miércoles por la tarde, sábado temprano. */
+export const FRANJAS_CANCHA: Franja[] = [
+  { id: 'f1', diaSemana: 1, horaInicio: '14:00', horaFin: '15:00', activa: true },
+  { id: 'f2', diaSemana: 3, horaInicio: '14:00', horaFin: '15:00', activa: true },
+  { id: 'f3', diaSemana: 3, horaInicio: '18:00', horaFin: '19:00', activa: true },
+  { id: 'f4', diaSemana: 4, horaInicio: '18:00', horaFin: '19:00', activa: false },
+  { id: 'f5', diaSemana: 6, horaInicio: '08:00', horaFin: '09:00', activa: true },
+]
+
+/** En las pruebas, "hoy" es el miércoles 21 de octubre de 2026 a las 3 p. m. (Colombia). */
+export const HOY_CANCHA = { fecha: '2026-10-21', hora: '15:00' }
+
+const lunesDe = (fecha: string) => {
+  const dia = new Date(`${fecha}T00:00:00Z`).getUTCDay()
+  return sumarDias(fecha, 1 - (dia === 0 ? 7 : dia))
+}
+
+/** Arma GET /api/cancha/disponibilidad como el API, a partir de las franjas activas. */
+function disponibilidadDe(franjas: Franja[], semana: string | null, reservadas: string[]): DisponibilidadSemana {
+  const desde = lunesDe(semana ?? HOY_CANCHA.fecha)
+  const dias = [1, 2, 3, 4, 5, 6, 7].map((diaSemana) => {
+    const fecha = sumarDias(desde, diaSemana - 1)
+    return {
+      fecha,
+      diaSemana,
+      franjas: franjas
+        .filter((f) => f.activa && f.diaSemana === diaSemana)
+        .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
+        .map((f) => {
+          const pasada = `${fecha} ${f.horaInicio}` <= `${HOY_CANCHA.fecha} ${HOY_CANCHA.hora}`
+          const reservada = reservadas.includes(`${fecha} ${f.horaInicio}`)
+          return {
+            id: f.id,
+            horaInicio: f.horaInicio,
+            horaFin: f.horaFin,
+            estado: pasada ? ('PASADA' as const) : reservada ? ('RESERVADA' as const) : ('DISPONIBLE' as const),
+          }
+        }),
+    }
+  })
+  return {
+    cancha: { id: 'c1', nombre: 'Cancha sintética', descripcion: null },
+    hoy: HOY_CANCHA.fecha,
+    semana: { desde, hasta: sumarDias(desde, 6) },
+    dias,
+  }
 }
 
 export const EJERCICIOS_BASE: Ejercicio[] = [
@@ -110,6 +167,12 @@ interface OpcionesApi {
   respuestaPostRutina?: (datos: NuevaRutina) => Response
   /** Respuesta de GET /api/perfil/evaluaciones (mi ficha física): por defecto, ninguna. */
   miFicha?: Evaluacion[]
+  /** Franjas de la cancha (GYMM-20): por defecto, FRANJAS_CANCHA. */
+  franjasCancha?: Franja[]
+  /** Franjas reservadas, como "AAAA-MM-DD HH:MM" de inicio. */
+  canchaReservada?: string[]
+  /** Código de error para GET /api/cancha/disponibilidad (p. ej. 404 sin cancha). */
+  errorCancha?: number
 }
 
 /** Simula el API: responde /auth/yo y /health según las opciones. */
@@ -122,7 +185,11 @@ export function simularApi({
   rutinas: rutinasIniciales = {},
   respuestaPostRutina,
   miFicha = [],
+  franjasCancha = FRANJAS_CANCHA,
+  canchaReservada = ['2026-10-26 14:00'],
+  errorCancha,
 }: OpcionesApi = {}) {
+  let franjas = franjasCancha.map((f) => ({ ...f }))
   const evaluaciones: Record<string, Evaluacion[]> = { d1: [EVALUACION_INICIAL] }
   const rutinas: Record<string, Rutina[]> = Object.fromEntries(
     Object.entries(rutinasIniciales).map(([id, lista]) => [id, lista.map((r) => ({ ...r }))]),
@@ -207,6 +274,38 @@ export function simularApi({
       return json(evaluaciones[d.id] ?? [])
     }
     if (pathname === '/api/perfil/evaluaciones') return json(miFicha)
+    if (pathname === '/api/cancha/disponibilidad') {
+      if (errorCancha) return json({ message: 'La cancha no está habilitada en este momento.' }, errorCancha)
+      return json(disponibilidadDe(franjas, searchParams.get('semana'), canchaReservada))
+    }
+    if (pathname === '/api/cancha/franjas' && metodo === 'GET') {
+      const ordenadas = [...franjas].sort((a, b) => a.diaSemana - b.diaSemana || a.horaInicio.localeCompare(b.horaInicio))
+      return json({ cancha: { id: 'c1', nombre: 'Cancha sintética', descripcion: null }, franjas: ordenadas })
+    }
+    if (pathname === '/api/cancha/franjas' && metodo === 'POST') {
+      const datos = JSON.parse(String(init?.body)) as Omit<Franja, 'id' | 'activa'>
+      const cruce = franjas.find(
+        (f) => f.diaSemana === datos.diaSemana && datos.horaInicio < f.horaFin && f.horaInicio < datos.horaFin,
+      )
+      if (cruce) {
+        const mensaje = `Se cruza con la franja de ${cruce.horaInicio} a ${cruce.horaFin}.`
+        return json({ message: mensaje, errores: { horaInicio: mensaje } }, 409)
+      }
+      const nueva: Franja = { ...datos, id: `f${franjas.length + 1}`, activa: true }
+      franjas.push(nueva)
+      return json(nueva, 201)
+    }
+    const franja = pathname.match(/^\/api\/cancha\/franjas\/([^/]+)$/)
+    if (franja) {
+      const actual = franjas.find((f) => f.id === franja[1])
+      if (!actual) return json({ message: 'Esa franja no existe.' }, 404)
+      if (metodo === 'DELETE') {
+        franjas = franjas.filter((f) => f.id !== actual.id)
+        return new Response(null, { status: 204 })
+      }
+      Object.assign(actual, JSON.parse(String(init?.body)))
+      return json(actual)
+    }
     const detalle = pathname.match(/^\/api\/ejercicios\/([^/]+)$/)
     if (detalle) {
       const actual = ejercicios.find((e) => e.id === detalle[1])

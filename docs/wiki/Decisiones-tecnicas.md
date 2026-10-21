@@ -21,6 +21,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 | DT-09 | Diseño en Claude Design en lugar de Figma | Aceptada | 2026-09-29 |
 | DT-11 | Rediseño visual minimalista y app responsive | Aceptada | 2026-10-04 |
 | DT-12 | Rutinas por días y catálogo de la ficha del gimnasio | Aceptada | 2026-10-18 |
+| DT-13 | Horarios de la cancha en hora de Colombia | Propuesta | 2026-10-20 |
 
 ---
 
@@ -252,3 +253,20 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 - Los días van seguidos desde el 1: el API rechaza una rutina con huecos (p. ej. días 1 y 3 sin el 2).
 - Los ejercicios del catálogo de prueba anterior quedan desactivados, no borrados.
 - Algunos ejercicios con nombre propio del gimnasio (Voladora, Copa, Cabina pecho…) no tienen descripción: la escribe un instructor desde el catálogo.
+
+## DT-13 · Horarios de la cancha en hora de Colombia
+
+**Decisión:**
+- Las franjas (`franja_cancha.hora_inicio`/`hora_fin`, tipo `time`) son horas de Colombia: "14:00" son las 2 p. m. en Manizales.
+- Colombia está en UTC−5 todo el año (no tiene horario de verano), así que el API convierte con un desfase fijo de 5 horas, sin librerías de zonas horarias. Las funciones están en `apps/api/src/cancha/cancha.horario.ts`.
+- La semana va de lunes a domingo y se calcula con la fecha de Colombia, no la del servidor: el domingo a las 10 p. m. sigue siendo la misma semana aunque en UTC ya sea lunes.
+- Las fechas del calendario viajan entre el API y la web como texto `AAAA-MM-DD`, sin zona, para que el navegador no las corra un día.
+- Una franja está **reservada** si alguna reserva confirmada se cruza con ella, aunque sea en parte, y **pasada** si ya empezó (GYMM-20).
+
+**Por qué:** el servidor de Render y la base de Supabase corren en UTC; sin fijar la zona, una franja de las 8 p. m. caería en el día siguiente.
+
+**Implica:**
+- **La base de datos debe estar en UTC.** El adaptador `@prisma/adapter-pg` lee los `timestamptz` sin tener en cuenta el desfase de la sesión: con una base en `America/Bogota`, las reservas se leen corridas 5 horas. Supabase, el PostgreSQL de Docker de la demo y el del CI ya están en UTC; si alguien usa un PostgreSQL local propio, debe ejecutar `ALTER DATABASE <base> SET timezone TO 'UTC'`.
+- GYMM-28 (reservar) debe guardar `inicio` y `fin` con la misma conversión (`instanteEnColombia`).
+- Si algún día hay sedes en otra zona horaria, el desfase fijo se reemplaza por una zona IANA por cancha.
+

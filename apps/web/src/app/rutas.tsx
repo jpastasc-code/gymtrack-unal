@@ -3,6 +3,7 @@ import { LoginPage } from '../features/auth/LoginPage'
 import { PerfilPage } from '../features/auth/PerfilPage'
 import { RutaProtegida } from '../features/auth/RutaProtegida'
 import { CanchaPage } from '../features/cancha/CanchaPage'
+import { FranjasCanchaPage } from '../features/cancha/FranjasCanchaPage'
 import { EntrenarPage } from '../features/entrenamiento/EntrenarPage'
 import { DeportistaEvaluacionesPage } from '../features/evaluacion/DeportistaEvaluacionesPage'
 import { EvaluarPage } from '../features/evaluacion/EvaluarPage'
@@ -61,6 +62,11 @@ export const rutas: RouteObject[] = [
           { path: 'rutinas/:id', element: <DeportistaRutinasPage /> },
           { path: 'rutinas/:id/nueva', element: <NuevaRutinaPage /> },
         ],
+      },
+      {
+        // Horario de la cancha, lo define el personal de deportes (GYMM-20).
+        element: <RutaProtegida roles={['PERSONAL_DEPORTES', 'ADMIN']} />,
+        children: [{ path: 'reservas/cancha/franjas', element: <FranjasCanchaPage /> }],
       },
     ],
   },

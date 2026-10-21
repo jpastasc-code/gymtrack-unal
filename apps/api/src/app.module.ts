@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { CanchaModule } from './cancha/cancha.module';
 import { EjerciciosModule } from './ejercicios/ejercicios.module';
 import { EvaluacionesModule } from './evaluaciones/evaluaciones.module';
 import { NutricionModule } from './nutricion/nutricion.module';
@@ -20,6 +21,7 @@ import { RutinasModule } from './rutinas/rutinas.module';
     EvaluacionesModule,
     RutinasModule,
     NutricionModule,
+    CanchaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
