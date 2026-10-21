@@ -173,6 +173,8 @@ interface OpcionesApi {
   canchaReservada?: string[]
   /** Código de error para GET /api/cancha/disponibilidad (p. ej. 404 sin cancha). */
   errorCancha?: number
+  /** GET /api/rutinas/mia (GYMM-22): la rutina vigente, null (404, sin rutina) o un código de error. */
+  miRutina?: Rutina | null | number
 }
 
 /** Simula el API: responde /auth/yo y /health según las opciones. */
@@ -188,6 +190,7 @@ export function simularApi({
   franjasCancha = FRANJAS_CANCHA,
   canchaReservada = ['2026-10-26 14:00'],
   errorCancha,
+  miRutina = null,
 }: OpcionesApi = {}) {
   let franjas = franjasCancha.map((f) => ({ ...f }))
   const evaluaciones: Record<string, Evaluacion[]> = { d1: [EVALUACION_INICIAL] }
@@ -274,6 +277,11 @@ export function simularApi({
       return json(evaluaciones[d.id] ?? [])
     }
     if (pathname === '/api/perfil/evaluaciones') return json(miFicha)
+    if (pathname === '/api/rutinas/mia') {
+      if (typeof miRutina === 'number') return json({ message: 'El servidor tuvo un problema. Intenta de nuevo.' }, miRutina)
+      if (miRutina === null) return json({ message: 'Aún no tienes una rutina asignada. Pídesela a tu instructor.' }, 404)
+      return json(miRutina)
+    }
     if (pathname === '/api/cancha/disponibilidad') {
       if (errorCancha) return json({ message: 'La cancha no está habilitada en este momento.' }, errorCancha)
       return json(disponibilidadDe(franjas, searchParams.get('semana'), canchaReservada))
