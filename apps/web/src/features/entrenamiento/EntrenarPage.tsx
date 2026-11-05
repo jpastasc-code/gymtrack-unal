@@ -208,8 +208,9 @@ function SesionEnCurso({
         <div role="status" className={`${AVISO} mb-5`}>
           <p className="font-semibold">Sin conexión con el servidor.</p>
           <p className="mt-1 text-grafito">
-            {pendientes === 1 ? 'Tu última serie quedó guardada' : `${pendientes} series quedaron guardadas`} en este
-            celular y se envían solas cuando vuelva la señal.
+            {pendientes === 1
+              ? 'Tu última serie quedó guardada en este celular y se envía sola cuando vuelva la señal.'
+              : `${pendientes} series quedaron guardadas en este celular y se envían solas cuando vuelva la señal.`}
           </p>
           <button type="button" onClick={() => void reintentar()} className="mt-2 min-h-11 font-semibold underline underline-offset-4">
             Reintentar ahora
@@ -231,6 +232,7 @@ function SesionEnCurso({
             key={actual.id}
             ejercicio={actual}
             hechas={deEjercicio(actual)}
+            sinConexion={sinConexion}
             precarga={precarga.find((p) => p.ejercicioId === actual.ejercicio.id)}
             onRegistrar={registrar}
           />
