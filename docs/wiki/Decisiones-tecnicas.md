@@ -22,6 +22,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 | DT-11 | Rediseño visual minimalista y app responsive | Aceptada | 2026-10-04 |
 | DT-12 | Rutinas por días y catálogo de la ficha del gimnasio | Aceptada | 2026-10-18 |
 | DT-13 | Horarios de la cancha en hora de Colombia | Propuesta | 2026-10-20 |
+| DT-14 | Registro de series sin conexión e idempotente | Propuesta | 2026-11-04 |
 
 ---
 
@@ -270,3 +271,19 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 - GYMM-28 (reservar) debe guardar `inicio` y `fin` con la misma conversión (`instanteEnColombia`).
 - Si algún día hay sedes en otra zona horaria, el desfase fijo se reemplaza por una zona IANA por cancha.
 
+
+## DT-14 · Registro de series sin conexión e idempotente
+
+**Decisión:**
+- Registrar una serie es `PUT /api/sesiones/:id/series` con el ejercicio y el número de serie. La fila es única por (sesión, ejercicio, número): enviarla otra vez la corrige y no la duplica (GYMM-26).
+- En la web, cada serie entra primero a una cola en `localStorage` (`gymtrack:entrenar:pendientes`) y luego se envía. Si no hay señal, el servidor no responde o la sesión de Supabase se está renovando, queda en la cola y se reintenta al volver la conexión (`online`), cada 15 segundos y al abrir la pantalla otra vez. Si el API la rechaza (por ejemplo, la sesión ya terminó), sale de la cola y se muestra el motivo (GYMM-45).
+- La cola vive en `features/entrenamiento/useRegistroSeries.ts` y usa `apiFetch` directamente, no una mutación de TanStack Query: TanStack no guarda las mutaciones pendientes si se cierra la app.
+- Una persona tiene una sola sesión abierta (índice único parcial `sesion_una_abierta_por_usuario`). "Empezar a entrenar" devuelve la abierta si ya existe.
+- Una sesión abierta hace más de 6 horas se da por terminada en la hora de su última serie la próxima vez que se consulta.
+
+**Por qué:** en el gimnasio la señal va y viene, y una serie perdida obliga a la persona a recordarla y escribirla otra vez.
+
+**Implica:**
+- Para terminar la sesión no puede haber series en la cola: así ninguna llega a una sesión cerrada.
+- La precarga (`GET /api/sesiones/precarga`, GYMM-43) solo usa sesiones terminadas, así que las series de la sesión en curso no se precargan a sí mismas.
+- El día de la rutina que se está entrenando no se guarda en la base: lo recuerda el navegador, y en otro celular se deduce de los ejercicios ya registrados.
