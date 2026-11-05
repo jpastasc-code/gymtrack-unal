@@ -24,6 +24,7 @@ import type { Usuario } from '../generated/prisma/client';
 import { RegistrarSerieDto } from './sesiones.dto';
 import {
   SesionesService,
+  type PrecargaEjercicio,
   type SerieVista,
   type SesionVista,
 } from './sesiones.service';
@@ -46,6 +47,17 @@ export class SesionesController {
   @ApiNotFoundResponse({ description: 'No hay una sesión abierta.' })
   actual(@UsuarioActual() usuario: Usuario): Promise<SesionVista> {
     return this.sesiones.actual(usuario.id);
+  }
+
+  @Get('precarga')
+  @ApiOperation({
+    summary: 'Última carga y repeticiones de cada ejercicio de mi rutina',
+    description:
+      'Por cada ejercicio de la rutina vigente, las series de la última sesión terminada en que se hizo. Los ejercicios que nunca se han hecho no aparecen.',
+  })
+  @ApiOkResponse({ description: 'Valores para precargar el formulario.' })
+  precarga(@UsuarioActual() usuario: Usuario): Promise<PrecargaEjercicio[]> {
+    return this.sesiones.precarga(usuario.id);
   }
 
   @Post()

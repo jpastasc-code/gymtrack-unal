@@ -104,6 +104,7 @@ describe('Sesiones de entrenamiento (e2e)', () => {
           'Aún no tienes una rutina asignada. Pídesela a tu instructor.',
         ),
       );
+    await como('nueva').get('/sesiones/precarga').expect(200, []);
   });
 
   it('empieza la sesión, registra series con reintentos y la termina', async () => {
@@ -236,6 +237,57 @@ describe('Sesiones de entrenamiento (e2e)', () => {
     await deportista().post('/sesiones/no-es-un-id/cerrar').expect(404);
   });
 
+  it('precarga cada ejercicio con las series de la última sesión terminada', async () => {
+    await levantar();
+    const registrar = async (
+      valores: ReturnType<typeof serie>[],
+      cerrar: boolean,
+    ) => {
+      const { body: s } = await deportista().post('/sesiones').expect(201);
+      for (const v of valores) {
+        await deportista().put(`/sesiones/${s.id}/series`, v).expect(200);
+      }
+      if (cerrar)
+        await deportista().post(`/sesiones/${s.id}/cerrar`).expect(200);
+    };
+
+    await deportista().get('/sesiones/precarga').expect(200, []);
+
+    await registrar(
+      [
+        serie(SENTADILLA, 1, 40, 10),
+        serie(PRESS, 1, 30, 12),
+        serie(PRESS, 2, 30, 10),
+      ],
+      true,
+    );
+    // En la sesión siguiente solo hizo sentadilla: el press sigue saliendo de la primera.
+    await registrar(
+      [serie(SENTADILLA, 1, 45, 10), serie(SENTADILLA, 2, 45, 8)],
+      true,
+    );
+    // La sesión abierta no cuenta: es la que se está registrando.
+    await registrar([serie(SENTADILLA, 1, 50, 6)], false);
+
+    const { body } = await deportista().get('/sesiones/precarga').expect(200);
+    const porEjercicio = Object.fromEntries(
+      (body as { ejercicioId: string; series: object[] }[]).map((p) => [
+        p.ejercicioId,
+        p.series,
+      ]),
+    );
+    expect(porEjercicio).toEqual({
+      [SENTADILLA]: [
+        { numeroSerie: 1, cargaKg: 45, repeticiones: 10 },
+        { numeroSerie: 2, cargaKg: 45, repeticiones: 8 },
+      ],
+      [PRESS]: [
+        { numeroSerie: 1, cargaKg: 30, repeticiones: 12 },
+        { numeroSerie: 2, cargaKg: 30, repeticiones: 10 },
+      ],
+    });
+  });
+
   it('da por terminada una sesión olvidada y empieza una nueva', async () => {
     const hace8Horas = new Date(Date.now() - 8 * HORA);
     const ultimaSerie = new Date(Date.now() - 7 * HORA);
@@ -267,5 +319,18 @@ describe('Sesiones de entrenamiento (e2e)', () => {
 
     const { body } = await deportista().post('/sesiones').expect(201);
     expect(body.id).not.toBe(olvidada.id);
+    // Lo que hizo en la sesión olvidada sirve para precargar.
+    await deportista()
+      .get('/sesiones/precarga')
+      .expect(200)
+      .expect(({ body: precarga }) =>
+        expect(precarga).toEqual([
+          {
+            ejercicioId: SENTADILLA,
+            fecha: hace8Horas.toISOString(),
+            series: [{ numeroSerie: 1, cargaKg: 40, repeticiones: 10 }],
+          },
+        ]),
+      );
   });
 });
