@@ -8,6 +8,7 @@ import { SesionProvider } from '../features/auth/SesionProvider'
 import type { Perfil } from '../features/auth/perfil'
 import type { PerfilSesion } from '../features/auth/tipos'
 import { sumarDias, type DisponibilidadSemana, type Franja } from '../features/cancha/api'
+import type { PrecargaEjercicio, SerieNueva, SerieRegistrada, Sesion } from '../features/entrenamiento/api'
 import type { DeportistaResumen, Evaluacion } from '../features/evaluacion/api'
 import type { NuevaRutina, Rutina } from '../features/rutinas/api'
 import type { Ejercicio } from '../features/rutinas/ejercicios/api'
@@ -175,6 +176,12 @@ interface OpcionesApi {
   errorCancha?: number
   /** GET /api/rutinas/mia (GYMM-22): la rutina vigente, null (404, sin rutina) o un código de error. */
   miRutina?: Rutina | null | number
+  /** Sesión de entrenamiento abierta (GYMM-26): por defecto, ninguna. */
+  sesionActual?: Sesion | null
+  /** GET /api/sesiones/precarga: lo que se hizo la última vez en cada ejercicio. */
+  precargaSesiones?: PrecargaEjercicio[]
+  /** Mientras `caida` sea true, registrar una serie falla como si no hubiera señal. */
+  red?: { caida: boolean }
 }
 
 /** Simula el API: responde /auth/yo y /health según las opciones. */
@@ -191,7 +198,11 @@ export function simularApi({
   canchaReservada = ['2026-10-26 14:00'],
   errorCancha,
   miRutina = null,
+  sesionActual = null,
+  precargaSesiones = [],
+  red = { caida: false },
 }: OpcionesApi = {}) {
+  let sesion: Sesion | null = sesionActual && { ...sesionActual, series: [...sesionActual.series] }
   let franjas = franjasCancha.map((f) => ({ ...f }))
   const evaluaciones: Record<string, Evaluacion[]> = { d1: [EVALUACION_INICIAL] }
   const rutinas: Record<string, Rutina[]> = Object.fromEntries(
@@ -281,6 +292,31 @@ export function simularApi({
       if (typeof miRutina === 'number') return json({ message: 'El servidor tuvo un problema. Intenta de nuevo.' }, miRutina)
       if (miRutina === null) return json({ message: 'Aún no tienes una rutina asignada. Pídesela a tu instructor.' }, 404)
       return json(miRutina)
+    }
+    if (pathname === '/api/sesiones/actual') {
+      return sesion ? json(sesion) : json({ message: 'No tienes una sesión de entrenamiento abierta.' }, 404)
+    }
+    if (pathname === '/api/sesiones/precarga') return json(precargaSesiones)
+    if (pathname === '/api/sesiones' && metodo === 'POST') {
+      sesion ??= { id: 's-nueva', rutinaId: 'r1', inicio: '2026-11-04T13:00:00.000Z', fin: null, series: [] }
+      return json(sesion, 201)
+    }
+    const seriesDe = pathname.match(/^\/api\/sesiones\/([^/]+)\/series$/)
+    if (seriesDe) {
+      if (red.caida) throw new TypeError('Failed to fetch')
+      if (!sesion || sesion.id !== seriesDe[1]) return json({ message: 'Esta sesión ya terminó. Empieza una nueva para seguir registrando.' }, 409)
+      const datos = JSON.parse(String(init?.body)) as SerieNueva
+      const registrada: SerieRegistrada = { ...datos, registradaEn: '2026-11-04T13:10:00.000Z' }
+      sesion.series = [
+        ...sesion.series.filter((s) => !(s.ejercicioId === datos.ejercicioId && s.numeroSerie === datos.numeroSerie)),
+        registrada,
+      ]
+      return json(registrada)
+    }
+    if (/^\/api\/sesiones\/[^/]+\/cerrar$/.test(pathname)) {
+      const cerrada = { ...sesion!, fin: '2026-11-04T14:00:00.000Z' }
+      sesion = null
+      return json(cerrada)
     }
     if (pathname === '/api/cancha/disponibilidad') {
       if (errorCancha) return json({ message: 'La cancha no está habilitada en este momento.' }, errorCancha)

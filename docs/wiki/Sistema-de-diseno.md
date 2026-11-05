@@ -62,6 +62,7 @@ Antes de escribir clases, busca aquí:
 | Un botón | `Boton` (`variante`: `primario`, `secundario`, `texto`; `bloque`; `grande`) | `components/Boton.tsx` |
 | Un enlace que se ve como botón primario | `ENLACE_PRIMARIO` | `components/estilos.ts` |
 | Un campo de texto o número (con unidad, ayuda y error) | `Campo` | `components/Campo.tsx` |
+| Un número que se ajusta con una mano (carga, repeticiones) | `Contador` (botones − y + de 56 px; el valor también se escribe) | `components/Contador.tsx` |
 | Una lista desplegable o texto largo | `Selector`, `AreaTexto` | `components/Controles.tsx` |
 | Elegir una opción entre varias | `GrupoOpciones` (`forma`: `fila` o `lista`) | `components/GrupoOpciones.tsx` |
 | Un filtro que se queda marcado | `Chip` | `components/Chip.tsx` |
@@ -95,6 +96,7 @@ Lo que muestra la [referencia visual](https://claude.ai/artifact/2VMdDupNQX1ruBP
 - **Catálogo:** sin tarjetas ni etiquetas de color. Buscador en `hueso`, chips de filtro con el activo en verde, el conteo ("27 ejercicios") y filas con separadores finos. En computador, la lista pasa a dos columnas.
 - **Perfil:** secciones separadas por una línea (datos institucionales, datos personales, objetivo). Los datos que no se editan van como pares etiqueta/valor, con una ayuda que explica por qué no se pueden cambiar. Las opciones excluyentes usan `GrupoOpciones`, con la elegida en verde y texto negro.
 - **Iniciar sesión:** el logo de la Universidad Nacional en sus colores originales (no el ícono de la app), el titular "GymTrack UNAL", una frase que dice para qué entrar, los campos y el botón principal en negro.
+- **Entrenar:** un ejercicio a la vez, con sus series como filas. La siguiente serie por hacer aparece abierta con dos `Contador` (carga y repeticiones) y un botón negro grande, "Registrar serie N": si no cambió nada, registrarla es un toque. Las hechas muestran el valor y un visto en `verde-claro`. Arriba, la barra de progreso de la sesión en `verde`.
 - **Computador (desde 1024 px):** la barra de abajo sube a una barra superior con el logo y la pestaña activa subrayada en negro. Entrenar queda como botón verde a la derecha y el contenido aprovecha el ancho en dos columnas.
 
 ## Responsive
