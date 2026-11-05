@@ -158,6 +158,53 @@ export function crearSesionesEnMemoria(
           return Promise.resolve(fila);
         },
       ),
+      findMany: jest.fn(
+        (consulta: {
+          where:
+            | { ejercicioId: { in: string[] }; sesion: { usuarioId: string } }
+            | { OR: { ejercicioId: string; sesionId: string }[] };
+          distinct?: string[];
+        }) => {
+          const { where } = consulta;
+          if ('OR' in where) {
+            return Promise.resolve(
+              series
+                .filter((s) =>
+                  where.OR.some(
+                    (o) =>
+                      o.ejercicioId === s.ejercicioId &&
+                      o.sesionId === s.sesionId,
+                  ),
+                )
+                .sort((a, b) => a.numeroSerie - b.numeroSerie)
+                .map((s) => ({
+                  ...s,
+                  sesion: { inicio: sesion(s.sesionId)!.inicio },
+                })),
+            );
+          }
+          // La serie más reciente de cada ejercicio en sesiones terminadas del usuario.
+          const vistos = new Set<string>();
+          return Promise.resolve(
+            series
+              .filter((s) => {
+                const de = sesion(s.sesionId)!;
+                return (
+                  where.ejercicioId.in.includes(s.ejercicioId) &&
+                  de.usuarioId === where.sesion.usuarioId &&
+                  de.fin !== null
+                );
+              })
+              .sort(
+                (a, b) => b.registradaEn.getTime() - a.registradaEn.getTime(),
+              )
+              .filter(
+                (s) => !vistos.has(s.ejercicioId) && vistos.add(s.ejercicioId),
+              )
+              .map(({ ejercicioId, sesionId }) => ({ ejercicioId, sesionId })),
+          );
+        },
+      ),
     },
   };
 

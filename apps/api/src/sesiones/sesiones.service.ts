@@ -25,6 +25,14 @@ export interface SesionVista {
   series: SerieVista[];
 }
 
+/** Lo que hizo el deportista en un ejercicio la última vez, para precargar el formulario. */
+export interface PrecargaEjercicio {
+  ejercicioId: string;
+  /** Inicio de la sesión de donde salen los valores. */
+  fecha: string;
+  series: Pick<SerieVista, 'numeroSerie' | 'cargaKg' | 'repeticiones'>[];
+}
+
 /**
  * Una sesión abierta hace más de estas horas se da por terminada: la persona se fue
  * sin tocar "Terminar sesión" y la próxima vez que entrene empieza una nueva.
@@ -174,6 +182,55 @@ export class SesionesService {
         include: CON_SERIES,
       }),
     );
+  }
+
+  /**
+   * Por cada ejercicio de la rutina vigente, las series de la última sesión terminada
+   * en que se hizo (GYMM-43). Los ejercicios que nunca ha hecho no aparecen.
+   */
+  async precarga(usuarioId: string): Promise<PrecargaEjercicio[]> {
+    const rutina = await this.prisma.rutina.findFirst({
+      where: { usuarioId, vigente: true },
+      select: { ejercicios: { select: { ejercicioId: true } } },
+    });
+    const ids = [...new Set(rutina?.ejercicios.map((e) => e.ejercicioId))];
+    if (ids.length === 0) return [];
+
+    // La serie más reciente de cada ejercicio dice de qué sesión salen sus valores.
+    const ultimas = await this.prisma.serieRegistrada.findMany({
+      where: {
+        ejercicioId: { in: ids },
+        sesion: { usuarioId, fin: { not: null } },
+      },
+      orderBy: { registradaEn: 'desc' },
+      distinct: ['ejercicioId'],
+      select: { ejercicioId: true, sesionId: true },
+    });
+    if (ultimas.length === 0) return [];
+
+    const series = await this.prisma.serieRegistrada.findMany({
+      where: {
+        OR: ultimas.map(({ ejercicioId, sesionId }) => ({
+          ejercicioId,
+          sesionId,
+        })),
+      },
+      orderBy: { numeroSerie: 'asc' },
+      include: { sesion: { select: { inicio: true } } },
+    });
+
+    return ultimas.map(({ ejercicioId }) => {
+      const delEjercicio = series.filter((s) => s.ejercicioId === ejercicioId);
+      return {
+        ejercicioId,
+        fecha: delEjercicio[0].sesion.inicio.toISOString(),
+        series: delEjercicio.map((s) => ({
+          numeroSerie: s.numeroSerie,
+          cargaKg: Number(s.cargaKg),
+          repeticiones: s.repeticiones,
+        })),
+      };
+    });
   }
 
   /**
