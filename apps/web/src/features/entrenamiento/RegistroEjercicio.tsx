@@ -17,17 +17,22 @@ interface Props {
   hechas: Map<number, SerieHecha>
   precarga: PrecargaEjercicio | undefined
   onRegistrar: (serie: SerieNueva) => void
+  /** Las series pendientes no se pudieron enviar (no solo van en camino). */
+  sinConexion: boolean
 }
 
 /**
  * Las series de un ejercicio como filas (GYMM-44). La siguiente serie por hacer aparece
  * abierta y con los valores de la última vez: registrarla sin cambios es un toque.
  */
-export function RegistroEjercicio({ ejercicio, hechas, precarga, onRegistrar }: Props) {
+export function RegistroEjercicio({ ejercicio, hechas, precarga, onRegistrar, sinConexion }: Props) {
   const [corrigiendo, setCorrigiendo] = useState<number | null>(null)
   const numeros = Array.from({ length: ejercicio.series }, (_, i) => i + 1)
   const abierta = corrigiendo ?? numeros.find((n) => !hechas.has(n)) ?? null
-  const inicial = (n: number) => hechas.get(n) ?? valoresIniciales(ejercicio, n, precarga, hechas)
+  // Cada serie por hacer sigue a la anterior, aunque esa tampoco se haya hecho aún.
+  const previstas = new Map<number, Valores>()
+  for (const n of numeros) previstas.set(n, hechas.get(n) ?? valoresIniciales(ejercicio, n, precarga, previstas))
+  const inicial = (n: number) => previstas.get(n)!
 
   function registrar(numeroSerie: number, valores: Valores) {
     onRegistrar({ ejercicioId: ejercicio.ejercicio.id, numeroSerie, ...valores })
@@ -62,7 +67,7 @@ export function RegistroEjercicio({ ejercicio, hechas, precarga, onRegistrar }: 
               />
             </li>
           ) : (
-            <FilaSerie key={n} numero={n} hecha={hechas.get(n)} prevista={inicial(n)} onCorregir={() => setCorrigiendo(n)} />
+            <FilaSerie key={n} numero={n} hecha={hechas.get(n)} prevista={inicial(n)} sinConexion={sinConexion} onCorregir={() => setCorrigiendo(n)} />
           ),
         )}
       </ol>
@@ -109,11 +114,13 @@ function FilaSerie({
   numero,
   hecha,
   prevista,
+  sinConexion,
   onCorregir,
 }: {
   numero: number
   hecha: SerieHecha | undefined
   prevista: Valores
+  sinConexion: boolean
   onCorregir: () => void
 }) {
   return (
@@ -123,7 +130,7 @@ function FilaSerie({
         <>
           <span className="flex-1 text-lg tabular-nums">{describirSerie(hecha)}</span>
           {hecha.pendiente ? (
-            <span className="text-sm text-grafito">Sin enviar</span>
+            <span className="text-sm text-grafito">{sinConexion ? 'Sin enviar' : 'Enviando…'}</span>
           ) : (
             <span className="grid size-8 place-items-center rounded-full bg-verde-claro text-verde-tinta">
               <IconoListo width={18} height={18} />
