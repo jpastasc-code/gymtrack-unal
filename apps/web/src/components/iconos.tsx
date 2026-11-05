@@ -74,6 +74,30 @@ export function IconoFlecha(props: PropsIcono) {
   )
 }
 
+export function IconoMas(props: PropsIcono) {
+  return (
+    <Base {...props}>
+      <path d="M12 5v14M5 12h14" />
+    </Base>
+  )
+}
+
+export function IconoMenos(props: PropsIcono) {
+  return (
+    <Base {...props}>
+      <path d="M5 12h14" />
+    </Base>
+  )
+}
+
+export function IconoListo(props: PropsIcono) {
+  return (
+    <Base {...props}>
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </Base>
+  )
+}
+
 export function IconoAtras(props: PropsIcono) {
   return (
     <Base {...props}>
