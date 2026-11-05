@@ -232,6 +232,8 @@ model RutinaEjercicio {
 
 // ─────────────────────── Sesiones de entrenamiento ───────────────────────
 
+/// Sesión de entrenamiento; está abierta mientras no tenga `fin`. Solo una sesión
+/// abierta por usuario (índice único parcial creado en la migración).
 model Sesion {
   id        String    @id @default(uuid()) @db.Uuid
   usuarioId String    @map("usuario_id") @db.Uuid
