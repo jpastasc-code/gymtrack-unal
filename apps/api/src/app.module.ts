@@ -10,6 +10,7 @@ import { NutricionModule } from './nutricion/nutricion.module';
 import { PerfilModule } from './perfil/perfil.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RutinasModule } from './rutinas/rutinas.module';
+import { SesionesModule } from './sesiones/sesiones.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RutinasModule } from './rutinas/rutinas.module';
     EjerciciosModule,
     EvaluacionesModule,
     RutinasModule,
+    SesionesModule,
     NutricionModule,
     CanchaModule,
   ],

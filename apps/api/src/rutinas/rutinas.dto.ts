@@ -27,7 +27,8 @@ export const METODOS = [
 export type Metodo = (typeof METODOS)[number];
 
 /** Cualquier UUID que acepte PostgreSQL (sin exigir versión ni variante). */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Una rutina se reparte en máximo 7 días (Día 1 … Día 7). */
 export const MAX_DIAS = 7;

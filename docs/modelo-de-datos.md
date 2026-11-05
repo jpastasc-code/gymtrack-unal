@@ -162,7 +162,7 @@ erDiagram
 
 ## Reglas que viven en la base de datos
 
-Prisma no puede expresarlas en `schema.prisma`, así que están en SQL dentro de la primera migración:
+Prisma no puede expresarlas en `schema.prisma`, así que están en SQL dentro de las migraciones:
 
 | Regla | Historia | Cómo se garantiza |
 | ----- | -------- | ----------------- |
@@ -171,6 +171,7 @@ Prisma no puede expresarlas en `schema.prisma`, así que están en SQL dentro de
 | Una rutina se reparte en máximo 7 días | GYMM-21 | Restricción `CHECK` `rutina_ejercicio_dia_chk` |
 | Un usuario no reserva dos veces la misma franja y fecha | GYMM-27 | Índice único parcial sobre reservas `CONFIRMADA` |
 | Nadie tiene dos entradas abiertas al gimnasio | GYMM-32 | Índice único parcial sobre `registro_acceso` sin `salida` |
+| Nadie tiene dos sesiones de entrenamiento abiertas | GYMM-26 | Índice único parcial `sesion_una_abierta_por_usuario` (sesiones sin `fin`) |
 | Rangos razonables de peso, talla y % de grasa | GYMM-13 | Restricciones `CHECK` |
 | Horas, días de la semana, cupos y series válidos | — | Restricciones `CHECK` |
 | La API REST pública de Supabase no expone datos | — | RLS habilitado sin políticas en todas las tablas |
