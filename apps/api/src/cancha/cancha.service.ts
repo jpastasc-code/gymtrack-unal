@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,6 +10,7 @@ import type {
   FranjaCancha,
   ReservaCancha,
 } from '../generated/prisma/client';
+import type { Rol } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import type {
   ActualizarFranjaDto,
@@ -35,6 +37,11 @@ export interface CanchaResumen {
   nombre: string;
   descripcion: string | null;
 }
+
+/** Quienes definen el horario de la cancha (GYMM-20) y cancelan reservas ajenas (GYMM-29). */
+export const GESTORES_CANCHA: readonly Rol[] = ['PERSONAL_DEPORTES', 'ADMIN'];
+
+export const esGestorCancha = (rol: Rol) => GESTORES_CANCHA.includes(rol);
 
 export interface FranjaDelDia {
   id: string;
@@ -273,6 +280,39 @@ export class CanchaService {
           : 'Otra persona acaba de reservar esa franja. Elige otra.',
       );
     }
+  }
+
+  /**
+   * Cancela una reserva (GYMM-29): la marca CANCELADA, así que la restricción de
+   * exclusión y la disponibilidad dejan de contarla y la franja queda libre al
+   * instante. Puede hacerlo quien la hizo o el personal de deportes, y solo antes
+   * de que empiece. Cancelar dos veces no es un error.
+   */
+  async cancelarReserva(
+    id: string,
+    usuario: { id: string; rol: Rol },
+    ahora = new Date(),
+  ): Promise<void> {
+    const reserva = await this.prisma.reservaCancha.findUnique({
+      where: { id },
+    });
+    if (!reserva) throw new NotFoundException('Esa reserva no existe.');
+    if (reserva.usuarioId !== usuario.id && !esGestorCancha(usuario.rol)) {
+      throw new ForbiddenException(
+        'Solo quien hizo la reserva o el personal de deportes puede cancelarla.',
+      );
+    }
+    if (reserva.estado === 'CANCELADA') return;
+    if (reserva.inicio <= ahora) {
+      throw new ConflictException(
+        'Esa reserva ya empezó, así que no se puede cancelar.',
+      );
+    }
+    // El filtro por estado evita pisar `canceladaEn` si dos cancelaciones llegan juntas.
+    await this.prisma.reservaCancha.updateMany({
+      where: { id, estado: 'CONFIRMADA' },
+      data: { estado: 'CANCELADA', canceladaEn: ahora },
+    });
   }
 
   /** Reservas confirmadas de la persona que todavía no terminan, de la más próxima a la más lejana. */

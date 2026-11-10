@@ -157,6 +157,7 @@ erDiagram
 - **Evaluaciones inmutables (GYMM-13).** Cada evaluación es una fila nueva; las medidas variables (perímetros, pliegues, tests) van en `medida` para no tener una columna por cada una.
 - **Franjas como plantilla semanal.** `franja_gimnasio` y `franja_cancha` describen el horario de cada día de la semana; la reserva del gimnasio guarda la `fecha` concreta.
 - **`franja_cancha` se agregó** a la lista original de entidades para cumplir GYMM-20 (el personal de deportes define las franjas habilitadas).
+- **Cancelar una reserva no la borra (GYMM-29):** pasa a `CANCELADA` con `cancelada_en`. La exclusión de la cancha solo cuenta las `CONFIRMADA`, así que la franja queda libre al instante y el historial se conserva.
 - **Aforo en tiempo real (GYMM-33)** = registros de `registro_acceso` sin `salida`.
 - **`serie_registrada` guarda el ejercicio** para el histórico (GYMM-31) y la precarga de la última carga (GYMM-26), aunque la rutina cambie después.
 
