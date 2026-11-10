@@ -17,7 +17,7 @@ const USUARIOS = {
 /** Una semana lejana, para que ninguna reserva haya empezado al correr la prueba. */
 const SEMANA = '2030-01-09';
 
-type Franja = { horaInicio: string; estado: string };
+type Franja = { horaInicio: string; estado: string; reserva?: object };
 
 describe('Cancelación de reservas de la cancha (e2e, GYMM-29)', () => {
   let app: INestApplication<App>;
@@ -117,7 +117,14 @@ describe('Cancelación de reservas de la cancha (e2e, GYMM-29)', () => {
     expect((await franjaDelLunes('instructor')).estado).toBe('RESERVADA');
   });
 
-  it('el personal de deportes cancela la reserva de otra persona', async () => {
+  it('el personal de deportes ve de quién es la franja y la cancela', async () => {
+    expect((await franjaDelLunes('deportes')).reserva).toEqual({
+      id: reservaId(),
+      nombre: 'Daniela Deportista',
+    });
+    // Quien no es del personal de deportes no ve a nombre de quién está.
+    expect(await franjaDelLunes('instructor')).not.toHaveProperty('reserva');
+
     await como('deportes').cancelar(reservaId()).expect(204);
     expect((await franjaDelLunes('deportista')).estado).toBe('DISPONIBLE');
   });

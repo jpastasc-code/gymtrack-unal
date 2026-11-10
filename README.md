@@ -106,7 +106,7 @@ pnpm dev:web   # Frontend en http://localhost:5173
 | GET    | `/api/deportistas/:id` | Datos básicos de un deportista (instructores). |
 | GET    | `/api/deportistas/:id/evaluaciones` | Historial de evaluaciones, de la más reciente a la más antigua (instructores). |
 | POST   | `/api/deportistas/:id/evaluaciones` | Registra una evaluación nueva; nunca modifica las anteriores. Valida rangos de peso, talla, % de grasa y de cada medida; los errores de una medida llegan como `medidas.<i>.valor` (instructores). |
-| GET    | `/api/cancha/disponibilidad` | Franjas de la cancha de una semana (`?semana=AAAA-MM-DD`) con su estado: `DISPONIBLE`, `RESERVADA`, `TUYA` o `PASADA`. |
+| GET    | `/api/cancha/disponibilidad` | Franjas de la cancha de una semana (`?semana=AAAA-MM-DD`) con su estado: `DISPONIBLE`, `RESERVADA`, `TUYA` o `PASADA`. Al personal de deportes cada franja ocupada le trae `reserva` (id y nombre de quien reservó). |
 | POST   | `/api/cancha/reservas` | Reserva una franja libre (`{ franjaId, fecha }`) a nombre de quien la pide. Si alguien la reservó primero, 409. |
 | GET    | `/api/cancha/reservas/mias` | Mis reservas de la cancha que todavía no terminan. |
 | POST   | `/api/cancha/reservas/:id/cancelar` | Cancela una reserva antes de que empiece (quien la hizo o el personal de deportes); la franja queda libre de inmediato. 204, también si ya estaba cancelada. |
