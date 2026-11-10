@@ -23,6 +23,7 @@ export interface FilaReserva {
   inicio: Date;
   fin: Date;
   estado: 'CONFIRMADA' | 'CANCELADA';
+  canceladaEn?: Date | null;
 }
 
 const errorPrisma = (code: string) =>
@@ -189,6 +190,24 @@ export function crearCanchaEnMemoria({
           .sort((a, b) => a.inicio.getTime() - b.inicio.getTime())
           .map(conCancha),
       ),
+    ),
+    findUnique: jest.fn(({ where }: { where: { id: string } }) =>
+      Promise.resolve(reservas.find((r) => r.id === where.id) ?? null),
+    ),
+    updateMany: jest.fn(
+      ({
+        where,
+        data,
+      }: {
+        where: { id: string; estado: string };
+        data: Partial<FilaReserva>;
+      }) => {
+        const filas = reservas.filter(
+          (r) => r.id === where.id && r.estado === where.estado,
+        );
+        for (const fila of filas) Object.assign(fila, data);
+        return Promise.resolve({ count: filas.length });
+      },
     ),
     findFirst: jest.fn(({ where }: { where: FiltroReservas }) =>
       Promise.resolve(reservas.find((r) => cumple(r, where)) ?? null),

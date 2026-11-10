@@ -109,6 +109,7 @@ pnpm dev:web   # Frontend en http://localhost:5173
 | GET    | `/api/cancha/disponibilidad` | Franjas de la cancha de una semana (`?semana=AAAA-MM-DD`) con su estado: `DISPONIBLE`, `RESERVADA`, `TUYA` o `PASADA`. |
 | POST   | `/api/cancha/reservas` | Reserva una franja libre (`{ franjaId, fecha }`) a nombre de quien la pide. Si alguien la reservó primero, 409. |
 | GET    | `/api/cancha/reservas/mias` | Mis reservas de la cancha que todavía no terminan. |
+| POST   | `/api/cancha/reservas/:id/cancelar` | Cancela una reserva antes de que empiece (quien la hizo o el personal de deportes); la franja queda libre de inmediato. 204, también si ya estaba cancelada. |
 
 Todas las rutas exigen `Authorization: Bearer <token de Supabase>` salvo las marcadas con `@Publico()` (`/api`, `/api/health`). Para restringir por rol usa `@Roles('INSTRUCTOR', …)`; el rol se lee de la tabla `usuario`. En Swagger, el botón **Authorize** acepta el token.
 

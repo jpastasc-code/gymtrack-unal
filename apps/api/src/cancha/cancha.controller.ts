@@ -34,17 +34,19 @@ import {
 } from './cancha.dto';
 import {
   CanchaService,
+  GESTORES_CANCHA,
   type DisponibilidadSemana,
   type FranjasCancha,
   type FranjaVista,
   type ReservaVista,
 } from './cancha.service';
 
-/** Quienes definen el horario de la cancha (GYMM-20). */
-const GESTORES = ['PERSONAL_DEPORTES', 'ADMIN'] as const;
 /** Un id que no es UUID no puede existir: se responde 404 en vez de un error de formato. */
 const uuid = new ParseUUIDPipe({
   exceptionFactory: () => new NotFoundException('Esa franja no existe.'),
+});
+const uuidReserva = new ParseUUIDPipe({
+  exceptionFactory: () => new NotFoundException('Esa reserva no existe.'),
 });
 
 @ApiTags('Cancha')
@@ -89,6 +91,26 @@ export class CanchaController {
     return this.cancha.reservar(usuario.id, dto);
   }
 
+  @Post('reservas/:id/cancelar')
+  @HttpCode(204)
+  @ApiOperation({
+    summary: 'Cancelar una reserva de la cancha',
+    description:
+      'Quien hizo la reserva o el personal de deportes, antes de que empiece. La franja queda libre de inmediato. Cancelar una reserva ya cancelada no es un error.',
+  })
+  @ApiNoContentResponse({ description: 'Cancelada.' })
+  @ApiNotFoundResponse({ description: 'La reserva no existe.' })
+  @ApiForbiddenResponse({
+    description: 'No es tu reserva y no eres personal de deportes.',
+  })
+  @ApiConflictResponse({ description: 'La reserva ya empezó.' })
+  cancelarReserva(
+    @Param('id', uuidReserva) id: string,
+    @UsuarioActual() usuario: Usuario,
+  ): Promise<void> {
+    return this.cancha.cancelarReserva(id, usuario);
+  }
+
   @Get('reservas/mias')
   @ApiOperation({
     summary: 'Mis reservas activas de la cancha',
@@ -101,7 +123,7 @@ export class CanchaController {
   }
 
   @Get('franjas')
-  @Roles(...GESTORES)
+  @Roles(...GESTORES_CANCHA)
   @ApiOperation({
     summary: 'Franjas semanales de la cancha (personal de deportes)',
     description: 'Incluye las deshabilitadas.',
@@ -114,7 +136,7 @@ export class CanchaController {
   }
 
   @Post('franjas')
-  @Roles(...GESTORES)
+  @Roles(...GESTORES_CANCHA)
   @ApiOperation({
     summary: 'Habilitar una franja semanal (personal de deportes)',
   })
@@ -133,7 +155,7 @@ export class CanchaController {
   }
 
   @Patch('franjas/:id')
-  @Roles(...GESTORES)
+  @Roles(...GESTORES_CANCHA)
   @ApiOperation({
     summary:
       'Deshabilitar o volver a habilitar una franja (personal de deportes)',
@@ -151,7 +173,7 @@ export class CanchaController {
 
   @Delete('franjas/:id')
   @HttpCode(204)
-  @Roles(...GESTORES)
+  @Roles(...GESTORES_CANCHA)
   @ApiOperation({
     summary: 'Eliminar una franja (personal de deportes)',
     description: 'Las reservas ya hechas en ese horario se conservan.',
