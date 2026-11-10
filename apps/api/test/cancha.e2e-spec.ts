@@ -22,7 +22,7 @@ type Dia = {
   franjas: { horaInicio: string; estado: string }[];
 };
 
-describe('Disponibilidad de la cancha (e2e, GYMM-20)', () => {
+describe('Disponibilidad y reservas de la cancha (e2e, GYMM-20 y GYMM-28)', () => {
   let app: INestApplication<App>;
   let db: ReturnType<typeof crearCanchaEnMemoria>;
 
@@ -238,5 +238,103 @@ describe('Disponibilidad de la cancha (e2e, GYMM-20)', () => {
     await como('deportes')
       .patch('/api/cancha/franjas/no-es-un-id', { activa: true })
       .expect(404);
+  });
+
+  describe('reservas (GYMM-28)', () => {
+    /** Lunes 7 de enero de 2030: la franja de 3 p. m. está libre. */
+    const reservaLibre = () => ({
+      franjaId: db.idDe(1, '15:00'),
+      fecha: '2030-01-07',
+    });
+
+    it('exige sesión para reservar', async () => {
+      await request(app.getHttpServer())
+        .post('/api/cancha/reservas')
+        .send(reservaLibre())
+        .expect(401);
+    });
+
+    it('un deportista reserva una franja libre y la ve como suya', async () => {
+      const res = await como('deportista')
+        .post('/api/cancha/reservas', reservaLibre())
+        .expect(201);
+      expect(res.body).toMatchObject({
+        cancha: 'Cancha sintética',
+        fecha: '2030-01-07',
+        diaSemana: 1,
+        horaInicio: '15:00',
+        horaFin: '16:00',
+      });
+      expect(db.reservas().at(-1)?.usuarioId).toBe('u-deportista');
+
+      const mias = await como('deportista')
+        .get('/api/cancha/reservas/mias')
+        .expect(200);
+      expect(mias.body).toEqual([res.body]);
+
+      const semana = await como('deportista')
+        .get(`/api/cancha/disponibilidad?semana=${SEMANA}`)
+        .expect(200);
+      expect((semana.body.dias as Dia[])[0].franjas).toEqual([
+        expect.objectContaining({ horaInicio: '14:00', estado: 'RESERVADA' }),
+        expect.objectContaining({ horaInicio: '15:00', estado: 'TUYA' }),
+      ]);
+      // Para otra persona la misma franja aparece reservada, sin decir de quién es.
+      const otra = await como('instructor')
+        .get(`/api/cancha/disponibilidad?semana=${SEMANA}`)
+        .expect(200);
+      expect((otra.body.dias as Dia[])[0].franjas[1].estado).toBe('RESERVADA');
+    });
+
+    it('de dos reservas simultáneas de la misma franja solo una se confirma', async () => {
+      const [a, b] = await Promise.all([
+        como('deportista').post('/api/cancha/reservas', reservaLibre()),
+        como('instructor').post('/api/cancha/reservas', reservaLibre()),
+      ]);
+      expect([a.status, b.status].sort((x, y) => x - y)).toEqual([201, 409]);
+      expect([a, b].find((r) => r.status === 409)?.body.message).toBe(
+        'Otra persona acaba de reservar esa franja. Elige otra.',
+      );
+      expect(db.reservas()).toHaveLength(2);
+    });
+
+    it('no deja reservar una franja ya reservada', async () => {
+      const res = await como('deportista')
+        .post('/api/cancha/reservas', {
+          franjaId: db.idDe(1, '14:00'),
+          fecha: '2030-01-07',
+        })
+        .expect(409);
+      expect(res.body.message).toBe(
+        'Otra persona acaba de reservar esa franja. Elige otra.',
+      );
+    });
+
+    it('valida los datos de la reserva', async () => {
+      const formato = await como('deportista')
+        .post('/api/cancha/reservas', { franjaId: 'x', fecha: '7/1/2030' })
+        .expect(400);
+      expect(formato.body.errores).toEqual({
+        franjaId: 'Elige una franja.',
+        fecha: 'La fecha debe tener el formato AAAA-MM-DD.',
+      });
+
+      const dia = await como('deportista')
+        .post('/api/cancha/reservas', {
+          ...reservaLibre(),
+          fecha: '2030-01-08',
+        })
+        .expect(400);
+      expect(dia.body.errores.fecha).toBe(
+        'Esa franja es del lunes, no del martes.',
+      );
+    });
+
+    it('sin reservas, la lista de mis reservas viene vacía', async () => {
+      const res = await como('deportista')
+        .get('/api/cancha/reservas/mias')
+        .expect(200);
+      expect(res.body).toEqual([]);
+    });
   });
 });
