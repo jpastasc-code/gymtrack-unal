@@ -20,7 +20,7 @@ beforeEach(() => {
 const franjasDe = (dia: string) =>
   within(screen.getByRole('region', { name: dia }))
     .queryAllByRole('listitem')
-    .map((li) => li.textContent?.replace(/(\d{2}:\d{2})(Libre|Reservada|Ya pasó)$/, '$1 $2'))
+    .map((li) => li.textContent?.replace(/(\d{2}:\d{2})(Libre|Reservada|Tuya|Elegida|Ya pasó)$/, '$1 $2'))
 
 describe('disponibilidad de la cancha: deportista (GYMM-20)', () => {
   it('ve la semana actual con lo libre, lo que ya pasó y los días sin horario', async () => {
@@ -140,5 +140,75 @@ describe('franjas de la cancha: personal de deportes (GYMM-20)', () => {
     await userEvent.click(within(confirmacion).getByRole('button', { name: 'Sí, eliminar' }))
     expect(await screen.findByText('Franja eliminada: sábado de 08:00 a 09:00.')).toBeInTheDocument()
     expect(screen.queryByRole('list', { name: 'Franjas del sábado' })).not.toBeInTheDocument()
+  })
+})
+
+describe('reserva de la cancha (GYMM-28)', () => {
+  const MIERCOLES = 'Miércoles 21 de octubre'
+
+  it('reserva una franja libre y la ve en sus reservas', async () => {
+    const fetchMock = simularApi()
+    renderApp('/reservas/cancha')
+    expect(await screen.findByText('Aún no tienes reservas.')).toBeInTheDocument()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Reservar miércoles 21 de octubre de 18:00 a 19:00' }))
+    expect(franjasDe(MIERCOLES)).toEqual(['14:00–15:00 Ya pasó', '18:00–19:00 Elegida'])
+    const confirmacion = screen.getByRole('alertdialog', { name: 'Confirmar reserva' })
+    expect(confirmacion).toHaveTextContent('¿Reservar la cancha el miércoles 21 de octubre de 18:00 a 19:00?')
+    await userEvent.click(within(confirmacion).getByRole('button', { name: 'Sí, reservar' }))
+
+    expect(await screen.findByText('Listo, la cancha es tuya el miércoles 21 de octubre de 18:00 a 19:00.')).toBeInTheDocument()
+    await waitFor(() => expect(franjasDe(MIERCOLES)).toEqual(['14:00–15:00 Ya pasó', '18:00–19:00 Tuya']))
+    const mias = await screen.findByRole('list', { name: 'Tus reservas activas' })
+    expect(within(mias).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Miércoles 21 de octubre18:00–19:00'])
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+
+    const post = fetchMock.mock.calls.find(([url, init]) => String(url).endsWith('/cancha/reservas') && init?.method === 'POST')
+    expect(JSON.parse(String(post?.[1]?.body))).toEqual({ franjaId: 'f3', fecha: '2026-10-21' })
+  })
+
+  it('puede arrepentirse antes de confirmar', async () => {
+    const fetchMock = simularApi()
+    renderApp('/reservas/cancha')
+    await userEvent.click(await screen.findByRole('button', { name: 'Reservar sábado 24 de octubre de 08:00 a 09:00' }))
+    await userEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(franjasDe('Sábado 24 de octubre')).toEqual(['08:00–09:00 Libre'])
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+  })
+
+  it('si otra persona la reservó primero, lo explica y la franja deja de verse libre', async () => {
+    simularApi({ canchaGanadaPorOtro: ['2026-10-21 18:00'] })
+    renderApp('/reservas/cancha')
+    await userEvent.click(await screen.findByRole('button', { name: 'Reservar miércoles 21 de octubre de 18:00 a 19:00' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Sí, reservar' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Otra persona acaba de reservar esa franja. Elige otra.')
+    await waitFor(() => expect(franjasDe(MIERCOLES)).toEqual(['14:00–15:00 Ya pasó', '18:00–19:00 Reservada']))
+    expect(screen.getByText('Aún no tienes reservas.')).toBeInTheDocument()
+  })
+
+  it('ve sus reservas activas en orden y marcadas como suyas en la semana', async () => {
+    simularApi({ misReservasCancha: ['2026-10-28 14:00', '2026-10-24 08:00'] })
+    renderApp('/reservas/cancha')
+
+    const mias = await screen.findByRole('list', { name: 'Tus reservas activas' })
+    expect(within(mias).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'Sábado 24 de octubre08:00–09:00',
+      'Miércoles 28 de octubre14:00–15:00',
+    ])
+    expect(franjasDe('Sábado 24 de octubre')).toEqual(['08:00–09:00 Tuya'])
+    // Solo las franjas libres se pueden tocar.
+    expect(screen.queryByRole('button', { name: /^Reservar sábado/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Reservar miércoles 21 de octubre de 14:00/ })).not.toBeInTheDocument()
+  })
+
+  it('si no carga sus reservas, lo dice y deja intentar de nuevo sin perder la semana', async () => {
+    simularApi({ errorMisReservas: 403 })
+    renderApp('/reservas/cancha')
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos cargar tus reservas.')
+    expect(within(screen.getByRole('alert')).getByRole('button', { name: 'Intentar de nuevo' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Semana del 19 al 25 de octubre' })).toBeInTheDocument()
   })
 })

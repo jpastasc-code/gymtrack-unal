@@ -1,7 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from '../../lib/api/client'
 
-export type EstadoFranja = 'DISPONIBLE' | 'RESERVADA' | 'PASADA'
+/** TUYA: la reservaste tú (GYMM-28); RESERVADA: otra persona. */
+export type EstadoFranja = 'DISPONIBLE' | 'RESERVADA' | 'TUYA' | 'PASADA'
 
 export interface CanchaResumen {
   id: string
@@ -45,6 +46,23 @@ export interface FranjasCancha {
   franjas: Franja[]
 }
 
+/** Reserva de la cancha de quien tiene la sesión (GYMM-28). */
+export interface ReservaCancha {
+  id: string
+  cancha: string
+  /** AAAA-MM-DD en hora de Colombia. */
+  fecha: string
+  /** 1 = lunes … 7 = domingo. */
+  diaSemana: number
+  horaInicio: string
+  horaFin: string
+}
+
+export interface NuevaReserva {
+  franjaId: string
+  fecha: string
+}
+
 export interface NuevaFranja {
   diaSemana: number
   horaInicio: string
@@ -67,6 +85,14 @@ export function useDisponibilidadCancha(semana: string | null) {
   })
 }
 
+/** Mis reservas que todavía no terminan, de la más próxima a la más lejana. */
+export function useMisReservasCancha() {
+  return useQuery({
+    queryKey: [...CLAVE, 'reservas', 'mias'],
+    queryFn: ({ signal }) => apiFetch<ReservaCancha[]>('/cancha/reservas/mias', { signal }),
+  })
+}
+
 export function useFranjasCancha() {
   return useQuery({
     queryKey: [...CLAVE, 'franjas'],
@@ -77,6 +103,18 @@ export function useFranjasCancha() {
 function useInvalidarCancha() {
   const queryClient = useQueryClient()
   return () => queryClient.invalidateQueries({ queryKey: CLAVE })
+}
+
+/**
+ * Reserva una franja. Pase lo que pase se vuelve a pedir la disponibilidad: si
+ * otra persona la reservó primero (409), la franja debe dejar de verse libre.
+ */
+export function useReservarCancha() {
+  const invalidar = useInvalidarCancha()
+  return useMutation({
+    mutationFn: (datos: NuevaReserva) => apiFetch<ReservaCancha>('/cancha/reservas', { method: 'POST', body: datos }),
+    onSettled: invalidar,
+  })
 }
 
 export function useCrearFranja() {
