@@ -213,3 +213,162 @@ describe('CanchaService: franjas (personal de deportes)', () => {
     );
   });
 });
+
+describe('CanchaService: reservas (GYMM-28)', () => {
+  const YO = 'u-yo';
+
+  it('reserva una franja libre a nombre de quien la pide', async () => {
+    const { db, servicio } = montar();
+    const reserva = await servicio.reservar(
+      YO,
+      { franjaId: db.idDe(3, '16:00'), fecha: '2026-10-21' },
+      AHORA,
+    );
+    expect(reserva).toMatchObject({
+      cancha: 'Cancha sintética',
+      fecha: '2026-10-21',
+      diaSemana: 3,
+      horaInicio: '16:00',
+      horaFin: '17:00',
+    });
+    // Se guarda como el instante real: 4 p. m. en Colombia son las 21:00 UTC.
+    expect(db.reservas()).toEqual([
+      expect.objectContaining({
+        usuarioId: YO,
+        estado: 'CONFIRMADA',
+        inicio: new Date('2026-10-21T21:00:00Z'),
+        fin: new Date('2026-10-21T22:00:00Z'),
+      }),
+    ]);
+    const semana = await servicio.disponibilidad('2026-10-21', AHORA, YO);
+    expect(resumen(semana)['2026-10-21']).toEqual([
+      '14:00 PASADA',
+      '16:00 TUYA',
+    ]);
+  });
+
+  it('dos reservas simultáneas de la misma franja: solo una se confirma', async () => {
+    const { db, servicio } = montar();
+    const datos = { franjaId: db.idDe(1, '14:00'), fecha: '2026-10-26' };
+    const resultados = await Promise.allSettled([
+      servicio.reservar('u-ana', datos, AHORA),
+      servicio.reservar('u-luis', datos, AHORA),
+    ]);
+    expect(resultados.map((r) => r.status).sort()).toEqual([
+      'fulfilled',
+      'rejected',
+    ]);
+    const rechazo = resultados.find((r) => r.status === 'rejected')!;
+    expect(rechazo.reason).toBeInstanceOf(ConflictException);
+    expect((rechazo.reason as Error).message).toBe(
+      'Otra persona acaba de reservar esa franja. Elige otra.',
+    );
+    expect(db.reservas()).toHaveLength(1);
+  });
+
+  it('avisa distinto si quien choca con la reserva es uno mismo', async () => {
+    const { db, servicio } = montar();
+    const datos = { franjaId: db.idDe(1, '14:00'), fecha: '2026-10-26' };
+    await servicio.reservar(YO, datos, AHORA);
+    await expect(servicio.reservar(YO, datos, AHORA)).rejects.toThrow(
+      'Ya tienes reservada la cancha en ese horario.',
+    );
+  });
+
+  it('una reserva cancelada no ocupa la franja', async () => {
+    const { db, servicio } = montar({
+      reservas: [
+        {
+          inicio: '2026-10-26T19:00:00Z',
+          fin: '2026-10-26T20:00:00Z',
+          estado: 'CANCELADA',
+        },
+      ],
+    });
+    await expect(
+      servicio.reservar(
+        YO,
+        { franjaId: db.idDe(1, '14:00'), fecha: '2026-10-26' },
+        AHORA,
+      ),
+    ).resolves.toMatchObject({ horaInicio: '14:00' });
+  });
+
+  it('solo deja reservar franjas disponibles', async () => {
+    const { db, servicio } = montar();
+    // Ya empezó: hoy miércoles a las 2 p. m. (son las 3).
+    await expect(
+      servicio.reservar(
+        YO,
+        { franjaId: db.idDe(3, '14:00'), fecha: '2026-10-21' },
+        AHORA,
+      ),
+    ).rejects.toThrow('Esa franja ya empezó. Elige una que no haya pasado.');
+    // Deshabilitada por el personal de deportes.
+    await expect(
+      servicio.reservar(
+        YO,
+        { franjaId: db.idDe(2, '14:00'), fecha: '2026-10-27' },
+        AHORA,
+      ),
+    ).rejects.toThrow('Esa franja ya no está habilitada. Elige otra.');
+    // La franja es de los lunes y la fecha es un martes.
+    await expect(
+      servicio.reservar(
+        YO,
+        { franjaId: db.idDe(1, '14:00'), fecha: '2026-10-27' },
+        AHORA,
+      ),
+    ).rejects.toThrow(BadRequestException);
+    await expect(
+      servicio.reservar(
+        YO,
+        {
+          franjaId: '00000000-0000-4000-8000-000000000000',
+          fecha: '2026-10-26',
+        },
+        AHORA,
+      ),
+    ).rejects.toThrow(NotFoundException);
+    expect(db.reservas()).toEqual([]);
+  });
+
+  it('lista mis reservas que no han terminado, de la más próxima a la más lejana', async () => {
+    const { servicio } = montar({
+      reservas: [
+        // Sábado 31, 8 a 9 a. m.
+        {
+          inicio: '2026-10-31T13:00:00Z',
+          fin: '2026-10-31T14:00:00Z',
+          usuarioId: YO,
+        },
+        // Hoy de 2:30 a 3:30 p. m.: ya empezó, pero sigue activa.
+        {
+          inicio: '2026-10-21T19:30:00Z',
+          fin: '2026-10-21T20:30:00Z',
+          usuarioId: YO,
+        },
+        // Ya terminó.
+        {
+          inicio: '2026-10-19T19:00:00Z',
+          fin: '2026-10-19T20:00:00Z',
+          usuarioId: YO,
+        },
+        // Cancelada.
+        {
+          inicio: '2026-10-26T19:00:00Z',
+          fin: '2026-10-26T20:00:00Z',
+          usuarioId: YO,
+          estado: 'CANCELADA',
+        },
+        // De otra persona.
+        { inicio: '2026-10-28T19:00:00Z', fin: '2026-10-28T20:00:00Z' },
+      ],
+    });
+    const mias = await servicio.misReservas(YO, AHORA);
+    expect(mias.map((r) => `${r.fecha} ${r.horaInicio}-${r.horaFin}`)).toEqual([
+      '2026-10-21 14:30-15:30',
+      '2026-10-31 08:00-09:00',
+    ]);
+  });
+});
