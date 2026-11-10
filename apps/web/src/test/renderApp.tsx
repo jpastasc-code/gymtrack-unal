@@ -7,7 +7,7 @@ import { rutas } from '../app/rutas'
 import { SesionProvider } from '../features/auth/SesionProvider'
 import type { Perfil } from '../features/auth/perfil'
 import type { PerfilSesion } from '../features/auth/tipos'
-import { sumarDias, type DisponibilidadSemana, type Franja } from '../features/cancha/api'
+import { sumarDias, type DisponibilidadSemana, type Franja, type NuevaReserva, type ReservaCancha } from '../features/cancha/api'
 import type { PrecargaEjercicio, SerieNueva, SerieRegistrada, Sesion } from '../features/entrenamiento/api'
 import type { DeportistaResumen, Evaluacion } from '../features/evaluacion/api'
 import type { NuevaRutina, Rutina } from '../features/rutinas/api'
@@ -65,7 +65,7 @@ const lunesDe = (fecha: string) => {
 }
 
 /** Arma GET /api/cancha/disponibilidad como el API, a partir de las franjas activas. */
-function disponibilidadDe(franjas: Franja[], semana: string | null, reservadas: string[]): DisponibilidadSemana {
+function disponibilidadDe(franjas: Franja[], semana: string | null, reservadas: string[], mias: string[]): DisponibilidadSemana {
   const desde = lunesDe(semana ?? HOY_CANCHA.fecha)
   const dias = [1, 2, 3, 4, 5, 6, 7].map((diaSemana) => {
     const fecha = sumarDias(desde, diaSemana - 1)
@@ -77,13 +77,15 @@ function disponibilidadDe(franjas: Franja[], semana: string | null, reservadas: 
         .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
         .map((f) => {
           const pasada = `${fecha} ${f.horaInicio}` <= `${HOY_CANCHA.fecha} ${HOY_CANCHA.hora}`
-          const reservada = reservadas.includes(`${fecha} ${f.horaInicio}`)
-          return {
-            id: f.id,
-            horaInicio: f.horaInicio,
-            horaFin: f.horaFin,
-            estado: pasada ? ('PASADA' as const) : reservada ? ('RESERVADA' as const) : ('DISPONIBLE' as const),
-          }
+          const clave = `${fecha} ${f.horaInicio}`
+          const estado = pasada
+            ? ('PASADA' as const)
+            : mias.includes(clave)
+              ? ('TUYA' as const)
+              : reservadas.includes(clave)
+                ? ('RESERVADA' as const)
+                : ('DISPONIBLE' as const)
+          return { id: f.id, horaInicio: f.horaInicio, horaFin: f.horaFin, estado }
         }),
     }
   })
@@ -174,6 +176,12 @@ interface OpcionesApi {
   canchaReservada?: string[]
   /** Código de error para GET /api/cancha/disponibilidad (p. ej. 404 sin cancha). */
   errorCancha?: number
+  /** Mis reservas de la cancha (GYMM-28), como "AAAA-MM-DD HH:MM" de inicio. Por defecto, ninguna. */
+  misReservasCancha?: string[]
+  /** Franjas que se ven libres pero otra persona reserva justo antes (POST responde 409). */
+  canchaGanadaPorOtro?: string[]
+  /** Código de error para GET /api/cancha/reservas/mias. */
+  errorMisReservas?: number
   /** GET /api/rutinas/mia (GYMM-22): la rutina vigente, null (404, sin rutina) o un código de error. */
   miRutina?: Rutina | null | number
   /** Sesión de entrenamiento abierta (GYMM-26): por defecto, ninguna. */
@@ -197,6 +205,9 @@ export function simularApi({
   franjasCancha = FRANJAS_CANCHA,
   canchaReservada = ['2026-10-26 14:00'],
   errorCancha,
+  misReservasCancha = [],
+  canchaGanadaPorOtro = [],
+  errorMisReservas,
   miRutina = null,
   sesionActual = null,
   precargaSesiones = [],
@@ -204,6 +215,15 @@ export function simularApi({
 }: OpcionesApi = {}) {
   let sesion: Sesion | null = sesionActual && { ...sesionActual, series: [...sesionActual.series] }
   let franjas = franjasCancha.map((f) => ({ ...f }))
+  const reservadasCancha = [...canchaReservada]
+  const miasCancha = [...misReservasCancha]
+  /** "2026-10-28 14:00" → la reserva como la devuelve el API. */
+  const reservaDe = (clave: string): ReservaCancha => {
+    const [fecha, horaInicio] = clave.split(' ')
+    const diaSemana = new Date(`${fecha}T00:00:00Z`).getUTCDay() || 7
+    const franja = franjas.find((f) => f.diaSemana === diaSemana && f.horaInicio === horaInicio)
+    return { id: `r-${clave}`, cancha: 'Cancha sintética', fecha, diaSemana, horaInicio, horaFin: franja?.horaFin ?? '' }
+  }
   const evaluaciones: Record<string, Evaluacion[]> = { d1: [EVALUACION_INICIAL] }
   const rutinas: Record<string, Rutina[]> = Object.fromEntries(
     Object.entries(rutinasIniciales).map(([id, lista]) => [id, lista.map((r) => ({ ...r }))]),
@@ -320,7 +340,24 @@ export function simularApi({
     }
     if (pathname === '/api/cancha/disponibilidad') {
       if (errorCancha) return json({ message: 'La cancha no está habilitada en este momento.' }, errorCancha)
-      return json(disponibilidadDe(franjas, searchParams.get('semana'), canchaReservada))
+      return json(disponibilidadDe(franjas, searchParams.get('semana'), reservadasCancha, miasCancha))
+    }
+    if (pathname === '/api/cancha/reservas/mias') {
+      if (errorMisReservas) return json({ message: 'No pudimos cargar tus reservas.' }, errorMisReservas)
+      return json([...miasCancha].sort().map(reservaDe))
+    }
+    if (pathname === '/api/cancha/reservas' && metodo === 'POST') {
+      const datos = JSON.parse(String(init?.body)) as NuevaReserva
+      const franja = franjas.find((f) => f.id === datos.franjaId)
+      if (!franja) return json({ message: 'Esa franja no existe.' }, 404)
+      const clave = `${datos.fecha} ${franja.horaInicio}`
+      if (canchaGanadaPorOtro.includes(clave)) reservadasCancha.push(clave)
+      if (miasCancha.includes(clave)) return json({ message: 'Ya tienes reservada la cancha en ese horario.' }, 409)
+      if (reservadasCancha.includes(clave)) {
+        return json({ message: 'Otra persona acaba de reservar esa franja. Elige otra.' }, 409)
+      }
+      miasCancha.push(clave)
+      return json(reservaDe(clave), 201)
     }
     if (pathname === '/api/cancha/franjas' && metodo === 'GET') {
       const ordenadas = [...franjas].sort((a, b) => a.diaSemana - b.diaSemana || a.horaInicio.localeCompare(b.horaInicio))
