@@ -15,6 +15,8 @@ export interface FranjaDelDia {
   horaInicio: string
   horaFin: string
   estado: EstadoFranja
+  /** Solo para el personal de deportes (GYMM-29): la reserva que ocupa la franja y de quién es. */
+  reserva?: { id: string; nombre: string }
 }
 
 export interface DiaDisponible {
@@ -113,6 +115,15 @@ export function useReservarCancha() {
   const invalidar = useInvalidarCancha()
   return useMutation({
     mutationFn: (datos: NuevaReserva) => apiFetch<ReservaCancha>('/cancha/reservas', { method: 'POST', body: datos }),
+    onSettled: invalidar,
+  })
+}
+
+/** Cancela una reserva (GYMM-29). La disponibilidad se vuelve a pedir para mostrar la franja libre. */
+export function useCancelarReservaCancha() {
+  const invalidar = useInvalidarCancha()
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<void>(`/cancha/reservas/${id}/cancelar`, { method: 'POST' }),
     onSettled: invalidar,
   })
 }

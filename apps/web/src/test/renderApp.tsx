@@ -65,7 +65,14 @@ const lunesDe = (fecha: string) => {
 }
 
 /** Arma GET /api/cancha/disponibilidad como el API, a partir de las franjas activas. */
-function disponibilidadDe(franjas: Franja[], semana: string | null, reservadas: string[], mias: string[]): DisponibilidadSemana {
+function disponibilidadDe(
+  franjas: Franja[],
+  semana: string | null,
+  reservadas: string[],
+  mias: string[],
+  /** Personal de deportes (GYMM-29): cada franja ocupada dice de quién es. */
+  gestor?: { nombreMio: string },
+): DisponibilidadSemana {
   const desde = lunesDe(semana ?? HOY_CANCHA.fecha)
   const dias = [1, 2, 3, 4, 5, 6, 7].map((diaSemana) => {
     const fecha = sumarDias(desde, diaSemana - 1)
@@ -85,7 +92,9 @@ function disponibilidadDe(franjas: Franja[], semana: string | null, reservadas: 
               : reservadas.includes(clave)
                 ? ('RESERVADA' as const)
                 : ('DISPONIBLE' as const)
-          return { id: f.id, horaInicio: f.horaInicio, horaFin: f.horaFin, estado }
+          const duenio = estado === 'TUYA' ? gestor?.nombreMio : estado === 'RESERVADA' ? 'Otra Persona' : undefined
+          const reserva = gestor && duenio ? { reserva: { id: `r-${clave}`, nombre: duenio } } : {}
+          return { id: f.id, horaInicio: f.horaInicio, horaFin: f.horaFin, estado, ...reserva }
         }),
     }
   })
@@ -340,11 +349,25 @@ export function simularApi({
     }
     if (pathname === '/api/cancha/disponibilidad') {
       if (errorCancha) return json({ message: 'La cancha no está habilitada en este momento.' }, errorCancha)
-      return json(disponibilidadDe(franjas, searchParams.get('semana'), reservadasCancha, miasCancha))
+      const datosPerfil = typeof perfil === 'object' ? perfil : null
+      const gestor =
+        datosPerfil && ['PERSONAL_DEPORTES', 'ADMIN'].includes(datosPerfil.rol)
+          ? { nombreMio: `${datosPerfil.nombres} ${datosPerfil.apellidos}` }
+          : undefined
+      return json(disponibilidadDe(franjas, searchParams.get('semana'), reservadasCancha, miasCancha, gestor))
     }
     if (pathname === '/api/cancha/reservas/mias') {
       if (errorMisReservas) return json({ message: 'No pudimos cargar tus reservas.' }, errorMisReservas)
       return json([...miasCancha].sort().map(reservaDe))
+    }
+    const cancelacion = pathname.match(/^\/api\/cancha\/reservas\/r-(.+)\/cancelar$/)
+    if (cancelacion && metodo === 'POST') {
+      const clave = decodeURIComponent(cancelacion[1])
+      const gestor = typeof perfil === 'object' && ['PERSONAL_DEPORTES', 'ADMIN'].includes(perfil.rol)
+      const lista = miasCancha.includes(clave) ? miasCancha : gestor && reservadasCancha.includes(clave) ? reservadasCancha : null
+      if (!lista) return json({ message: 'Solo quien hizo la reserva o el personal de deportes puede cancelarla.' }, 403)
+      lista.splice(lista.indexOf(clave), 1)
+      return new Response(null, { status: 204 })
     }
     if (pathname === '/api/cancha/reservas' && metodo === 'POST') {
       const datos = JSON.parse(String(init?.body)) as NuevaReserva
