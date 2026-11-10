@@ -67,6 +67,8 @@ export function useCerrarSesion() {
       queryClient.setQueryData(CLAVE_SESION, null)
       // Lo que acabo de hacer es la precarga de la próxima sesión.
       void queryClient.invalidateQueries({ queryKey: ['sesiones', 'precarga'] })
+      // Y entra al histórico por ejercicio (GYMM-31).
+      void queryClient.invalidateQueries({ queryKey: ['progreso'] })
     },
   })
 }

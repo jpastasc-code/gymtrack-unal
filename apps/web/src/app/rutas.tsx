@@ -12,6 +12,7 @@ import { NuevaEvaluacionPage } from '../features/evaluacion/NuevaEvaluacionPage'
 import { ReservasPage } from '../features/gimnasio/ReservasPage'
 import { InicioPage } from '../features/inicio/InicioPage'
 import { NutricionPage } from '../features/nutricion/NutricionPage'
+import { HistoricoEjercicioPage } from '../features/progreso/HistoricoEjercicioPage'
 import { ProgresoPage } from '../features/progreso/ProgresoPage'
 import { MiRutinaPage } from '../features/rutinas/MiRutinaPage'
 import { AsignarRutinasPage } from '../features/rutinas/asignar/AsignarRutinasPage'
@@ -46,6 +47,7 @@ export const rutas: RouteObject[] = [
       { path: 'ficha', element: <FichaFisicaPage /> },
       { path: 'nutricion', element: <NutricionPage /> },
       { path: 'progreso', element: <ProgresoPage /> },
+      { path: 'progreso/ejercicios/:id', element: <HistoricoEjercicioPage /> },
       { path: 'ejercicios', element: <CatalogoPage /> },
       {
         // Pantallas de instructores: catálogo (GYMM-12), evaluaciones (GYMM-13) y rutinas (GYMM-21).
