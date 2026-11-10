@@ -24,16 +24,20 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Roles } from '../auth/auth.decorators';
+import { UsuarioActual } from '../auth/usuario-actual.decorator';
+import type { Usuario } from '../generated/prisma/client';
 import {
   ActualizarFranjaDto,
   ConsultaDisponibilidadDto,
   CrearFranjaDto,
+  CrearReservaDto,
 } from './cancha.dto';
 import {
   CanchaService,
   type DisponibilidadSemana,
   type FranjasCancha,
   type FranjaVista,
+  type ReservaVista,
 } from './cancha.service';
 
 /** Quienes definen el horario de la cancha (GYMM-20). */
@@ -53,14 +57,47 @@ export class CanchaController {
   @ApiOperation({
     summary: 'Disponibilidad semanal de la cancha sintética',
     description:
-      'Cualquier usuario con sesión. Devuelve los 7 días (lunes a domingo, hora de Colombia) con cada franja habilitada y su estado: DISPONIBLE, RESERVADA o PASADA (ya empezó).',
+      'Cualquier usuario con sesión. Devuelve los 7 días (lunes a domingo, hora de Colombia) con cada franja habilitada y su estado: DISPONIBLE, RESERVADA (por otra persona), TUYA (la reservaste tú) o PASADA (ya empezó).',
   })
   @ApiOkResponse({ description: 'La semana pedida, día por día.' })
   @ApiNotFoundResponse({ description: 'No hay una cancha habilitada.' })
   disponibilidad(
     @Query() consulta: ConsultaDisponibilidadDto,
+    @UsuarioActual() usuario: Usuario,
   ): Promise<DisponibilidadSemana> {
-    return this.cancha.disponibilidad(consulta.semana);
+    return this.cancha.disponibilidad(consulta.semana, new Date(), usuario.id);
+  }
+
+  @Post('reservas')
+  @ApiOperation({
+    summary: 'Reservar una franja de la cancha',
+    description:
+      'Cualquier usuario con sesión. La reserva queda a su nombre y confirmada. Si dos personas reservan la misma franja al mismo tiempo, la base de datos solo acepta una.',
+  })
+  @ApiCreatedResponse({ description: 'Reserva confirmada.' })
+  @ApiBadRequestResponse({
+    description: 'Datos no válidos o la franja no es de ese día.',
+  })
+  @ApiNotFoundResponse({ description: 'La franja no existe.' })
+  @ApiConflictResponse({
+    description: 'La franja ya está reservada, ya empezó o está deshabilitada.',
+  })
+  reservar(
+    @Body() dto: CrearReservaDto,
+    @UsuarioActual() usuario: Usuario,
+  ): Promise<ReservaVista> {
+    return this.cancha.reservar(usuario.id, dto);
+  }
+
+  @Get('reservas/mias')
+  @ApiOperation({
+    summary: 'Mis reservas activas de la cancha',
+    description:
+      'Reservas confirmadas que todavía no terminan, de la más próxima a la más lejana.',
+  })
+  @ApiOkResponse({ description: 'Puede ser una lista vacía.' })
+  misReservas(@UsuarioActual() usuario: Usuario): Promise<ReservaVista[]> {
+    return this.cancha.misReservas(usuario.id);
   }
 
   @Get('franjas')

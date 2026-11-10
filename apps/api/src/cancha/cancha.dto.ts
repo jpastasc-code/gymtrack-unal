@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsInt,
   IsOptional,
+  IsUUID,
   Matches,
   Max,
   Min,
@@ -58,6 +59,22 @@ export class CrearFranjaDto {
   @ApiProperty({ example: '15:00', description: 'Hora de Colombia, 24 h.' })
   @Matches(HORA, { message: 'La hora de fin debe tener el formato HH:MM.' })
   horaFin: string;
+}
+
+/** Reserva de una franja de la cancha en una fecha concreta (GYMM-28). */
+export class CrearReservaDto {
+  @ApiProperty({ description: 'Id de la franja que se quiere reservar.' })
+  @IsUUID('all', { message: 'Elige una franja.' })
+  franjaId: string;
+
+  @ApiProperty({
+    example: '2026-10-28',
+    description: 'Día de la reserva (hora de Colombia).',
+  })
+  @Validate(FechaCalendario, {
+    message: 'La fecha debe tener el formato AAAA-MM-DD.',
+  })
+  fecha: string;
 }
 
 export class ActualizarFranjaDto {

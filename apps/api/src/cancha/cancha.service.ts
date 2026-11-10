@@ -4,13 +4,22 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Cancha, FranjaCancha } from '../generated/prisma/client';
+import type {
+  Cancha,
+  FranjaCancha,
+  ReservaCancha,
+} from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import type { ActualizarFranjaDto, CrearFranjaDto } from './cancha.dto';
+import type {
+  ActualizarFranjaDto,
+  CrearFranjaDto,
+  CrearReservaDto,
+} from './cancha.dto';
 import {
   diaSemanaIso,
   fechaEnColombia,
   horaDeTime,
+  horaEnColombia,
   instanteEnColombia,
   lunesDe,
   minutosDe,
@@ -18,7 +27,8 @@ import {
   timeDeHora,
 } from './cancha.horario';
 
-export type EstadoFranja = 'DISPONIBLE' | 'RESERVADA' | 'PASADA';
+/** TUYA: la reservó quien consulta (GYMM-28); RESERVADA: otra persona. */
+export type EstadoFranja = 'DISPONIBLE' | 'RESERVADA' | 'TUYA' | 'PASADA';
 
 export interface CanchaResumen {
   id: string;
@@ -62,6 +72,18 @@ export interface FranjasCancha {
   franjas: FranjaVista[];
 }
 
+/** Reserva de la cancha tal como la ve quien la hizo (GYMM-28). */
+export interface ReservaVista {
+  id: string;
+  cancha: string;
+  /** AAAA-MM-DD en hora de Colombia. */
+  fecha: string;
+  /** 1 = lunes … 7 = domingo. */
+  diaSemana: number;
+  horaInicio: string;
+  horaFin: string;
+}
+
 const aResumen = (c: Cancha): CanchaResumen => ({
   id: c.id,
   nombre: c.nombre,
@@ -93,6 +115,32 @@ const esErrorPrisma = (error: unknown, codigo: string) =>
   'code' in error &&
   (error as { code: unknown }).code === codigo;
 
+/**
+ * true si Postgres rechazó la fila por la restricción de exclusión
+ * `reserva_cancha_sin_solapamiento` (SQLSTATE 23P01). Prisma no tiene un código
+ * propio para eso: la entrega como P2039 con el error original del driver.
+ */
+function esExclusionViolada(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null || !('meta' in error)) {
+    return false;
+  }
+  const meta = error.meta as
+    { driverAdapterError?: { cause?: { originalCode?: unknown } } } | undefined;
+  return meta?.driverAdapterError?.cause?.originalCode === '23P01';
+}
+
+const aReserva = (r: ReservaCancha, cancha: string): ReservaVista => {
+  const fecha = fechaEnColombia(r.inicio);
+  return {
+    id: r.id,
+    cancha,
+    fecha,
+    diaSemana: diaSemanaIso(fecha),
+    horaInicio: horaEnColombia(r.inicio),
+    horaFin: horaEnColombia(r.fin),
+  };
+};
+
 /** Dos intervalos [a, b) y [c, d) se cruzan si cada uno empieza antes de que termine el otro. */
 const seCruzan = (a: number, b: number, c: number, d: number) => a < d && c < b;
 
@@ -103,11 +151,12 @@ export class CanchaService {
   /**
    * Disponibilidad de la semana (GYMM-20): cada franja habilitada, día por día,
    * con su estado. Una franja está RESERVADA si alguna reserva confirmada se cruza
-   * con ella (GYMM-28 crea las reservas), y PASADA si ya empezó.
+   * con ella (TUYA si esa reserva es de `usuarioId`), y PASADA si ya empezó.
    */
   async disponibilidad(
     semana?: string,
     ahora = new Date(),
+    usuarioId?: string,
   ): Promise<DisponibilidadSemana> {
     const cancha = await this.canchaHabilitada();
     const hoy = fechaEnColombia(ahora);
@@ -126,7 +175,7 @@ export class CanchaService {
           inicio: { lt: instanteEnColombia(sumarDias(desde, 7), '00:00') },
           fin: { gt: instanteEnColombia(desde, '00:00') },
         },
-        select: { inicio: true, fin: true },
+        select: { inicio: true, fin: true, usuarioId: true },
       }),
     ]);
 
@@ -144,21 +193,99 @@ export class CanchaService {
             const horaFin = horaDeTime(f.horaFin);
             const inicio = instanteEnColombia(fecha, horaInicio).getTime();
             const fin = instanteEnColombia(fecha, horaFin).getTime();
-            const reservada = reservas.some((r) =>
+            const cruces = reservas.filter((r) =>
               seCruzan(inicio, fin, r.inicio.getTime(), r.fin.getTime()),
             );
             const estado: EstadoFranja =
               inicio <= ahora.getTime()
                 ? 'PASADA'
-                : reservada
-                  ? 'RESERVADA'
-                  : 'DISPONIBLE';
+                : cruces.some((r) => r.usuarioId === usuarioId)
+                  ? 'TUYA'
+                  : cruces.length > 0
+                    ? 'RESERVADA'
+                    : 'DISPONIBLE';
             return { id: f.id, horaInicio, horaFin, estado };
           }),
       });
     }
 
     return { cancha: aResumen(cancha), hoy, semana: { desde, hasta }, dias };
+  }
+
+  /**
+   * Reserva una franja en una fecha (GYMM-28). Quien decide si dos reservas
+   * chocan es Postgres (restricción de exclusión), no una consulta previa: así,
+   * si dos personas reservan la misma franja al mismo tiempo, solo una queda.
+   */
+  async reservar(
+    usuarioId: string,
+    dto: CrearReservaDto,
+    ahora = new Date(),
+  ): Promise<ReservaVista> {
+    const cancha = await this.canchaHabilitada();
+    const franja = await this.prisma.franjaCancha.findUnique({
+      where: { id: dto.franjaId },
+    });
+    if (!franja || franja.canchaId !== cancha.id) {
+      throw new NotFoundException('Esa franja no existe.');
+    }
+    if (franja.diaSemana !== diaSemanaIso(dto.fecha)) {
+      const mensaje = `Esa franja es del ${NOMBRE_DIA[franja.diaSemana]}, no del ${NOMBRE_DIA[diaSemanaIso(dto.fecha)]}.`;
+      throw new BadRequestException({
+        statusCode: 400,
+        message: mensaje,
+        errores: { fecha: mensaje },
+      });
+    }
+    if (!franja.activa) {
+      throw new ConflictException(
+        'Esa franja ya no está habilitada. Elige otra.',
+      );
+    }
+
+    const inicio = instanteEnColombia(dto.fecha, horaDeTime(franja.horaInicio));
+    const fin = instanteEnColombia(dto.fecha, horaDeTime(franja.horaFin));
+    if (inicio <= ahora) {
+      throw new ConflictException(
+        'Esa franja ya empezó. Elige una que no haya pasado.',
+      );
+    }
+
+    try {
+      const reserva = await this.prisma.reservaCancha.create({
+        data: { canchaId: cancha.id, usuarioId, inicio, fin },
+      });
+      return aReserva(reserva, cancha.nombre);
+    } catch (error) {
+      if (!esExclusionViolada(error)) throw error;
+      const otra = await this.prisma.reservaCancha.findFirst({
+        where: {
+          canchaId: cancha.id,
+          estado: 'CONFIRMADA',
+          inicio: { lt: fin },
+          fin: { gt: inicio },
+        },
+        select: { usuarioId: true },
+      });
+      throw new ConflictException(
+        otra?.usuarioId === usuarioId
+          ? 'Ya tienes reservada la cancha en ese horario.'
+          : 'Otra persona acaba de reservar esa franja. Elige otra.',
+      );
+    }
+  }
+
+  /** Reservas confirmadas de la persona que todavía no terminan, de la más próxima a la más lejana. */
+  async misReservas(
+    usuarioId: string,
+    ahora = new Date(),
+  ): Promise<ReservaVista[]> {
+    const reservas = await this.prisma.reservaCancha.findMany({
+      where: { usuarioId, estado: 'CONFIRMADA', fin: { gt: ahora } },
+      orderBy: { inicio: 'asc' },
+      include: { cancha: { select: { nombre: true } } },
+    });
+    return reservas.map((r) => aReserva(r, r.cancha.nombre));
   }
 
   /** Todas las franjas de la cancha, también las deshabilitadas (personal de deportes). */
