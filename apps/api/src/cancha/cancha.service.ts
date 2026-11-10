@@ -48,6 +48,11 @@ export interface FranjaDelDia {
   horaInicio: string;
   horaFin: string;
   estado: EstadoFranja;
+  /**
+   * Solo para el personal de deportes (GYMM-29): la reserva que ocupa la franja y
+   * a nombre de quién está, para poder cancelarla.
+   */
+  reserva?: { id: string; nombre: string };
 }
 
 export interface DiaDisponible {
@@ -159,11 +164,13 @@ export class CanchaService {
    * Disponibilidad de la semana (GYMM-20): cada franja habilitada, día por día,
    * con su estado. Una franja está RESERVADA si alguna reserva confirmada se cruza
    * con ella (TUYA si esa reserva es de `usuarioId`), y PASADA si ya empezó.
+   * Con `verReservas` (personal de deportes) cada franja ocupada dice de quién es.
    */
   async disponibilidad(
     semana?: string,
     ahora = new Date(),
     usuarioId?: string,
+    verReservas = false,
   ): Promise<DisponibilidadSemana> {
     const cancha = await this.canchaHabilitada();
     const hoy = fechaEnColombia(ahora);
@@ -182,7 +189,13 @@ export class CanchaService {
           inicio: { lt: instanteEnColombia(sumarDias(desde, 7), '00:00') },
           fin: { gt: instanteEnColombia(desde, '00:00') },
         },
-        select: { inicio: true, fin: true, usuarioId: true },
+        select: {
+          id: true,
+          inicio: true,
+          fin: true,
+          usuarioId: true,
+          usuario: { select: { nombres: true, apellidos: true } },
+        },
       }),
     ]);
 
@@ -211,7 +224,20 @@ export class CanchaService {
                   : cruces.length > 0
                     ? 'RESERVADA'
                     : 'DISPONIBLE';
-            return { id: f.id, horaInicio, horaFin, estado };
+            const franja: FranjaDelDia = {
+              id: f.id,
+              horaInicio,
+              horaFin,
+              estado,
+            };
+            const ocupada = cruces[0];
+            if (verReservas && ocupada && estado !== 'PASADA') {
+              franja.reserva = {
+                id: ocupada.id,
+                nombre: `${ocupada.usuario.nombres} ${ocupada.usuario.apellidos}`,
+              };
+            }
+            return franja;
           }),
       });
     }

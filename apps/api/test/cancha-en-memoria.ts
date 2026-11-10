@@ -26,6 +26,12 @@ export interface FilaReserva {
   canceladaEn?: Date | null;
 }
 
+/** Nombres de las personas que reservan en las pruebas (los demás, "Usuario Prueba"). */
+const NOMBRES: Record<string, { nombres: string; apellidos: string }> = {
+  'u-otro': { nombres: 'Otra', apellidos: 'Persona' },
+  'u-deportista': { nombres: 'Daniela', apellidos: 'Deportista' },
+};
+
 const errorPrisma = (code: string) =>
   Object.assign(new Error(`Prisma ${code}`), { code });
 
@@ -180,6 +186,10 @@ export function crearCanchaEnMemoria({
   const conCancha = (r: FilaReserva) => ({
     ...r,
     cancha: { nombre: canchas.find((c) => c.id === r.canchaId)!.nombre },
+    usuario: NOMBRES[r.usuarioId] ?? {
+      nombres: 'Usuario',
+      apellidos: 'Prueba',
+    },
   });
 
   const reservaCancha = {
