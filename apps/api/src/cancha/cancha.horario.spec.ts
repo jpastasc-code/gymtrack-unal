@@ -3,6 +3,7 @@ import {
   esFechaValida,
   fechaEnColombia,
   horaDeTime,
+  horaEnColombia,
   instanteEnColombia,
   lunesDe,
   minutosDe,
@@ -49,6 +50,11 @@ describe('horario de la cancha (hora de Colombia)', () => {
     expect(instanteEnColombia('2026-10-21', '20:30').toISOString()).toBe(
       '2026-10-22T01:30:00.000Z',
     );
+  });
+
+  it('da la hora de Colombia de un instante', () => {
+    expect(horaEnColombia(new Date('2026-10-21T19:00:00Z'))).toBe('14:00');
+    expect(horaEnColombia(new Date('2026-10-22T01:30:00Z'))).toBe('20:30');
   });
 
   it('lee y escribe columnas time sin correr la hora', () => {

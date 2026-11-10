@@ -58,6 +58,13 @@ export function instanteEnColombia(fecha: string, hora: string): Date {
   return new Date(Date.UTC(anio, mes - 1, dia, h + HORAS_DETRAS_DE_UTC, m));
 }
 
+/** La hora en Colombia en ese instante: "14:00". */
+export function horaEnColombia(instante: Date): string {
+  return horaDeTime(
+    new Date(instante.getTime() - HORAS_DETRAS_DE_UTC * 60 * 60 * 1000),
+  );
+}
+
 /** Columna `time` leída por Prisma → "14:00". */
 export function horaDeTime(valor: Date): string {
   return `${dosCifras(valor.getUTCHours())}:${dosCifras(valor.getUTCMinutes())}`;

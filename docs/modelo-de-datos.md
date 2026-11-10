@@ -166,7 +166,7 @@ Prisma no puede expresarlas en `schema.prisma`, así que están en SQL dentro de
 
 | Regla | Historia | Cómo se garantiza |
 | ----- | -------- | ----------------- |
-| Dos reservas confirmadas de la cancha no se pueden solapar | GYMM-28 | Restricción de exclusión `reserva_cancha_sin_solapamiento` (btree_gist + `tstzrange`) |
+| Dos reservas confirmadas de la cancha no se pueden solapar | GYMM-28 | Restricción de exclusión `reserva_cancha_sin_solapamiento` (btree_gist + `tstzrange`). El API no consulta antes de insertar: deja que Postgres decida y traduce el error 23P01 (Prisma lo entrega como P2039) en un 409. La prueba `apps/api/prisma/pruebas/reserva-cancha-sin-solapamiento.sql` corre en el CI. |
 | Solo una rutina vigente por usuario | GYMM-21 | Índice único parcial `rutina_una_vigente_por_usuario` |
 | Una rutina se reparte en máximo 7 días | GYMM-21 | Restricción `CHECK` `rutina_ejercicio_dia_chk` |
 | Un usuario no reserva dos veces la misma franja y fecha | GYMM-27 | Índice único parcial sobre reservas `CONFIRMADA` |

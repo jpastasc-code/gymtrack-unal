@@ -28,6 +28,32 @@ export interface FilaReserva {
 const errorPrisma = (code: string) =>
   Object.assign(new Error(`Prisma ${code}`), { code });
 
+/** Como entrega Prisma 7 la restricción de exclusión de Postgres (SQLSTATE 23P01). */
+const errorExclusion = () =>
+  Object.assign(new Error('Prisma P2039'), {
+    code: 'P2039',
+    meta: {
+      driverAdapterError: {
+        cause: { originalCode: '23P01', kind: 'postgres' },
+      },
+    },
+  });
+
+interface FiltroReservas {
+  canchaId?: string;
+  usuarioId?: string;
+  estado?: string;
+  inicio?: { lt: Date };
+  fin?: { gt: Date };
+}
+
+const cumple = (r: FilaReserva, w: FiltroReservas) =>
+  (w.canchaId === undefined || r.canchaId === w.canchaId) &&
+  (w.usuarioId === undefined || r.usuarioId === w.usuarioId) &&
+  (w.estado === undefined || r.estado === w.estado) &&
+  (w.inicio === undefined || r.inicio < w.inicio.lt) &&
+  (w.fin === undefined || r.fin > w.fin.gt);
+
 const hora = (h: string) => new Date(`1970-01-01T${h}:00.000Z`);
 
 export const ID_CANCHA = '00000000-0000-4000-8000-0000000000ca';
@@ -35,7 +61,8 @@ export const ID_CANCHA = '00000000-0000-4000-8000-0000000000ca';
 /**
  * Tablas `cancha`, `franja_cancha` y `reserva_cancha` en memoria, con la parte de
  * la API de Prisma que usa CanchaService. Repite la llave única de la base
- * (cancha, día, hora de inicio) para que crear una franja repetida dé P2002.
+ * (cancha, día, hora de inicio) para que crear una franja repetida dé P2002, y la
+ * exclusión de reservas confirmadas que se solapan (23P01).
  */
 export function crearCanchaEnMemoria({
   franjas: franjasIniciales = [],
@@ -48,7 +75,12 @@ export function crearCanchaEnMemoria({
     fin: string;
     activa?: boolean;
   }[];
-  reservas?: { inicio: string; fin: string; estado?: FilaReserva['estado'] }[];
+  reservas?: {
+    inicio: string;
+    fin: string;
+    estado?: FilaReserva['estado'];
+    usuarioId?: string;
+  }[];
   canchaActiva?: boolean;
 } = {}) {
   const canchas: FilaCancha[] = [
@@ -70,7 +102,7 @@ export function crearCanchaEnMemoria({
   const reservas: FilaReserva[] = reservasIniciales.map((r) => ({
     id: randomUUID(),
     canchaId: ID_CANCHA,
-    usuarioId: 'u-deportista',
+    usuarioId: r.usuarioId ?? 'u-otro',
     inicio: new Date(r.inicio),
     fin: new Date(r.fin),
     estado: r.estado ?? 'CONFIRMADA',
@@ -144,33 +176,52 @@ export function crearCanchaEnMemoria({
     }),
   };
 
+  const conCancha = (r: FilaReserva) => ({
+    ...r,
+    cancha: { nombre: canchas.find((c) => c.id === r.canchaId)!.nombre },
+  });
+
   const reservaCancha = {
-    findMany: jest.fn(
+    findMany: jest.fn(({ where }: { where: FiltroReservas }) =>
+      Promise.resolve(
+        reservas
+          .filter((r) => cumple(r, where))
+          .sort((a, b) => a.inicio.getTime() - b.inicio.getTime())
+          .map(conCancha),
+      ),
+    ),
+    findFirst: jest.fn(({ where }: { where: FiltroReservas }) =>
+      Promise.resolve(reservas.find((r) => cumple(r, where)) ?? null),
+    ),
+    create: jest.fn(
       ({
-        where,
+        data,
       }: {
-        where: {
-          canchaId: string;
-          estado: string;
-          inicio: { lt: Date };
-          fin: { gt: Date };
+        data: Pick<FilaReserva, 'canchaId' | 'usuarioId' | 'inicio' | 'fin'>;
+      }) => {
+        const solapada = reservas.some(
+          (r) =>
+            r.canchaId === data.canchaId &&
+            r.estado === 'CONFIRMADA' &&
+            r.inicio < data.fin &&
+            data.inicio < r.fin,
+        );
+        if (solapada) return Promise.reject(errorExclusion());
+        const fila: FilaReserva = {
+          id: randomUUID(),
+          estado: 'CONFIRMADA',
+          ...data,
         };
-      }) =>
-        Promise.resolve(
-          reservas.filter(
-            (r) =>
-              r.canchaId === where.canchaId &&
-              r.estado === where.estado &&
-              r.inicio < where.inicio.lt &&
-              r.fin > where.fin.gt,
-          ),
-        ),
+        reservas.push(fila);
+        return Promise.resolve(fila);
+      },
     ),
   };
 
   return {
     prisma: { cancha, franjaCancha, reservaCancha },
     franjas: () => franjas,
+    reservas: () => reservas,
     idDe: (diaSemana: number, inicio: string) =>
       franjas.find(
         (f) =>
