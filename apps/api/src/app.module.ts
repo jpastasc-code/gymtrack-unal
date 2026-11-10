@@ -9,6 +9,7 @@ import { EvaluacionesModule } from './evaluaciones/evaluaciones.module';
 import { NutricionModule } from './nutricion/nutricion.module';
 import { PerfilModule } from './perfil/perfil.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ProgresoModule } from './progreso/progreso.module';
 import { RutinasModule } from './rutinas/rutinas.module';
 import { SesionesModule } from './sesiones/sesiones.module';
 
@@ -24,6 +25,7 @@ import { SesionesModule } from './sesiones/sesiones.module';
     SesionesModule,
     NutricionModule,
     CanchaModule,
+    ProgresoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
