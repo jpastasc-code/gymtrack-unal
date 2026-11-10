@@ -91,3 +91,11 @@ jobs:
         run: |
           pnpm run db:seed
           pnpm run db:seed
+
+      # Reglas que viven en SQL (exclusión, índices parciales): se prueban contra PostgreSQL real.
+      - name: Reglas de la base de datos
+        working-directory: apps/api
+        run: |
+          for prueba in prisma/pruebas/*.sql; do
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$prueba"
+          done
