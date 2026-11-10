@@ -10,6 +10,7 @@ import {
   diaYMes,
   sumarDias,
   textoSemana,
+  useCancelarReservaCancha,
   useDisponibilidadCancha,
   useMisReservasCancha,
   useReservarCancha,
@@ -23,7 +24,10 @@ import {
 const descripcion = (r: Pick<ReservaCancha, 'diaSemana' | 'fecha' | 'horaInicio' | 'horaFin'>) =>
   `${NOMBRE_DIA[r.diaSemana].toLowerCase()} ${diaYMes(r.fecha)} de ${r.horaInicio} a ${r.horaFin}`
 
-/** Franja que la persona tocó y está por confirmar. */
+/**
+ * Franja que la persona tocó y está por confirmar: reservarla si está libre o,
+ * para el personal de deportes, cancelar la reserva que la ocupa (GYMM-29).
+ */
 interface Eleccion {
   fecha: string
   diaSemana: number
@@ -37,7 +41,7 @@ interface Resultado {
   texto: string
 }
 
-/** Disponibilidad semanal de la cancha sintética (GYMM-20) y reserva de una franja libre (GYMM-28). */
+/** Disponibilidad de la cancha (GYMM-20), reserva de una franja libre (GYMM-28) y cancelación (GYMM-29). */
 export function CanchaPage() {
   const { perfil } = useSesion()
   const puedeGestionar = !!perfil && (ROLES_GESTORES as readonly string[]).includes(perfil.rol)
@@ -46,6 +50,7 @@ export function CanchaPage() {
   const [semana, setSemana] = useState<string | null>(null)
   const { data, isPending, isError, error, refetch, isPlaceholderData } = useDisponibilidadCancha(semana)
   const reservar = useReservarCancha()
+  const cancelar = useCancelarReservaCancha()
   const [eleccion, setEleccion] = useState<Eleccion | null>(null)
   const [resultado, setResultado] = useState<Resultado | null>(null)
 
@@ -63,13 +68,19 @@ export function CanchaPage() {
   function confirmar() {
     if (!eleccion) return
     const { fecha, franja } = eleccion
+    const alTerminar = {
+      onError: (e: Error) => setResultado({ fecha, exito: false, texto: e.message }),
+      onSettled: () => setEleccion(null),
+    }
+    if (franja.reserva) {
+      const { id, nombre } = franja.reserva
+      const texto = `Reserva de ${nombre} cancelada: la franja del ${descripcion({ ...eleccion, ...franja })} quedó libre.`
+      cancelar.mutate(id, { ...alTerminar, onSuccess: () => setResultado({ fecha, exito: true, texto }) })
+      return
+    }
     reservar.mutate(
       { franjaId: franja.id, fecha },
-      {
-        onSuccess: (r) => setResultado({ fecha, exito: true, texto: `Listo, la cancha es tuya el ${descripcion(r)}.` }),
-        onError: (e) => setResultado({ fecha, exito: false, texto: e.message }),
-        onSettled: () => setEleccion(null),
-      },
+      { ...alTerminar, onSuccess: (r) => setResultado({ fecha, exito: true, texto: `Listo, la cancha es tuya el ${descripcion(r)}.` }) },
     )
   }
 
@@ -158,7 +169,7 @@ export function CanchaPage() {
                       esHoy={dia.fecha === data.hoy}
                       eleccion={eleccion?.fecha === dia.fecha ? eleccion : null}
                       resultado={resultado?.fecha === dia.fecha ? resultado : null}
-                      reservando={reservar.isPending}
+                      ocupado={reservar.isPending || cancelar.isPending}
                       onElegir={elegir}
                       onConfirmar={confirmar}
                     />
@@ -173,14 +184,33 @@ export function CanchaPage() {
   )
 }
 
-/** Mis reservas que todavía no terminan (GYMM-28). */
+/** Mis reservas que todavía no terminan (GYMM-28); cada una se puede cancelar (GYMM-29). */
 function MisReservas() {
   const { data, isPending, isError, error, refetch } = useMisReservasCancha()
+  // La mutación vive aquí y no en cada fila: al cancelar, la fila desaparece de la
+  // lista y TanStack Query no avisa del resultado a un componente desmontado.
+  const cancelar = useCancelarReservaCancha()
+  const [confirmando, setConfirmando] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<string | null>(null)
+
+  function confirmar(r: ReservaCancha) {
+    setAviso(null)
+    cancelar.mutate(r.id, {
+      onSuccess: () => setAviso(`Reserva cancelada: la franja del ${descripcion(r)} quedó libre.`),
+      onSettled: () => setConfirmando(null),
+    })
+  }
+
   return (
     <section aria-labelledby="titulo-mis-reservas" className="mb-8">
       <h2 id="titulo-mis-reservas" className="titular text-3xl">
         Mis reservas
       </h2>
+      {aviso && (
+        <p role="status" className={`mt-3 ${AVISO_EXITO}`}>
+          {aviso}
+        </p>
+      )}
       {isPending && (
         <p className="mt-3 text-grafito" role="status">
           Cargando tus reservas…
@@ -203,18 +233,71 @@ function MisReservas() {
       {data && data.length > 0 && (
         <ul aria-label="Tus reservas activas" className="mt-3 border-t border-linea">
           {data.map((r) => (
-            <li key={r.id} className="flex flex-wrap items-baseline justify-between gap-x-3 border-b border-linea py-3">
-              <span className="text-lg font-semibold">
-                {NOMBRE_DIA[r.diaSemana]} {diaYMes(r.fecha)}
-              </span>
-              <span className="text-grafito">
-                {r.horaInicio}–{r.horaFin}
-              </span>
+            <li key={r.id} className="border-b border-linea">
+              <FilaReserva
+                reserva={r}
+                confirmando={confirmando === r.id}
+                cancelando={cancelar.isPending}
+                error={cancelar.variables === r.id ? cancelar.error : null}
+                onPedir={() => setConfirmando(r.id)}
+                onConfirmar={() => confirmar(r)}
+                onMantener={() => setConfirmando(null)}
+              />
             </li>
           ))}
         </ul>
       )}
     </section>
+  )
+}
+
+interface PropsFilaReserva {
+  reserva: ReservaCancha
+  confirmando: boolean
+  cancelando: boolean
+  error: Error | null
+  onPedir: () => void
+  onConfirmar: () => void
+  onMantener: () => void
+}
+
+function FilaReserva({ reserva: r, confirmando, cancelando, error, onPedir, onConfirmar, onMantener }: PropsFilaReserva) {
+  if (confirmando) {
+    return (
+      <div role="alertdialog" aria-label="Confirmar cancelación" className="py-3">
+        <p className="font-semibold">¿Cancelar tu reserva del {descripcion(r)}?</p>
+        <p className="mt-1 text-sm text-grafito">La franja quedará libre para otras personas.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Boton disabled={cancelando} onClick={onConfirmar}>
+            {cancelando ? 'Cancelando…' : 'Sí, cancelar'}
+          </Boton>
+          <Boton variante="texto" onClick={onMantener} disabled={cancelando}>
+            No, mantenerla
+          </Boton>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="py-2">
+      <div className="flex flex-wrap items-center gap-x-3">
+        <p className="flex-1 text-lg font-semibold">
+          {NOMBRE_DIA[r.diaSemana]} {diaYMes(r.fecha)}
+          <span className="ml-3 font-normal text-grafito">
+            {r.horaInicio}–{r.horaFin}
+          </span>
+        </p>
+        <Boton variante="texto" aria-label={`Cancelar tu reserva del ${descripcion(r)}`} onClick={onPedir}>
+          Cancelar
+        </Boton>
+      </div>
+      {error && (
+        <p role="alert" className="text-sm font-medium text-alerta">
+          {error.message}
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -238,13 +321,14 @@ interface PropsDia {
   esHoy: boolean
   eleccion: Eleccion | null
   resultado: Resultado | null
-  reservando: boolean
+  ocupado: boolean
   onElegir: (e: Eleccion | null) => void
   onConfirmar: () => void
 }
 
-function Dia({ dia, esHoy, eleccion, resultado, reservando, onElegir, onConfirmar }: PropsDia) {
+function Dia({ dia, esHoy, eleccion, resultado, ocupado, onElegir, onConfirmar }: PropsDia) {
   const nombre = `${NOMBRE_DIA[dia.diaSemana]} ${diaYMes(dia.fecha)}`
+  const ocupante = eleccion?.franja.reserva
   return (
     <section aria-label={nombre}>
       <h3 className="flex items-baseline gap-2 text-lg font-semibold">
@@ -272,17 +356,20 @@ function Dia({ dia, esHoy, eleccion, resultado, reservando, onElegir, onConfirma
       )}
 
       {eleccion && (
-        <div role="alertdialog" aria-label="Confirmar reserva" className={`mt-3 ${AVISO}`}>
+        <div role="alertdialog" aria-label={ocupante ? 'Confirmar cancelación' : 'Confirmar reserva'} className={`mt-3 ${AVISO}`}>
           <p className="font-semibold">
-            ¿Reservar la cancha el {descripcion({ ...eleccion.franja, fecha: eleccion.fecha, diaSemana: eleccion.diaSemana })}?
+            {ocupante ? `¿Cancelar la reserva de ${ocupante.nombre} del ` : '¿Reservar la cancha el '}
+            {descripcion({ ...eleccion.franja, fecha: eleccion.fecha, diaSemana: eleccion.diaSemana })}?
           </p>
-          <p className="mt-1 text-sm text-grafito">Quedará a tu nombre.</p>
+          <p className="mt-1 text-sm text-grafito">
+            {ocupante ? 'La franja quedará libre para otras personas.' : 'Quedará a tu nombre.'}
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Boton onClick={onConfirmar} disabled={reservando}>
-              {reservando ? 'Reservando…' : 'Sí, reservar'}
+            <Boton onClick={onConfirmar} disabled={ocupado}>
+              {ocupado ? 'Un momento…' : ocupante ? 'Sí, cancelar la reserva' : 'Sí, reservar'}
             </Boton>
-            <Boton variante="texto" onClick={() => onElegir(null)} disabled={reservando}>
-              Cancelar
+            <Boton variante="texto" onClick={() => onElegir(null)} disabled={ocupado}>
+              {ocupante ? 'No, mantenerla' : 'Cancelar'}
             </Boton>
           </div>
         </div>
@@ -316,21 +403,23 @@ function Franja({ franja: f, nombreDia, elegida, onElegir }: PropsFranja) {
       <span className="block font-semibold">
         {f.horaInicio}–{f.horaFin}
       </span>
-      <span className="block text-sm">{elegida ? 'Elegida' : TEXTO_ESTADO[f.estado]}</span>
+      {/* El personal de deportes ve a nombre de quién está cada franja ocupada. */}
+      <span className="block truncate text-sm">{elegida ? 'Elegida' : (f.reserva?.nombre ?? TEXTO_ESTADO[f.estado])}</span>
     </>
   )
-  if (f.estado !== 'DISPONIBLE') {
+  const horario = `${nombreDia.toLowerCase()} de ${f.horaInicio} a ${f.horaFin}`
+  if (f.estado !== 'DISPONIBLE' && !f.reserva) {
     return <div className={`rounded-xl px-3 py-2 ${ESTILO_FRANJA[f.estado]}`}>{contenido}</div>
   }
-  // Una franja libre es un botón con forma de franja: no hay un componente para eso.
+  // Una franja que se puede tocar es un botón con forma de franja: no hay un componente para eso.
   return (
     <button
       type="button"
-      aria-label={`Reservar ${nombreDia.toLowerCase()} de ${f.horaInicio} a ${f.horaFin}`}
+      aria-label={f.reserva ? `Cancelar la reserva de ${f.reserva.nombre}, ${horario}` : `Reservar ${horario}`}
       aria-pressed={elegida}
       onClick={onElegir}
       className={`min-h-11 w-full rounded-xl px-3 py-2 text-left ${
-        elegida ? ESTILO_FRANJA.TUYA : `${ESTILO_FRANJA.DISPONIBLE} hover:bg-hueso`
+        elegida ? ESTILO_FRANJA.TUYA : `${ESTILO_FRANJA[f.estado]} hover:bg-hueso`
       }`}
     >
       {contenido}
