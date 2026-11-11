@@ -12,6 +12,7 @@ import type { PrecargaEjercicio, SerieNueva, SerieRegistrada, Sesion } from '../
 import type { DeportistaResumen, Evaluacion } from '../features/evaluacion/api'
 import type { NuevaRutina, Rutina } from '../features/rutinas/api'
 import type { Ejercicio } from '../features/rutinas/ejercicios/api'
+import { crearGimnasioFalso, GIMNASIO_BASE, type GimnasioSimulado } from './gimnasioFalso'
 
 export const PERFIL_DEPORTISTA: PerfilSesion = {
   id: 'id-deportista@gymtrack.test',
@@ -199,6 +200,8 @@ interface OpcionesApi {
   precargaSesiones?: PrecargaEjercicio[]
   /** Mientras `caida` sea true, registrar una serie falla como si no hubiera señal. */
   red?: { caida: boolean }
+  /** Cupos del gimnasio (GYMM-27): por defecto, GIMNASIO_BASE. */
+  gimnasio?: GimnasioSimulado
 }
 
 /** Simula el API: responde /auth/yo y /health según las opciones. */
@@ -221,7 +224,9 @@ export function simularApi({
   sesionActual = null,
   precargaSesiones = [],
   red = { caida: false },
+  gimnasio = GIMNASIO_BASE,
 }: OpcionesApi = {}) {
+  const responderGimnasio = crearGimnasioFalso(gimnasio)
   let sesion: Sesion | null = sesionActual && { ...sesionActual, series: [...sesionActual.series] }
   let franjas = franjasCancha.map((f) => ({ ...f }))
   const reservadasCancha = [...canchaReservada]
@@ -322,6 +327,8 @@ export function simularApi({
       if (miRutina === null) return json({ message: 'Aún no tienes una rutina asignada. Pídesela a tu instructor.' }, 404)
       return json(miRutina)
     }
+    const delGimnasio = responderGimnasio(pathname, metodo, init)
+    if (delGimnasio) return delGimnasio
     if (pathname === '/api/sesiones/actual') {
       return sesion ? json(sesion) : json({ message: 'No tienes una sesión de entrenamiento abierta.' }, 404)
     }

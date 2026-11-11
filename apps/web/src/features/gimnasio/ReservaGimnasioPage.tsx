@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { Boton } from '../../components/Boton'
 import { Chip } from '../../components/Chip'
-import { AVISO, AVISO_EXITO, VACIO } from '../../components/estilos'
+import { AVISO, AVISO_EXITO, ENLACE_PRIMARIO, VACIO } from '../../components/estilos'
 import { Pantalla } from '../../components/Pantalla'
-import { NOMBRE_DIA, diaYMes } from '../cancha/api'
+import { useSesion } from '../auth/sesion'
+import { NOMBRE_DIA, ROLES_GESTORES, diaYMes } from '../cancha/api'
 import {
   useCancelarCupo,
   useDisponibilidadGimnasio,
@@ -21,6 +23,8 @@ const cupos = (n: number) => (n === 1 ? '1 cupo libre' : `${n} cupos libres`)
 
 /** Reserva de cupo en el gimnasio por franja horaria (GYMM-27). */
 export function ReservaGimnasioPage() {
+  const { perfil } = useSesion()
+  const puedeGestionar = !!perfil && (ROLES_GESTORES as readonly string[]).includes(perfil.rol)
   const { data, isPending, isError, error, refetch } = useDisponibilidadGimnasio()
   const reservar = useReservarCupo()
   // null = hoy, según la fecha de Colombia que da el servidor.
@@ -49,6 +53,12 @@ export function ReservaGimnasioPage() {
 
   return (
     <Pantalla titulo="Gimnasio" volverA="/reservas" estrecha>
+      {puedeGestionar && (
+        <Link to="/reservas/gimnasio/franjas" className={`mb-6 ${ENLACE_PRIMARIO} md:w-fit`}>
+          Configurar cupos
+        </Link>
+      )}
+
       {/* Al cancelar, el aviso de una reserva ya cancelada deja de tener sentido. */}
       <MisReservas onCancelada={() => setAviso(null)} />
 
