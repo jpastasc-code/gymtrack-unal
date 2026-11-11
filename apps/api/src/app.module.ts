@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { CanchaModule } from './cancha/cancha.module';
 import { EjerciciosModule } from './ejercicios/ejercicios.module';
 import { EvaluacionesModule } from './evaluaciones/evaluaciones.module';
+import { GimnasioModule } from './gimnasio/gimnasio.module';
 import { NutricionModule } from './nutricion/nutricion.module';
 import { PerfilModule } from './perfil/perfil.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -25,6 +26,7 @@ import { SesionesModule } from './sesiones/sesiones.module';
     SesionesModule,
     NutricionModule,
     CanchaModule,
+    GimnasioModule,
     ProgresoModule,
   ],
   controllers: [AppController],

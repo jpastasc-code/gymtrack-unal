@@ -177,4 +177,4 @@ Prisma no puede expresarlas en `schema.prisma`, así que están en SQL dentro de
 | Horas, días de la semana, cupos y series válidos | — | Restricciones `CHECK` |
 | La API REST pública de Supabase no expone datos | — | RLS habilitado sin políticas en todas las tablas |
 
-> El cupo máximo de cada franja del gimnasio se valida en el backend dentro de una transacción al crear la reserva.
+> El cupo máximo de cada franja del gimnasio se valida en el backend dentro de una transacción al crear la reserva: la franja se bloquea con `SELECT … FOR UPDATE` mientras se cuentan sus reservas (GYMM-27, DT-15).
