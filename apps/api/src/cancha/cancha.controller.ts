@@ -34,6 +34,7 @@ import {
 } from './cancha.dto';
 import {
   CanchaService,
+  esGestorCancha,
   GESTORES_CANCHA,
   type DisponibilidadSemana,
   type FranjasCancha,
@@ -59,7 +60,7 @@ export class CanchaController {
   @ApiOperation({
     summary: 'Disponibilidad semanal de la cancha sintética',
     description:
-      'Cualquier usuario con sesión. Devuelve los 7 días (lunes a domingo, hora de Colombia) con cada franja habilitada y su estado: DISPONIBLE, RESERVADA (por otra persona), TUYA (la reservaste tú) o PASADA (ya empezó).',
+      'Cualquier usuario con sesión. Devuelve los 7 días (lunes a domingo, hora de Colombia) con cada franja habilitada y su estado: DISPONIBLE, RESERVADA (por otra persona), TUYA (la reservaste tú) o PASADA (ya empezó). Al personal de deportes cada franja ocupada le trae `reserva` (id y nombre de quien reservó) para poder cancelarla.',
   })
   @ApiOkResponse({ description: 'La semana pedida, día por día.' })
   @ApiNotFoundResponse({ description: 'No hay una cancha habilitada.' })
@@ -67,7 +68,12 @@ export class CanchaController {
     @Query() consulta: ConsultaDisponibilidadDto,
     @UsuarioActual() usuario: Usuario,
   ): Promise<DisponibilidadSemana> {
-    return this.cancha.disponibilidad(consulta.semana, new Date(), usuario.id);
+    return this.cancha.disponibilidad(
+      consulta.semana,
+      new Date(),
+      usuario.id,
+      esGestorCancha(usuario.rol),
+    );
   }
 
   @Post('reservas')

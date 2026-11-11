@@ -111,3 +111,38 @@ describe('CanchaService.cancelarReserva (GYMM-29)', () => {
     ).rejects.toThrow(NotFoundException);
   });
 });
+
+describe('CanchaService.disponibilidad: reservas para el personal de deportes', () => {
+  it('dice de quién es cada franja ocupada solo si se pide', async () => {
+    const { futura, servicio } = montar();
+    const gestor = await servicio.disponibilidad(
+      '2026-10-26',
+      AHORA,
+      'u-gestor',
+      true,
+    );
+    expect(lunes(gestor).reserva).toEqual({
+      id: futura.id,
+      nombre: 'Usuario Prueba',
+    });
+    const deportista = await servicio.disponibilidad(
+      '2026-10-26',
+      AHORA,
+      'u-luis',
+    );
+    expect(lunes(deportista)).not.toHaveProperty('reserva');
+  });
+
+  it('no ofrece cancelar una franja que ya pasó', async () => {
+    const { servicio } = montar();
+    const semana = await servicio.disponibilidad(
+      '2026-10-21',
+      AHORA,
+      'u-gestor',
+      true,
+    );
+    const miercoles = semana.dias[2].franjas[0];
+    expect(miercoles.estado).toBe('PASADA');
+    expect(miercoles).not.toHaveProperty('reserva');
+  });
+});
