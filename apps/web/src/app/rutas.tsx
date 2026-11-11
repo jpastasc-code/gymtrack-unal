@@ -9,6 +9,7 @@ import { DeportistaEvaluacionesPage } from '../features/evaluacion/DeportistaEva
 import { EvaluarPage } from '../features/evaluacion/EvaluarPage'
 import { FichaFisicaPage } from '../features/evaluacion/FichaFisicaPage'
 import { NuevaEvaluacionPage } from '../features/evaluacion/NuevaEvaluacionPage'
+import { ReservaGimnasioPage } from '../features/gimnasio/ReservaGimnasioPage'
 import { ReservasPage } from '../features/gimnasio/ReservasPage'
 import { InicioPage } from '../features/inicio/InicioPage'
 import { NutricionPage } from '../features/nutricion/NutricionPage'
@@ -42,6 +43,7 @@ export const rutas: RouteObject[] = [
       { path: 'rutina', element: <MiRutinaPage /> },
       { path: 'entrenar', element: <EntrenarPage /> },
       { path: 'reservas', element: <ReservasPage /> },
+      { path: 'reservas/gimnasio', element: <ReservaGimnasioPage /> },
       { path: 'reservas/cancha', element: <CanchaPage /> },
       { path: 'perfil', element: <PerfilPage /> },
       { path: 'ficha', element: <FichaFisicaPage /> },
