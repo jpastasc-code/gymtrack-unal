@@ -9,6 +9,7 @@ import { DeportistaEvaluacionesPage } from '../features/evaluacion/DeportistaEva
 import { EvaluarPage } from '../features/evaluacion/EvaluarPage'
 import { FichaFisicaPage } from '../features/evaluacion/FichaFisicaPage'
 import { NuevaEvaluacionPage } from '../features/evaluacion/NuevaEvaluacionPage'
+import { FranjasGimnasioPage } from '../features/gimnasio/FranjasGimnasioPage'
 import { ReservaGimnasioPage } from '../features/gimnasio/ReservaGimnasioPage'
 import { ReservasPage } from '../features/gimnasio/ReservasPage'
 import { InicioPage } from '../features/inicio/InicioPage'
@@ -68,9 +69,12 @@ export const rutas: RouteObject[] = [
         ],
       },
       {
-        // Horario de la cancha, lo define el personal de deportes (GYMM-20).
+        // Horario de la cancha (GYMM-20) y cupos del gimnasio (GYMM-27): los define el personal de deportes.
         element: <RutaProtegida roles={['PERSONAL_DEPORTES', 'ADMIN']} />,
-        children: [{ path: 'reservas/cancha/franjas', element: <FranjasCanchaPage /> }],
+        children: [
+          { path: 'reservas/cancha/franjas', element: <FranjasCanchaPage /> },
+          { path: 'reservas/gimnasio/franjas', element: <FranjasGimnasioPage /> },
+        ],
       },
     ],
   },
