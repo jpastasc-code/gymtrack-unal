@@ -1,10 +1,11 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { FranjaGimnasio } from '../generated/prisma/client';
+import type { FranjaGimnasio, Rol } from '../generated/prisma/client';
 import {
   diaSemanaIso,
   esFechaValida,
@@ -14,13 +15,19 @@ import {
   sumarDias,
 } from '../cancha/cancha.horario';
 import { PrismaService } from '../prisma/prisma.service';
-import type { CrearReservaGimnasioDto } from './gimnasio.dto';
+import type {
+  ActualizarFranjaGimnasioDto,
+  CrearReservaGimnasioDto,
+} from './gimnasio.dto';
 
 /** TUYA: tienes un cupo reservado; LLENA: no quedan cupos; PASADA: ya terminó. */
 export type EstadoFranjaGimnasio = 'DISPONIBLE' | 'LLENA' | 'TUYA' | 'PASADA';
 
 /** Días que se pueden reservar, contando hoy (DT-15). */
 export const DIAS_PARA_RESERVAR = 7;
+
+/** Quienes configuran el cupo de las franjas y cancelan reservas ajenas. */
+export const GESTORES_GIMNASIO: readonly Rol[] = ['PERSONAL_DEPORTES', 'ADMIN'];
 
 export interface FranjaConCupo {
   id: string;
@@ -55,9 +62,27 @@ export interface ReservaGimnasioVista {
   horaFin: string;
 }
 
+export interface FranjaGimnasioVista {
+  id: string;
+  diaSemana: number;
+  horaInicio: string;
+  horaFin: string;
+  cupoMaximo: number;
+  activa: boolean;
+}
+
 /** Columna `date` de Prisma ↔ texto AAAA-MM-DD. */
 const aDate = (fecha: string) => new Date(`${fecha}T00:00:00.000Z`);
 const deDate = (fecha: Date) => fecha.toISOString().slice(0, 10);
+
+const aFranja = (f: FranjaGimnasio): FranjaGimnasioVista => ({
+  id: f.id,
+  diaSemana: f.diaSemana,
+  horaInicio: horaDeTime(f.horaInicio),
+  horaFin: horaDeTime(f.horaFin),
+  cupoMaximo: f.cupoMaximo,
+  activa: f.activa,
+});
 
 const aReserva = (r: {
   id: string;
@@ -227,5 +252,94 @@ export class GimnasioService {
       }
       throw error;
     }
+  }
+
+  /** Mis reservas confirmadas que todavía no terminan, de la más próxima a la más lejana. */
+  async misReservas(
+    usuarioId: string,
+    ahora = new Date(),
+  ): Promise<ReservaGimnasioVista[]> {
+    const reservas = await this.prisma.reservaGimnasio.findMany({
+      where: {
+        usuarioId,
+        estado: 'CONFIRMADA',
+        fecha: { gte: aDate(fechaEnColombia(ahora)) },
+      },
+      include: { franja: true },
+    });
+    return reservas
+      .map(aReserva)
+      .filter((r) => instanteEnColombia(r.fecha, r.horaFin) > ahora)
+      .sort((a, b) =>
+        `${a.fecha} ${a.horaInicio}`.localeCompare(
+          `${b.fecha} ${b.horaInicio}`,
+        ),
+      );
+  }
+
+  /**
+   * Cancela una reserva antes de que empiece la franja y libera el cupo. Puede
+   * hacerlo quien la hizo o el personal de deportes. Cancelar dos veces no es un error.
+   */
+  async cancelar(
+    id: string,
+    usuario: { id: string; rol: Rol },
+    ahora = new Date(),
+  ): Promise<void> {
+    const reserva = await this.prisma.reservaGimnasio.findUnique({
+      where: { id },
+      include: { franja: true },
+    });
+    if (!reserva) throw new NotFoundException('Esa reserva no existe.');
+    if (
+      reserva.usuarioId !== usuario.id &&
+      !GESTORES_GIMNASIO.includes(usuario.rol)
+    ) {
+      throw new ForbiddenException(
+        'Solo quien hizo la reserva o el personal de deportes puede cancelarla.',
+      );
+    }
+    if (reserva.estado === 'CANCELADA') return;
+    const inicio = instanteEnColombia(
+      deDate(reserva.fecha),
+      horaDeTime(reserva.franja.horaInicio),
+    );
+    if (inicio <= ahora) {
+      throw new ConflictException(
+        'Esa franja ya empezó, así que la reserva no se puede cancelar.',
+      );
+    }
+    await this.prisma.reservaGimnasio.updateMany({
+      where: { id, estado: 'CONFIRMADA' },
+      data: { estado: 'CANCELADA', canceladaEn: ahora },
+    });
+  }
+
+  /** Todas las franjas, también las deshabilitadas (personal de deportes). */
+  async franjas(): Promise<FranjaGimnasioVista[]> {
+    const franjas = await this.prisma.franjaGimnasio.findMany({
+      orderBy: [{ diaSemana: 'asc' }, { horaInicio: 'asc' }],
+    });
+    return franjas.map(aFranja);
+  }
+
+  /**
+   * Cambia el cupo o habilita/deshabilita una franja. Bajar el cupo no cancela
+   * reservas ya hechas: solo impide nuevas hasta que haya espacio.
+   */
+  async actualizarFranja(
+    id: string,
+    dto: ActualizarFranjaGimnasioDto,
+  ): Promise<FranjaGimnasioVista> {
+    const existe = await this.prisma.franjaGimnasio.findUnique({
+      where: { id },
+    });
+    if (!existe) throw new NotFoundException('Esa franja no existe.');
+    return aFranja(
+      await this.prisma.franjaGimnasio.update({
+        where: { id },
+        data: { cupoMaximo: dto.cupoMaximo, activa: dto.activa },
+      }),
+    );
   }
 }
