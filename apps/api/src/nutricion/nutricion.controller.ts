@@ -26,7 +26,7 @@ export class NutricionController {
   })
   @ApiOkResponse({
     description:
-      '`formula`, `tmb`, `factorActividad`, `gastoDiario`, `ajusteObjetivo`, `calorias` (kcal/día) y los `datos` usados.',
+      '`formula`, `tmb`, `factorActividad`, `gastoDiario`, `ajusteObjetivo`, `calorias` (kcal/día), los `datos` usados y `macronutrientes`: gramos y porcentaje de proteína, grasas y carbohidratos (GYMM-30).',
   })
   @ApiUnprocessableEntityResponse({
     description:

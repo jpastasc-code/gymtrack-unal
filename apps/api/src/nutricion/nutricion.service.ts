@@ -2,8 +2,10 @@ import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import {
   calcularRequerimientoCalorico,
   datosFaltantes,
+  distribuirMacronutrientes,
   type DatoFaltante,
   type DatosRequerimiento,
+  type DistribucionMacronutrientes,
   type RequerimientoCalorico,
 } from '@gymtrack/shared';
 import type { Usuario } from '../generated/prisma/client';
@@ -17,6 +19,8 @@ export interface MiRequerimiento extends RequerimientoCalorico {
     /** Fecha de la evaluación de la que salen peso, talla y % de grasa. */
     fechaEvaluacion: string;
   };
+  /** Cómo repartir las calorías del día en proteína, grasas y carbohidratos (GYMM-30). */
+  macronutrientes: DistribucionMacronutrientes;
 }
 
 @Injectable()
@@ -70,9 +74,16 @@ export class NutricionService {
       });
     }
 
+    const requerimiento = calcularRequerimientoCalorico(datos);
     return {
-      ...calcularRequerimientoCalorico(datos),
+      ...requerimiento,
       datos: { ...datos, fechaEvaluacion: evaluacion.fecha.toISOString() },
+      // datosFaltantes ya garantizó que hay peso y objetivo.
+      macronutrientes: distribuirMacronutrientes(
+        requerimiento.calorias,
+        datos.pesoKg!,
+        datos.objetivo!,
+      ),
     };
   }
 }
