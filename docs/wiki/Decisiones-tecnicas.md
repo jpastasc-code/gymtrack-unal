@@ -16,7 +16,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 | DT-04 | PostgreSQL en Supabase con Prisma como ORM | Aceptada | 2026-09-29 |
 | DT-05 | Autenticación con Supabase Auth, validada en el backend | Aceptada | 2026-09-29 |
 | DT-06 | Simulación de las credenciales UNAL con una tabla precargada | Aceptada (implementación en GYMM-9) | 2026-09-23 |
-| DT-07 | Fórmulas nutricionales: Katch-McArdle y Mifflin-St Jeor | Aceptada (implementación en GYMM-25); factores de objetivo y macros en **propuesta** | 2026-09-29 |
+| DT-07 | Fórmulas nutricionales: Katch-McArdle y Mifflin-St Jeor | Aceptada (implementación en GYMM-25 y GYMM-30); factores de objetivo y macros en **propuesta**, pendientes de validar | 2026-09-29 |
 | DT-08 | Despliegue en Render (API) y Vercel (web) | Aceptada | 2026-09-29 |
 | DT-09 | Diseño en Claude Design en lugar de Figma | Aceptada | 2026-09-29 |
 | DT-11 | Rediseño visual minimalista y app responsive | Aceptada | 2026-10-04 |
@@ -182,6 +182,17 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
   - Si falta algo responde **422** con `faltantes` (p. ej. `["sexo", "objetivo"]`) y un mensaje que los nombra. Con % de grasa no se piden talla, edad ni sexo, porque Katch-McArdle no los usa.
 - Las kcal se redondean al entero solo al final. Por eso el ejemplo de arriba da 2.369 kcal (TMB 1.389, gasto con actividad 2.153).
 - La pantalla Nutrición muestra el resultado y cómo se llegó a él (fórmula, factor de actividad y ajuste por objetivo), para que la persona entienda de dónde sale el número.
+
+**Macronutrientes (GYMM-30):**
+- `distribuirMacronutrientes` (en el mismo archivo) reparte las kcal del día con la tabla de arriba:
+  - Proteína: g por kilo según el objetivo, en `PROTEINA_G_POR_KG`.
+  - Grasas: 25 % de las kcal, en `FRACCION_GRASAS`.
+  - Carbohidratos: lo que queda.
+- Usa 4 kcal por gramo de proteína y de carbohidratos, y 9 kcal por gramo de grasa. Los gramos se redondean al entero.
+- El ejemplo de arriba da 125 g de proteína, 66 g de grasas y 319 g de carbohidratos (21 %, 25 % y 54 %).
+- Si la proteína y las grasas ya pasan de las calorías (muy poco probable), los carbohidratos quedan en 0 en lugar de ser negativos.
+- El API los devuelve en `macronutrientes`, en la misma respuesta de `GET /api/perfil/requerimiento-calorico`. Así se recalculan con el mismo peso y objetivo, y la pantalla los vuelve a pedir al guardar el perfil.
+- **Pendiente:** validar con un profesional en nutrición los g de proteína por objetivo y el 25 % de grasas, igual que los factores de objetivo. El equipo no lo ha hecho todavía (retrospectiva del Sprint 2, acción 6).
 
 ## DT-08 · Despliegue en Render (API) y Vercel (web)
 
