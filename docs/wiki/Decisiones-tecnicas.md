@@ -206,6 +206,7 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 **Implica:**
 - En el plan gratuito, Render apaga el API tras 15 minutos sin uso, así que la primera petición tarda unos segundos.
 - Las variables de entorno de producción se configuran en cada plataforma, nunca en el repo.
+- El build no confía en los `postinstall`. El cliente de Prisma (`apps/api/src/generated/`) y `packages/shared/dist` no se suben al repo; se crean al instalar. Pero cuando Render o Vercel reutilizan la caché de `node_modules`, `pnpm install` responde que ya está al día y no los vuelve a crear. Por eso `render.yaml` corre `db:generate` y compila `api...`, y `vercel.json` compila `web...`: el `...` de pnpm compila primero los paquetes del workspace de los que dependen.
 
 ## DT-09 · Diseño en Claude Design en lugar de Figma
 

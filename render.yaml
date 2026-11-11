@@ -6,7 +6,9 @@ services:
     runtime: node
     plan: free
     branch: main
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter api build
+    # Genera el cliente de Prisma y compila packages/shared en cada build: con la caché de
+    # Render, pnpm install no vuelve a correr los postinstall que los crean (DT-08).
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter api db:generate && pnpm --filter "api..." build
     startCommand: pnpm --filter api start:prod
     healthCheckPath: /api/health
     autoDeploy: true
