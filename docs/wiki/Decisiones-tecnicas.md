@@ -23,6 +23,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 | DT-12 | Rutinas por días y catálogo de la ficha del gimnasio | Aceptada | 2026-10-18 |
 | DT-13 | Horarios de la cancha en hora de Colombia | Propuesta | 2026-10-20 |
 | DT-14 | Registro de series sin conexión e idempotente | Propuesta | 2026-11-04 |
+| DT-15 | Reglas de la reserva de cupo en el gimnasio | Propuesta | 2026-11-10 |
 
 ---
 
@@ -298,3 +299,18 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 - Para terminar la sesión no puede haber series en la cola: así ninguna llega a una sesión cerrada.
 - La precarga (`GET /api/sesiones/precarga`, GYMM-43) solo usa sesiones terminadas, así que las series de la sesión en curso no se precargan a sí mismas.
 - El día de la rutina que se está entrenando no se guarda en la base: lo recuerda el navegador, y en otro celular se deduce de los ejercicios ya registrados.
+
+## DT-15 · Reglas de la reserva de cupo en el gimnasio
+
+**Decisión:**
+- Se reserva desde hoy hasta 6 días adelante (7 días contando hoy), en hora de Colombia como la cancha (DT-13).
+- Una franja se puede reservar mientras no haya terminado: quien llega a las 6:20 aún puede apartar la franja de 6:00 a 7:00. Cancelar solo se puede antes de que empiece.
+- Cada persona tiene a lo sumo un cupo por franja y fecha (índice único parcial `reserva_gimnasio_usuario_franja_fecha_confirmada`).
+- Al reservar, la franja se bloquea con `SELECT … FOR UPDATE` dentro de una transacción mientras se cuentan sus reservas: si dos personas piden el último cupo a la vez, la segunda encuentra la franja llena.
+- El personal de deportes cambia el cupo de cada franja (`PATCH /api/gimnasio/franjas/:id`). Bajarlo no cancela reservas ya hechas; solo impide nuevas hasta que haya espacio.
+
+**Por qué:** que reservar sirva para llegar con espacio asegurado sin que nadie aparte cupos con semanas de anticipación (GYMM-27).
+
+**Implica:**
+- El check-in (GYMM-32) puede usar la reserva del día para dejar entrar a quien la tiene.
+- Si el gimnasio quiere otro plazo, se cambia `DIAS_PARA_RESERVAR` en `apps/api/src/gimnasio/gimnasio.service.ts`.
