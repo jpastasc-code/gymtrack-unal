@@ -1,7 +1,6 @@
-import type { DatoFaltante } from '@gymtrack/shared'
+import { FRACCION_GRASAS, PROTEINA_G_POR_KG, type DatoFaltante, type Objetivo } from '@gymtrack/shared'
 import { Link } from 'react-router'
 import { Boton } from '../../components/Boton'
-import { EnConstruccion } from '../../components/EnConstruccion'
 import { AVISO, ENLACE_PRIMARIO, VACIO } from '../../components/estilos'
 import { Pantalla } from '../../components/Pantalla'
 import { OPCIONES_ACTIVIDAD, OPCIONES_OBJETIVO } from '../auth/perfil'
@@ -67,6 +66,8 @@ function Resultado({ r }: { r: MiRequerimiento }) {
         Es una estimación con fórmulas generales y <strong>no reemplaza la valoración de un profesional en nutrición</strong>.
       </p>
 
+      <Macronutrientes r={r} />
+
       <section aria-labelledby="titulo-calculo" className="mt-8">
         <h2 id="titulo-calculo" className="titular text-3xl">
           Cómo se calcula
@@ -91,13 +92,43 @@ function Resultado({ r }: { r: MiRequerimiento }) {
         </Link>
       </section>
 
-      <section className="mt-8">
-        <EnConstruccion
-          historia="GYMM-30"
-          descripcion="Pronto verás cómo repartir estas calorías en proteínas, carbohidratos y grasas."
-        />
-      </section>
     </>
+  )
+}
+
+/** Cómo repartir las calorías del día (GYMM-30, DT-07). */
+function Macronutrientes({ r }: { r: MiRequerimiento }) {
+  const { proteina, grasas, carbohidratos } = r.macronutrientes
+  const objetivo = r.datos.objetivo as Objetivo
+  const filas = [
+    {
+      nombre: 'Proteína',
+      valor: proteina,
+      detalle: `${decimal(PROTEINA_G_POR_KG[objetivo])} g por kg de tu peso`,
+    },
+    { nombre: 'Carbohidratos', valor: carbohidratos, detalle: 'Las calorías que quedan' },
+    { nombre: 'Grasas', valor: grasas, detalle: `Siempre el ${Math.round(FRACCION_GRASAS * 100)} %, con cualquier objetivo` },
+  ]
+
+  return (
+    <section aria-labelledby="titulo-macros" className="mt-8">
+      <h2 id="titulo-macros" className="titular text-3xl">
+        Macronutrientes
+      </h2>
+      <p className="mt-1 text-grafito">Cuánto comer al día de cada uno para tu objetivo.</p>
+      <dl className="mt-4 grid gap-2 md:grid-cols-3">
+        {filas.map((f) => (
+          <div key={f.nombre} className="rounded-xl bg-hueso p-4">
+            <dt className="font-semibold">{f.nombre}</dt>
+            <dd>
+              <span className="titular text-5xl normal-case">{f.valor.gramos.toLocaleString('es-CO')} g</span>
+              <span className="mt-1 block text-sm">{f.valor.porcentaje} % de las calorías</span>
+              <span className="block text-sm text-grafito">{f.detalle}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   )
 }
 

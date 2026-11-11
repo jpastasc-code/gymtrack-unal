@@ -129,3 +129,62 @@ function exigirPositivo(nombre: string, valor: number): void {
     throw new RangeError(`${nombre} debe ser un número mayor que 0; llegó ${valor}.`)
   }
 }
+
+/**
+ * Proteína en gramos por kilo de peso según el objetivo (DT-07). Propuesta, pendiente de validar
+ * con un profesional en nutrición, igual que AJUSTE_OBJETIVO.
+ */
+export const PROTEINA_G_POR_KG: Record<Objetivo, number> = {
+  MANTENER: 1.6,
+  GANAR_MASA_MUSCULAR: 2.0,
+  PERDER_GRASA: 2.2,
+}
+
+/** Parte de las calorías que va a grasas, con cualquier objetivo (DT-07). */
+export const FRACCION_GRASAS = 0.25
+
+/** Kilocalorías por gramo de cada macronutriente. */
+export const KCAL_POR_GRAMO = { proteina: 4, carbohidratos: 4, grasas: 9 } as const
+
+export interface Macronutriente {
+  gramos: number
+  /** Parte de las calorías del día, en porcentaje entero. */
+  porcentaje: number
+}
+
+export interface DistribucionMacronutrientes {
+  proteina: Macronutriente
+  grasas: Macronutriente
+  carbohidratos: Macronutriente
+}
+
+/**
+ * Reparte las calorías del día (GYMM-30, DT-07): la proteína sale del peso y el objetivo, las
+ * grasas son el 25 % de las calorías y los carbohidratos, lo que queda. Si la proteína y las
+ * grasas ya pasan de las calorías, los carbohidratos quedan en 0 en lugar de ser negativos.
+ * Los gramos se redondean al entero y los porcentajes suman 100 (salvo en ese caso extremo, en
+ * que la proteína y las grasas ya pasan del 100 % de las calorías).
+ */
+export function distribuirMacronutrientes(
+  calorias: number,
+  pesoKg: number,
+  objetivo: Objetivo,
+): DistribucionMacronutrientes {
+  exigirPositivo('calorias', calorias)
+  exigirPositivo('pesoKg', pesoKg)
+
+  const proteinaG = pesoKg * PROTEINA_G_POR_KG[objetivo]
+  const grasasKcal = calorias * FRACCION_GRASAS
+  const carbohidratosKcal = Math.max(0, calorias - proteinaG * KCAL_POR_GRAMO.proteina - grasasKcal)
+
+  const porcentajeProteina = Math.round(((proteinaG * KCAL_POR_GRAMO.proteina) / calorias) * 100)
+  const porcentajeGrasas = Math.round(FRACCION_GRASAS * 100)
+  return {
+    proteina: { gramos: Math.round(proteinaG), porcentaje: porcentajeProteina },
+    grasas: { gramos: Math.round(grasasKcal / KCAL_POR_GRAMO.grasas), porcentaje: porcentajeGrasas },
+    carbohidratos: {
+      gramos: Math.round(carbohidratosKcal / KCAL_POR_GRAMO.carbohidratos),
+      porcentaje: Math.max(0, 100 - porcentajeProteina - porcentajeGrasas),
+    },
+  }
+}

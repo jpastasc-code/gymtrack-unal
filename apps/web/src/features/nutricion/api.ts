@@ -1,10 +1,17 @@
-import type { DatoFaltante, DatosRequerimiento, RequerimientoCalorico } from '@gymtrack/shared'
+import type {
+  DatoFaltante,
+  DatosRequerimiento,
+  DistribucionMacronutrientes,
+  RequerimientoCalorico,
+} from '@gymtrack/shared'
 import { useQuery } from '@tanstack/react-query'
 import { ApiError, apiFetch } from '../../lib/api/client'
 
 /** Respuesta de GET /api/perfil/requerimiento-calorico (GYMM-25). */
 export interface MiRequerimiento extends RequerimientoCalorico {
   datos: DatosRequerimiento & { fechaEvaluacion: string }
+  /** Gramos y porcentaje de proteína, grasas y carbohidratos (GYMM-30). */
+  macronutrientes: DistribucionMacronutrientes
 }
 
 export function useMiRequerimiento() {

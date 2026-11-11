@@ -95,6 +95,12 @@ describe('Requerimiento calórico (e2e)', () => {
         objetivo: 'GANAR_MASA_MUSCULAR',
         fechaEvaluacion: '2026-09-22T15:00:00.000Z',
       },
+      // Ejemplo de DT-07: 125 g de proteína, 66 g de grasas y 319 g de carbohidratos.
+      macronutrientes: {
+        proteina: { gramos: 125, porcentaje: 21 },
+        grasas: { gramos: 66, porcentaje: 25 },
+        carbohidratos: { gramos: 319, porcentaje: 54 },
+      },
     });
     expect(prisma.evaluacion.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -110,6 +116,8 @@ describe('Requerimiento calórico (e2e)', () => {
     const res = await pedir().expect(200);
     expect(res.body.formula).toBe('MIFFLIN_ST_JEOR');
     expect(res.body.ajusteObjetivo).toBe(1);
+    // Con objetivo mantener, la proteína es 1,6 g por kilo: 62,5 × 1,6 = 100 g.
+    expect(res.body.macronutrientes.proteina.gramos).toBe(100);
     expect(res.body.datos.edad).toBeGreaterThanOrEqual(23);
   });
 
