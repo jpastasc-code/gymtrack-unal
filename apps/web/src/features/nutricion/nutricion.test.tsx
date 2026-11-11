@@ -34,6 +34,24 @@ const REQUERIMIENTO: MiRequerimiento = {
     objetivo: 'GANAR_MASA_MUSCULAR',
     fechaEvaluacion: '2026-09-22T15:00:00.000Z',
   },
+  macronutrientes: {
+    proteina: { gramos: 125, porcentaje: 21 },
+    grasas: { gramos: 66, porcentaje: 25 },
+    carbohidratos: { gramos: 319, porcentaje: 54 },
+  },
+}
+
+/** La misma deportista con objetivo perder grasa: −20 % y 2,2 g de proteína por kilo. */
+const PERDER_GRASA: MiRequerimiento = {
+  ...REQUERIMIENTO,
+  ajusteObjetivo: 0.8,
+  calorias: 1723,
+  datos: { ...REQUERIMIENTO.datos, objetivo: 'PERDER_GRASA' },
+  macronutrientes: {
+    proteina: { gramos: 138, porcentaje: 32 },
+    grasas: { gramos: 48, porcentaje: 25 },
+    carbohidratos: { gramos: 155, porcentaje: 43 },
+  },
 }
 
 /** Simula el API y responde GET /api/perfil/requerimiento-calorico con `respuesta`. */
@@ -128,4 +146,38 @@ describe('requerimiento calórico (GYMM-25)', () => {
     await userEvent.click(within(aviso).getByRole('button', { name: 'Intentar de nuevo' }))
     expect(await screen.findByText('2.369')).toBeInTheDocument()
   })
+
+  it('reparte las calorías en macronutrientes (GYMM-30)', async () => {
+    simularRequerimiento(() => json(REQUERIMIENTO))
+    renderApp('/nutricion')
+
+    const macros = await screen.findByRole('region', { name: 'Macronutrientes' })
+    const proteina = within(macros).getByText('Proteína').parentElement!
+    expect(proteina).toHaveTextContent('125 g')
+    expect(proteina).toHaveTextContent('21 % de las calorías')
+    expect(proteina).toHaveTextContent('2 g por kg de tu peso')
+    expect(within(macros).getByText('Carbohidratos').parentElement!).toHaveTextContent('319 g')
+    expect(within(macros).getByText('Grasas').parentElement!).toHaveTextContent('Siempre el 25 %, con cualquier objetivo')
+  })
+
+  it('al cambiar el objetivo en el perfil, los macronutrientes se recalculan', async () => {
+    let actual = REQUERIMIENTO
+    simularRequerimiento(() => json(actual))
+    renderApp('/nutricion')
+    const macros = await screen.findByRole('region', { name: 'Macronutrientes' })
+    expect(within(macros).getByText('Proteína').parentElement!).toHaveTextContent('125 g')
+
+    // El API recalcula con el objetivo nuevo; la web debe volver a pedirlo al guardar el perfil.
+    actual = PERDER_GRASA
+    await userEvent.click(screen.getByRole('link', { name: 'Cambiar mi objetivo o actividad' }))
+    await userEvent.click(await screen.findByRole('radio', { name: /Perder grasa/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await screen.findByText('Cambios guardados.')
+
+    await userEvent.click(screen.getAllByRole('link', { name: 'Inicio' })[0])
+    await userEvent.click(await screen.findByRole('link', { name: /Nutrición/ }))
+    const nuevos = await screen.findByRole('region', { name: 'Macronutrientes' })
+    expect(await within(nuevos).findByText('138 g')).toBeInTheDocument()
+  })
 })
+
