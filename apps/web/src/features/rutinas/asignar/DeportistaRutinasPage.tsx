@@ -20,7 +20,7 @@ export function DeportistaRutinasPage() {
   const anteriores = rutinas.data?.filter((r) => !r.vigente) ?? []
 
   return (
-    <Pantalla titulo={nombre} volverA="/rutinas" estrecha>
+    <Pantalla titulo={nombre} volverA="/panel/rutinas" estrecha>
       {deportista.isError && (
         <p role="alert" className="rounded-xl bg-hueso p-5 font-medium text-alerta">
           {deportista.error.message}
@@ -35,7 +35,7 @@ export function DeportistaRutinasPage() {
               Rutina asignada. Ya la puede ver en su celular.
             </p>
           )}
-          <Link to={`/rutinas/${id}/nueva`} className={`mb-8 ${ENLACE_PRIMARIO}`}>
+          <Link to={`/panel/rutinas/${id}/nueva`} className={`mb-8 ${ENLACE_PRIMARIO}`}>
             {vigente ? 'Asignar rutina nueva' : 'Asignar rutina'}
           </Link>
 

@@ -4,11 +4,16 @@ import { Boton } from '../../components/Boton'
 import logoUnal from '../../assets/logo-unal.webp'
 import { Campo } from '../../components/Campo'
 import { AVISO } from '../../components/estilos'
+import { destinoInicial } from '../panel/modo'
 import { useSesion } from './sesion'
 
-/** Inicio de sesión con Supabase Auth (GYMM-10). */
+/**
+ * Inicio de sesión con Supabase Auth (GYMM-10). Al entrar respeta la pantalla que se había
+ * pedido; si no hay ninguna, va al último modo usado o, la primera vez, al panel para el
+ * personal y a Inicio para el deportista (GYMM-47).
+ */
 export function LoginPage() {
-  const { estado, iniciarSesion } = useSesion()
+  const { estado, perfil, cargandoPerfil, iniciarSesion } = useSesion()
   const location = useLocation()
   const [correo, setCorreo] = useState('')
   const [contrasena, setContrasena] = useState('')
@@ -16,8 +21,19 @@ export function LoginPage() {
   const [enviando, setEnviando] = useState(false)
 
   const desde = (location.state as { desde?: string } | null)?.desde
+  // "/" es la entrada por defecto de la app: no cuenta como una pantalla pedida.
+  const pedida = desde && desde !== '/login' && desde !== '/' ? desde : null
   if (estado === 'con-sesion') {
-    return <Navigate to={desde && desde !== '/login' ? desde : '/'} replace />
+    if (pedida) return <Navigate to={pedida} replace />
+    // Sin pantalla pedida, el destino depende de los permisos: hay que esperar el perfil.
+    if (cargandoPerfil) {
+      return (
+        <p className="p-6 text-grafito" role="status">
+          Abriendo GymTrack…
+        </p>
+      )
+    }
+    return <Navigate to={destinoInicial(perfil)} replace />
   }
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {

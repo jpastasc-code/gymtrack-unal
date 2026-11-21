@@ -1,20 +1,23 @@
 import type { ReactNode } from 'react'
-import { Navigate, Outlet, useLocation } from 'react-router'
+import { Link, Navigate, Outlet, useLocation } from 'react-router'
 import { Boton } from '../../components/Boton'
+import { ENLACE_SECUNDARIO } from '../../components/estilos'
 import { useSesion } from './sesion'
-import type { Rol } from './tipos'
+import type { Permiso } from './tipos'
 
 interface Props {
-  /** Si se indica, solo estos roles pueden entrar. */
-  roles?: Rol[]
+  /** Si se indica, solo entra quien tiene este permiso (DT-16). */
+  permiso?: Permiso
+  /** Si es true, solo entra quien tiene al menos un permiso: el panel del personal. */
+  personal?: boolean
   children?: ReactNode
 }
 
 /**
- * Exige sesión iniciada (y, si se indica, un rol) para mostrar su contenido.
+ * Exige sesión iniciada (y, si se indica, un permiso) para mostrar su contenido.
  * Sin sesión, lleva al login recordando a dónde quería ir la persona.
  */
-export function RutaProtegida({ roles, children }: Props) {
+export function RutaProtegida({ permiso, personal, children }: Props) {
   const { estado, perfil, cargandoPerfil, errorPerfil, cerrarSesion } = useSesion()
   const location = useLocation()
 
@@ -37,19 +40,22 @@ export function RutaProtegida({ roles, children }: Props) {
     )
   }
 
-  if (roles?.length) {
+  if (permiso || personal) {
     if (!perfil) {
-      // Sin conexión no podemos confirmar el rol; no mostramos datos de otro rol.
+      // Sin conexión no podemos confirmar los permisos; no mostramos pantallas del personal.
       return (
-        <PantallaMensaje titulo="No pudimos comprobar tu rol">
+        <PantallaMensaje titulo="No pudimos comprobar tus permisos">
           <p className="mt-4 text-grafito">Revisa tu conexión a internet y vuelve a abrir esta pantalla.</p>
+          <VolverAlInicio />
         </PantallaMensaje>
       )
     }
-    if (!roles.includes(perfil.rol)) {
+    const permitido = permiso ? perfil.permisos.includes(permiso) : perfil.permisos.length > 0
+    if (!permitido) {
       return (
         <PantallaMensaje titulo="No tienes permiso para ver esta pantalla">
           <p className="mt-4 text-grafito">Si crees que es un error, habla con el personal del gimnasio.</p>
+          <VolverAlInicio />
         </PantallaMensaje>
       )
     }
@@ -57,6 +63,17 @@ export function RutaProtegida({ roles, children }: Props) {
 
   // Sin conexión (errores de red) dejamos entrar: cada pantalla muestra su propio estado.
   return children ?? <Outlet />
+}
+
+function VolverAlInicio() {
+  return (
+    <Link
+      to="/"
+      className={`mt-6 ${ENLACE_SECUNDARIO}`}
+    >
+      Ir al inicio
+    </Link>
+  )
 }
 
 function PantallaMensaje({ titulo, children }: { titulo: string; children?: ReactNode }) {

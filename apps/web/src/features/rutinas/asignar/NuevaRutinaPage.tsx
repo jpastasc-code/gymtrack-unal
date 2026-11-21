@@ -177,7 +177,7 @@ export function NuevaRutinaPage() {
           descansoSegundos: f.descanso.trim() === '' ? null : Number(f.descanso),
         })),
       },
-      { onSuccess: () => void navigate(`/rutinas/${id}`, { state: { asignada: true } }) },
+      { onSuccess: () => void navigate(`/panel/rutinas/${id}`, { state: { asignada: true } }) },
     )
   }
 
@@ -185,7 +185,7 @@ export function NuevaRutinaPage() {
   const nombreDeportista = deportista.data ? `${deportista.data.nombres} ${deportista.data.apellidos}` : ''
 
   return (
-    <Pantalla titulo="Nueva rutina" volverA={`/rutinas/${id}`} estrecha>
+    <Pantalla titulo="Nueva rutina" volverA={`/panel/rutinas/${id}`} estrecha>
       {deportista.data && <p className="-mt-3 mb-5 text-lg text-grafito">Para {nombreDeportista}</p>}
 
       <form ref={formulario} className="flex flex-col gap-8" onSubmit={guardar} noValidate>

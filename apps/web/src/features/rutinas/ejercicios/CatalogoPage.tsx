@@ -4,14 +4,15 @@ import { AVISO, BUSCADOR, ENLACE_PRIMARIO, VACIO } from '../../../components/est
 import { IconoFlecha } from '../../../components/iconos'
 import { Pantalla } from '../../../components/Pantalla'
 import { useRetardado } from '../../../lib/useRetardado'
-import { useSesion } from '../../auth/sesion'
-import { NOMBRE_GRUPO, ROLES_EDITORES, useEjercicios, type Ejercicio, type GrupoMuscular } from './api'
+import { NOMBRE_GRUPO, useEjercicios, type Ejercicio, type GrupoMuscular } from './api'
 import { FiltroGrupos } from './FiltroGrupos'
 
-/** Catálogo de ejercicios (GYMM-12): todos lo consultan, los instructores lo editan. */
-export function CatalogoPage() {
-  const { perfil } = useSesion()
-  const puedeEditar = !!perfil && (ROLES_EDITORES as readonly string[]).includes(perfil.rol)
+/**
+ * Catálogo de ejercicios (GYMM-12). En el modo deportista es solo de lectura; en el panel
+ * (/panel/ejercicios, con GESTIONAR_EJERCICIOS) se agregan, editan y desactivan.
+ */
+export function CatalogoPage({ gestion = false }: { gestion?: boolean }) {
+  const puedeEditar = gestion
 
   const [texto, setTexto] = useState('')
   const [grupo, setGrupo] = useState<GrupoMuscular | null>(null)
@@ -26,9 +27,9 @@ export function CatalogoPage() {
   const hayFiltros = texto.trim() !== '' || grupo !== null
 
   return (
-    <Pantalla titulo="Ejercicios" volverA="/">
+    <Pantalla titulo="Ejercicios" volverA={gestion ? '/panel' : '/'}>
       {puedeEditar && (
-        <Link to="/ejercicios/nuevo" className={`mb-6 ${ENLACE_PRIMARIO} md:w-fit`}>
+        <Link to="/panel/ejercicios/nuevo" className={`mb-6 ${ENLACE_PRIMARIO} md:w-fit`}>
           Agregar ejercicio
         </Link>
       )}
@@ -130,7 +131,7 @@ function FilaEjercicio({ ejercicio: e, editable }: { ejercicio: Ejercicio; edita
   if (!editable) return <div className="py-4">{contenido}</div>
   return (
     <Link
-      to={`/ejercicios/${e.id}/editar`}
+      to={`/panel/ejercicios/${e.id}/editar`}
       className="-mx-2 flex items-center gap-3 px-2 py-4 hover:bg-hueso"
       aria-label={`Editar ${e.nombre}`}
     >
