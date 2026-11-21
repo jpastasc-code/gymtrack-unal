@@ -2,7 +2,7 @@
   "name": "@gymtrack/shared",
   "version": "0.0.0",
   "private": true,
-  "description": "Código compartido entre el API y la web: fórmulas nutricionales (DT-07).",
+  "description": "Código compartido entre el API y la web: fórmulas nutricionales (DT-07), progreso y permisos (DT-16).",
   "type": "module",
   "exports": {
     ".": {
