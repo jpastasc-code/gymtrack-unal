@@ -118,12 +118,11 @@ export function IconoPanel(props: PropsIcono) {
   )
 }
 
-/** Evaluaciones físicas: planilla con marcas. */
+/** Evaluaciones físicas: una línea de pulso. */
 export function IconoEvaluacion(props: PropsIcono) {
   return (
     <Base {...props}>
-      <rect x="5" y="4.5" width="14" height="16.5" rx="2" />
-      <path d="M9 3h6v3H9zM8.5 11h7M8.5 15h4.5" />
+      <path d="M3 12h4l2.5-6 5 12 2.5-6h4" />
     </Base>
   )
 }

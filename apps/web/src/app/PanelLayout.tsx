@@ -37,7 +37,6 @@ export function PanelLayout() {
           <Link to="/panel" className="hidden items-center gap-3 lg:flex" aria-label="GymTrack, ir al panel">
             <img src={logoUnal} alt="" width={44} height={44} className="size-11" />
             <span className="titular text-[1.65rem]">GymTrack</span>
-            <span className="text-sm font-semibold text-grafito">Panel</span>
           </Link>
 
           <nav aria-label="Navegación del panel" className="flex-1 lg:ml-auto lg:flex-none">
@@ -68,7 +67,7 @@ export function PanelLayout() {
           </nav>
 
           <div className="hidden lg:block">
-            <EnlaceModoDeportista />
+            <EnlaceModoDeportista className="whitespace-nowrap" />
           </div>
         </div>
       </header>
