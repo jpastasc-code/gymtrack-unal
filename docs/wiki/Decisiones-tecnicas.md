@@ -24,6 +24,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 | DT-13 | Horarios de la cancha en hora de Colombia | Propuesta | 2026-10-20 |
 | DT-14 | Registro de series sin conexión e idempotente | Propuesta | 2026-11-04 |
 | DT-15 | Reglas de la reserva de cupo en el gimnasio | Propuesta | 2026-11-10 |
+| DT-16 | Permisos por rol y panel del personal | Propuesta | 2026-11-21 |
 
 ---
 
@@ -100,7 +101,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 - **Cómo funciona (GYMM-10):**
   - En el API, un guard global (`apps/api/src/auth/auth.guard.ts`) exige un token válido en todas las rutas salvo las `@Publico()`.
   - El guard verifica la firma, el emisor (`<SUPABASE_URL>/auth/v1`), la audiencia `authenticated` y la expiración.
-  - Luego carga el perfil de `usuario` y aplica `@Roles(...)`.
+  - Luego carga el perfil de `usuario` y aplica `@Permisos(...)` ([DT-16](#dt-16--permisos-por-rol-y-panel-del-personal)).
   - Un perfil inexistente o inactivo responde 403.
 - **Claves de firma:**
   - Si el proyecto usa claves asimétricas (ES256/RS256), el API las toma del JWKS público (`/auth/v1/.well-known/jwks.json`), sin compartir secretos.
@@ -315,3 +316,29 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 **Implica:**
 - El check-in (GYMM-32) puede usar la reserva del día para dejar entrar a quien la tiene.
 - Si el gimnasio quiere otro plazo, se cambia `DIAS_PARA_RESERVAR` en `apps/api/src/gimnasio/gimnasio.service.ts`.
+
+## DT-16 · Permisos por rol y panel del personal
+
+**Decisión:**
+- Los accesos se definen por **permisos**, no por roles fijos (GYMM-47). Hay cinco: `GESTIONAR_RUTINAS`, `REGISTRAR_EVALUACIONES`, `GESTIONAR_EJERCICIOS`, `GESTIONAR_CUPOS_GIMNASIO` y `GESTIONAR_CANCHA`.
+- Cada rol tiene un conjunto de permisos en `PERMISOS_POR_ROL` (`packages/shared/src/permisos.ts`), que comparten el API y la web:
+
+  | Rol | Permisos |
+  | --- | -------- |
+  | `DEPORTISTA` | Ninguno |
+  | `INSTRUCTOR` | Todos |
+  | `PERSONAL_DEPORTES` | `GESTIONAR_CUPOS_GIMNASIO`, `GESTIONAR_CANCHA` |
+  | `ADMIN` | Todos |
+
+- En el API, las rutas se restringen con `@Permisos(...)`: el `AuthGuard` lee el rol de la tabla `usuario` (DT-05) y exige **al menos uno** de los permisos listados. Las reglas de los servicios (cancelar reservas ajenas, ver de quién es una franja de la cancha, ver ejercicios desactivados) usan `tienePermiso(rol, permiso)`.
+- `GET /api/auth/yo` devuelve los `permisos` del usuario: la web no los calcula por su cuenta.
+
+**Por qué:**
+- En el gimnasio de la UNAL el instructor también hace lo del personal de deportes (cupos del gimnasio y horario de la cancha). Con roles fijos había que tocar cada endpoint y cada pantalla para reflejarlo.
+- Queremos que la app se pueda adaptar a otros gimnasios.
+
+**Implica:**
+- **Para adaptar la app a otro gimnasio se cambia `PERMISOS_POR_ROL`**, y nada más: ni pantallas ni endpoints. Un permiso nuevo sí exige agregarlo a `PERMISOS` y usarlo donde corresponda.
+- Los roles siguen en la base (`usuario.rol`); no hay tabla de permisos ni cambios de esquema. Gestionar usuarios y roles queda fuera de esta decisión.
+- El decorador `@Roles` desaparece: ninguna ruta pide un rol.
+- Con GYMM-47 el instructor ya puede configurar los cupos del gimnasio, el horario de la cancha y cancelar reservas ajenas.
