@@ -61,6 +61,7 @@ Antes de escribir clases, busca aquí:
 | La estructura de una pantalla (titular, botón de atrás, ancho) | `Pantalla` (`volverA`, `estrecha` para formularios) | `components/Pantalla.tsx` |
 | Un botón | `Boton` (`variante`: `primario`, `secundario`, `texto`; `bloque`; `grande`) | `components/Boton.tsx` |
 | Un enlace que se ve como botón primario | `ENLACE_PRIMARIO` | `components/estilos.ts` |
+| Un enlace que se ve como botón secundario (borde negro) | `ENLACE_SECUNDARIO` | `components/estilos.ts` |
 | Un campo de texto o número (con unidad, ayuda y error) | `Campo` | `components/Campo.tsx` |
 | Un número que se ajusta con una mano (carga, repeticiones) | `Contador` (botones − y + de 56 px; el valor también se escribe) | `components/Contador.tsx` |
 | Una lista desplegable o texto largo | `Selector`, `AreaTexto` | `components/Controles.tsx` |
@@ -98,6 +99,8 @@ Lo que muestra la [referencia visual](https://claude.ai/artifact/2VMdDupNQX1ruBP
 - **Iniciar sesión:** el logo de la Universidad Nacional en sus colores originales (no el ícono de la app), el titular "GymTrack UNAL", una frase que dice para qué entrar, los campos y el botón principal en negro.
 - **Entrenar:** un ejercicio a la vez, con sus series como filas. La siguiente serie por hacer aparece abierta con dos `Contador` (carga y repeticiones) y un botón negro grande, "Registrar serie N": si no cambió nada, registrarla es un toque. Las hechas muestran el valor y un visto en `verde-claro`. Arriba, la barra de progreso de la sesión en `verde`.
 - **Computador (desde 1024 px):** la barra de abajo sube a una barra superior con el logo y la pestaña activa subrayada en negro. Entrenar queda como botón verde a la derecha y el contenido aprovecha el ancho en dos columnas.
+- **Panel del personal (`/panel`):** el mismo esqueleto que el modo deportista, con `PanelLayout` en lugar de `AppLayout`. La barra va abajo en el celular y arriba desde 1024 px, con la pestaña activa subrayada en negro. Las pestañas salen de los permisos (`features/panel/secciones.ts`), nunca del rol: Panel, las secciones permitidas y Perfil. En el celular caben 5 (Panel, hasta 3 secciones y Perfil); las demás se abren desde las filas del inicio del panel. El inicio del panel usa las mismas filas que Inicio, una por sección. **El panel no lleva verde**: aquí no se entrena.
+- **Cambio de modo:** en el panel, "Entrenar como deportista" es un `ENLACE_SECUNDARIO`. En el computador va a la derecha de la barra superior, donde el modo deportista tiene Entrenar; en el celular va al final del inicio del panel. En el modo deportista, quien tiene algún permiso ve la fila "Ir a mi panel" al principio de las secciones de Inicio, con las secciones que gestiona como descripción. Nada más del personal aparece en el modo deportista.
 
 ## Responsive
 
