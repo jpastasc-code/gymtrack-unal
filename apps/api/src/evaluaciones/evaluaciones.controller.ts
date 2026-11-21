@@ -18,7 +18,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { Roles } from '../auth/auth.decorators';
+import { Permisos } from '../auth/auth.decorators';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
 import type { Usuario } from '../generated/prisma/client';
 import { BuscarDeportistasDto, CrearEvaluacionDto } from './evaluaciones.dto';
@@ -33,18 +33,22 @@ const idDeportista = new ParseUUIDPipe({
     new NotFoundException('Ese deportista no existe o no está activo.'),
 });
 
-/** Evaluaciones físicas que registran los instructores (GYMM-13). */
+/**
+ * Evaluaciones físicas que registran los instructores (GYMM-13). Buscar deportistas y ver sus
+ * datos básicos también lo necesita quien arma rutinas (GYMM-21).
+ */
 @ApiTags('Evaluaciones')
 @ApiBearerAuth()
-@Roles('INSTRUCTOR', 'ADMIN')
-@ApiForbiddenResponse({ description: 'Solo instructores y administradores.' })
+@Permisos('REGISTRAR_EVALUACIONES')
+@ApiForbiddenResponse({ description: 'Sin el permiso REGISTRAR_EVALUACIONES.' })
 @Controller('deportistas')
 export class EvaluacionesController {
   constructor(private readonly evaluaciones: EvaluacionesService) {}
 
   @Get()
+  @Permisos('REGISTRAR_EVALUACIONES', 'GESTIONAR_RUTINAS')
   @ApiOperation({
-    summary: 'Buscar deportistas para evaluar',
+    summary: 'Buscar deportistas para evaluar o asignarles una rutina',
     description:
       'Por nombre, apellido, documento o correo. Máximo 20 resultados.',
   })
@@ -54,6 +58,7 @@ export class EvaluacionesController {
   }
 
   @Get(':id')
+  @Permisos('REGISTRAR_EVALUACIONES', 'GESTIONAR_RUTINAS')
   @ApiOperation({ summary: 'Datos básicos de un deportista' })
   @ApiNotFoundResponse({ description: 'No existe o no está activo.' })
   deportista(

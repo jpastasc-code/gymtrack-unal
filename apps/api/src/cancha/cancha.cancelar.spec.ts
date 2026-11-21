@@ -62,8 +62,8 @@ describe('CanchaService.cancelarReserva (GYMM-29)', () => {
     );
   });
 
-  it.each(['PERSONAL_DEPORTES', 'ADMIN'] as const)(
-    '%s cancela la reserva de otra persona',
+  it.each(['PERSONAL_DEPORTES', 'INSTRUCTOR', 'ADMIN'] as const)(
+    '%s (con GESTIONAR_CANCHA) cancela la reserva de otra persona',
     async (rol) => {
       const { futura, servicio } = montar();
       await servicio.cancelarReserva(futura.id, { id: 'u-gestor', rol }, AHORA);
@@ -71,16 +71,17 @@ describe('CanchaService.cancelarReserva (GYMM-29)', () => {
     },
   );
 
-  it.each(['DEPORTISTA', 'INSTRUCTOR'] as const)(
-    'un %s no puede cancelar una reserva ajena',
-    async (rol) => {
-      const { futura, servicio } = montar();
-      await expect(
-        servicio.cancelarReserva(futura.id, { id: 'u-intruso', rol }, AHORA),
-      ).rejects.toThrow(ForbiddenException);
-      expect(futura.estado).toBe('CONFIRMADA');
-    },
-  );
+  it('un DEPORTISTA no puede cancelar una reserva ajena', async () => {
+    const { futura, servicio } = montar();
+    await expect(
+      servicio.cancelarReserva(
+        futura.id,
+        { id: 'u-intruso', rol: 'DEPORTISTA' },
+        AHORA,
+      ),
+    ).rejects.toThrow(ForbiddenException);
+    expect(futura.estado).toBe('CONFIRMADA');
+  });
 
   it('no cancela una reserva que ya empezó', async () => {
     const { enCurso, servicio } = montar();

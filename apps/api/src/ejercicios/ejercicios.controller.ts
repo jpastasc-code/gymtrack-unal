@@ -22,7 +22,8 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { Roles } from '../auth/auth.decorators';
+import { tienePermiso } from '@gymtrack/shared';
+import { Permisos } from '../auth/auth.decorators';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
 import type { Usuario } from '../generated/prisma/client';
 import {
@@ -32,7 +33,6 @@ import {
 } from './ejercicios.dto';
 import { EjerciciosService, type EjercicioVista } from './ejercicios.service';
 
-const EDITORES = ['INSTRUCTOR', 'ADMIN'] as const;
 /** Un id que no es UUID no puede existir: se responde 404 en vez de un error de formato. */
 const uuid = new ParseUUIDPipe({
   exceptionFactory: () => new NotFoundException('Ese ejercicio no existe.'),
@@ -57,7 +57,7 @@ export class EjerciciosController {
   ): Promise<EjercicioVista[]> {
     return this.ejercicios.listar(
       filtro,
-      (EDITORES as readonly string[]).includes(usuario.rol),
+      tienePermiso(usuario.rol, 'GESTIONAR_EJERCICIOS'),
     );
   }
 
@@ -69,13 +69,13 @@ export class EjerciciosController {
   }
 
   @Post()
-  @Roles(...EDITORES)
+  @Permisos('GESTIONAR_EJERCICIOS')
   @ApiOperation({ summary: 'Agregar un ejercicio (instructores)' })
   @ApiCreatedResponse({ description: 'Ejercicio creado.' })
   @ApiConflictResponse({
     description: 'Ya existe un ejercicio con ese nombre.',
   })
-  @ApiForbiddenResponse({ description: 'Solo instructores y administradores.' })
+  @ApiForbiddenResponse({ description: 'Sin el permiso GESTIONAR_EJERCICIOS.' })
   crear(
     @Body() dto: CrearEjercicioDto,
     @UsuarioActual() usuario: Usuario,
@@ -84,14 +84,14 @@ export class EjerciciosController {
   }
 
   @Patch(':id')
-  @Roles(...EDITORES)
+  @Permisos('GESTIONAR_EJERCICIOS')
   @ApiOperation({
     summary: 'Editar, desactivar o reactivar un ejercicio (instructores)',
   })
   @ApiConflictResponse({
     description: 'Ya existe un ejercicio con ese nombre.',
   })
-  @ApiForbiddenResponse({ description: 'Solo instructores y administradores.' })
+  @ApiForbiddenResponse({ description: 'Sin el permiso GESTIONAR_EJERCICIOS.' })
   actualizar(
     @Param('id', uuid) id: string,
     @Body() dto: ActualizarEjercicioDto,
@@ -101,7 +101,7 @@ export class EjerciciosController {
 
   @Delete(':id')
   @HttpCode(204)
-  @Roles(...EDITORES)
+  @Permisos('GESTIONAR_EJERCICIOS')
   @ApiOperation({
     summary: 'Eliminar un ejercicio que nadie usa (instructores)',
     description:
@@ -109,7 +109,7 @@ export class EjerciciosController {
   })
   @ApiNoContentResponse({ description: 'Eliminado.' })
   @ApiConflictResponse({ description: 'El ejercicio está en uso.' })
-  @ApiForbiddenResponse({ description: 'Solo instructores y administradores.' })
+  @ApiForbiddenResponse({ description: 'Sin el permiso GESTIONAR_EJERCICIOS.' })
   eliminar(@Param('id', uuid) id: string): Promise<void> {
     return this.ejercicios.eliminar(id);
   }

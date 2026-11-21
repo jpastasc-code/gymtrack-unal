@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { tienePermiso } from '@gymtrack/shared';
 import type { FranjaGimnasio, Rol } from '../generated/prisma/client';
 import {
   diaSemanaIso,
@@ -25,9 +26,6 @@ export type EstadoFranjaGimnasio = 'DISPONIBLE' | 'LLENA' | 'TUYA' | 'PASADA';
 
 /** Días que se pueden reservar, contando hoy (DT-15). */
 export const DIAS_PARA_RESERVAR = 7;
-
-/** Quienes configuran el cupo de las franjas y cancelan reservas ajenas. */
-export const GESTORES_GIMNASIO: readonly Rol[] = ['PERSONAL_DEPORTES', 'ADMIN'];
 
 export interface FranjaConCupo {
   id: string;
@@ -279,7 +277,8 @@ export class GimnasioService {
 
   /**
    * Cancela una reserva antes de que empiece la franja y libera el cupo. Puede
-   * hacerlo quien la hizo o el personal de deportes. Cancelar dos veces no es un error.
+   * hacerlo quien la hizo o quien tiene el permiso GESTIONAR_CUPOS_GIMNASIO. Cancelar dos
+   * veces no es un error.
    */
   async cancelar(
     id: string,
@@ -293,10 +292,10 @@ export class GimnasioService {
     if (!reserva) throw new NotFoundException('Esa reserva no existe.');
     if (
       reserva.usuarioId !== usuario.id &&
-      !GESTORES_GIMNASIO.includes(usuario.rol)
+      !tienePermiso(usuario.rol, 'GESTIONAR_CUPOS_GIMNASIO')
     ) {
       throw new ForbiddenException(
-        'Solo quien hizo la reserva o el personal de deportes puede cancelarla.',
+        'Solo quien hizo la reserva o el personal del gimnasio puede cancelarla.',
       );
     }
     if (reserva.estado === 'CANCELADA') return;

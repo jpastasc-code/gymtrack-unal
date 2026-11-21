@@ -138,22 +138,38 @@ describe('Disponibilidad y reservas de la cancha (e2e, GYMM-20 y GYMM-28)', () =
     );
   });
 
-  it('solo el personal de deportes administra las franjas', async () => {
+  it('un deportista no administra las franjas', async () => {
     const id = db.idDe(1, '14:00');
-    for (const quien of ['deportista', 'instructor'] as const) {
-      await como(quien).get('/api/cancha/franjas').expect(403);
-      await como(quien)
-        .post('/api/cancha/franjas', {
-          diaSemana: 2,
-          horaInicio: '14:00',
-          horaFin: '15:00',
-        })
-        .expect(403);
-      await como(quien)
-        .patch(`/api/cancha/franjas/${id}`, { activa: false })
-        .expect(403);
-      await como(quien).delete(`/api/cancha/franjas/${id}`).expect(403);
-    }
+    await como('deportista').get('/api/cancha/franjas').expect(403);
+    await como('deportista')
+      .post('/api/cancha/franjas', {
+        diaSemana: 2,
+        horaInicio: '14:00',
+        horaFin: '15:00',
+      })
+      .expect(403);
+    await como('deportista')
+      .patch(`/api/cancha/franjas/${id}`, { activa: false })
+      .expect(403);
+    await como('deportista').delete(`/api/cancha/franjas/${id}`).expect(403);
+    expect(db.franjas()).toHaveLength(3);
+  });
+
+  it('el instructor, con GESTIONAR_CANCHA, define el horario de la cancha (GYMM-47)', async () => {
+    await como('instructor').get('/api/cancha/franjas').expect(200);
+    const creada = await como('instructor')
+      .post('/api/cancha/franjas', {
+        diaSemana: 2,
+        horaInicio: '07:00',
+        horaFin: '08:00',
+      })
+      .expect(201);
+    await como('instructor')
+      .patch(`/api/cancha/franjas/${creada.body.id}`, { activa: false })
+      .expect(200);
+    await como('instructor')
+      .delete(`/api/cancha/franjas/${creada.body.id}`)
+      .expect(204);
     expect(db.franjas()).toHaveLength(3);
   });
 

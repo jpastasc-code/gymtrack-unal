@@ -23,7 +23,8 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { Roles } from '../auth/auth.decorators';
+import { tienePermiso } from '@gymtrack/shared';
+import { Permisos } from '../auth/auth.decorators';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
 import type { Usuario } from '../generated/prisma/client';
 import {
@@ -34,8 +35,6 @@ import {
 } from './cancha.dto';
 import {
   CanchaService,
-  esGestorCancha,
-  GESTORES_CANCHA,
   type DisponibilidadSemana,
   type FranjasCancha,
   type FranjaVista,
@@ -60,7 +59,7 @@ export class CanchaController {
   @ApiOperation({
     summary: 'Disponibilidad semanal de la cancha sintética',
     description:
-      'Cualquier usuario con sesión. Devuelve los 7 días (lunes a domingo, hora de Colombia) con cada franja habilitada y su estado: DISPONIBLE, RESERVADA (por otra persona), TUYA (la reservaste tú) o PASADA (ya empezó). Al personal de deportes cada franja ocupada le trae `reserva` (id y nombre de quien reservó) para poder cancelarla.',
+      'Cualquier usuario con sesión. Devuelve los 7 días (lunes a domingo, hora de Colombia) con cada franja habilitada y su estado: DISPONIBLE, RESERVADA (por otra persona), TUYA (la reservaste tú) o PASADA (ya empezó). A quien tiene el permiso GESTIONAR_CANCHA cada franja ocupada le trae `reserva` (id y nombre de quien reservó) para poder cancelarla.',
   })
   @ApiOkResponse({ description: 'La semana pedida, día por día.' })
   @ApiNotFoundResponse({ description: 'No hay una cancha habilitada.' })
@@ -72,7 +71,7 @@ export class CanchaController {
       consulta.semana,
       new Date(),
       usuario.id,
-      esGestorCancha(usuario.rol),
+      tienePermiso(usuario.rol, 'GESTIONAR_CANCHA'),
     );
   }
 
@@ -107,7 +106,7 @@ export class CanchaController {
   @ApiNoContentResponse({ description: 'Cancelada.' })
   @ApiNotFoundResponse({ description: 'La reserva no existe.' })
   @ApiForbiddenResponse({
-    description: 'No es tu reserva y no eres personal de deportes.',
+    description: 'No es tu reserva y no tienes el permiso GESTIONAR_CANCHA.',
   })
   @ApiConflictResponse({ description: 'La reserva ya empezó.' })
   cancelarReserva(
@@ -129,20 +128,20 @@ export class CanchaController {
   }
 
   @Get('franjas')
-  @Roles(...GESTORES_CANCHA)
+  @Permisos('GESTIONAR_CANCHA')
   @ApiOperation({
     summary: 'Franjas semanales de la cancha (personal de deportes)',
     description: 'Incluye las deshabilitadas.',
   })
   @ApiForbiddenResponse({
-    description: 'Solo personal de deportes y administradores.',
+    description: 'Sin el permiso GESTIONAR_CANCHA.',
   })
   listarFranjas(): Promise<FranjasCancha> {
     return this.cancha.listarFranjas();
   }
 
   @Post('franjas')
-  @Roles(...GESTORES_CANCHA)
+  @Permisos('GESTIONAR_CANCHA')
   @ApiOperation({
     summary: 'Habilitar una franja semanal (personal de deportes)',
   })
@@ -154,21 +153,21 @@ export class CanchaController {
     description: 'Se cruza con otra franja del mismo día.',
   })
   @ApiForbiddenResponse({
-    description: 'Solo personal de deportes y administradores.',
+    description: 'Sin el permiso GESTIONAR_CANCHA.',
   })
   crearFranja(@Body() dto: CrearFranjaDto): Promise<FranjaVista> {
     return this.cancha.crearFranja(dto);
   }
 
   @Patch('franjas/:id')
-  @Roles(...GESTORES_CANCHA)
+  @Permisos('GESTIONAR_CANCHA')
   @ApiOperation({
     summary:
       'Deshabilitar o volver a habilitar una franja (personal de deportes)',
   })
   @ApiNotFoundResponse({ description: 'La franja no existe.' })
   @ApiForbiddenResponse({
-    description: 'Solo personal de deportes y administradores.',
+    description: 'Sin el permiso GESTIONAR_CANCHA.',
   })
   actualizarFranja(
     @Param('id', uuid) id: string,
@@ -179,7 +178,7 @@ export class CanchaController {
 
   @Delete('franjas/:id')
   @HttpCode(204)
-  @Roles(...GESTORES_CANCHA)
+  @Permisos('GESTIONAR_CANCHA')
   @ApiOperation({
     summary: 'Eliminar una franja (personal de deportes)',
     description: 'Las reservas ya hechas en ese horario se conservan.',
@@ -187,7 +186,7 @@ export class CanchaController {
   @ApiNoContentResponse({ description: 'Eliminada.' })
   @ApiNotFoundResponse({ description: 'La franja no existe.' })
   @ApiForbiddenResponse({
-    description: 'Solo personal de deportes y administradores.',
+    description: 'Sin el permiso GESTIONAR_CANCHA.',
   })
   eliminarFranja(@Param('id', uuid) id: string): Promise<void> {
     return this.cancha.eliminarFranja(id);

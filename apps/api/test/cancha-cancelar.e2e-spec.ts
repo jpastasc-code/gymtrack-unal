@@ -12,6 +12,7 @@ const USUARIOS = {
   deportes: { id: 'u-deportes', rol: 'PERSONAL_DEPORTES', activo: true },
   instructor: { id: 'u-instructor', rol: 'INSTRUCTOR', activo: true },
   deportista: { id: 'u-deportista', rol: 'DEPORTISTA', activo: true },
+  otro: { id: 'u-otro', rol: 'DEPORTISTA', activo: true },
 } as const;
 
 /** Una semana lejana, para que ninguna reserva haya empezado al correr la prueba. */
@@ -110,11 +111,11 @@ describe('Cancelación de reservas de la cancha (e2e, GYMM-29)', () => {
   });
 
   it('otra persona no puede cancelarla', async () => {
-    const res = await como('instructor').cancelar(reservaId()).expect(403);
+    const res = await como('otro').cancelar(reservaId()).expect(403);
     expect(res.body.message).toBe(
-      'Solo quien hizo la reserva o el personal de deportes puede cancelarla.',
+      'Solo quien hizo la reserva o el personal del gimnasio puede cancelarla.',
     );
-    expect((await franjaDelLunes('instructor')).estado).toBe('RESERVADA');
+    expect((await franjaDelLunes('otro')).estado).toBe('RESERVADA');
   });
 
   it('el personal de deportes ve de quién es la franja y la cancela', async () => {
@@ -122,10 +123,19 @@ describe('Cancelación de reservas de la cancha (e2e, GYMM-29)', () => {
       id: reservaId(),
       nombre: 'Daniela Deportista',
     });
-    // Quien no es del personal de deportes no ve a nombre de quién está.
-    expect(await franjaDelLunes('instructor')).not.toHaveProperty('reserva');
+    // Quien no tiene el permiso GESTIONAR_CANCHA no ve a nombre de quién está.
+    expect(await franjaDelLunes('otro')).not.toHaveProperty('reserva');
 
     await como('deportes').cancelar(reservaId()).expect(204);
+    expect((await franjaDelLunes('deportista')).estado).toBe('DISPONIBLE');
+  });
+
+  it('el instructor, con GESTIONAR_CANCHA, ve de quién es la franja y la cancela (GYMM-47)', async () => {
+    expect((await franjaDelLunes('instructor')).reserva).toEqual({
+      id: reservaId(),
+      nombre: 'Daniela Deportista',
+    });
+    await como('instructor').cancelar(reservaId()).expect(204);
     expect((await franjaDelLunes('deportista')).estado).toBe('DISPONIBLE');
   });
 

@@ -85,7 +85,8 @@ export class FiltroEjerciciosDto {
   grupo?: GrupoMuscular;
 
   @ApiPropertyOptional({
-    description: 'Solo instructores: incluir ejercicios desactivados.',
+    description:
+      'Solo con el permiso GESTIONAR_EJERCICIOS: incluir ejercicios desactivados.',
   })
   @IsOptional()
   @Transform(

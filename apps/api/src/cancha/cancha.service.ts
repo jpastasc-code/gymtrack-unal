@@ -10,6 +10,7 @@ import type {
   FranjaCancha,
   ReservaCancha,
 } from '../generated/prisma/client';
+import { tienePermiso } from '@gymtrack/shared';
 import type { Rol } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import type {
@@ -37,11 +38,6 @@ export interface CanchaResumen {
   nombre: string;
   descripcion: string | null;
 }
-
-/** Quienes definen el horario de la cancha (GYMM-20) y cancelan reservas ajenas (GYMM-29). */
-export const GESTORES_CANCHA: readonly Rol[] = ['PERSONAL_DEPORTES', 'ADMIN'];
-
-export const esGestorCancha = (rol: Rol) => GESTORES_CANCHA.includes(rol);
 
 export interface FranjaDelDia {
   id: string;
@@ -311,7 +307,7 @@ export class CanchaService {
   /**
    * Cancela una reserva (GYMM-29): la marca CANCELADA, así que la restricción de
    * exclusión y la disponibilidad dejan de contarla y la franja queda libre al
-   * instante. Puede hacerlo quien la hizo o el personal de deportes, y solo antes
+   * instante. Puede hacerlo quien la hizo o quien tiene el permiso GESTIONAR_CANCHA, y solo antes
    * de que empiece. Cancelar dos veces no es un error.
    */
   async cancelarReserva(
@@ -323,9 +319,12 @@ export class CanchaService {
       where: { id },
     });
     if (!reserva) throw new NotFoundException('Esa reserva no existe.');
-    if (reserva.usuarioId !== usuario.id && !esGestorCancha(usuario.rol)) {
+    if (
+      reserva.usuarioId !== usuario.id &&
+      !tienePermiso(usuario.rol, 'GESTIONAR_CANCHA')
+    ) {
       throw new ForbiddenException(
-        'Solo quien hizo la reserva o el personal de deportes puede cancelarla.',
+        'Solo quien hizo la reserva o el personal del gimnasio puede cancelarla.',
       );
     }
     if (reserva.estado === 'CANCELADA') return;
