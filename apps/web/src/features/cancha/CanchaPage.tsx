@@ -1,12 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
 import { Boton } from '../../components/Boton'
-import { AVISO, AVISO_EXITO, ENLACE_PRIMARIO, VACIO } from '../../components/estilos'
+import { AVISO, AVISO_EXITO, VACIO } from '../../components/estilos'
 import { Pantalla } from '../../components/Pantalla'
-import { useSesion } from '../auth/sesion'
 import {
   NOMBRE_DIA,
-  ROLES_GESTORES,
   diaYMes,
   sumarDias,
   textoSemana,
@@ -26,7 +23,7 @@ const descripcion = (r: Pick<ReservaCancha, 'diaSemana' | 'fecha' | 'horaInicio'
 
 /**
  * Franja que la persona tocó y está por confirmar: reservarla si está libre o,
- * para el personal de deportes, cancelar la reserva que la ocupa (GYMM-29).
+ * para quien tiene GESTIONAR_CANCHA, cancelar la reserva que la ocupa (GYMM-29).
  */
 interface Eleccion {
   fecha: string
@@ -43,8 +40,6 @@ interface Resultado {
 
 /** Disponibilidad de la cancha (GYMM-20), reserva de una franja libre (GYMM-28) y cancelación (GYMM-29). */
 export function CanchaPage() {
-  const { perfil } = useSesion()
-  const puedeGestionar = !!perfil && (ROLES_GESTORES as readonly string[]).includes(perfil.rol)
 
   // null = la semana actual, según la fecha de Colombia que da el servidor.
   const [semana, setSemana] = useState<string | null>(null)
@@ -90,11 +85,6 @@ export function CanchaPage() {
 
   return (
     <Pantalla titulo="Cancha sintética" volverA="/reservas">
-      {puedeGestionar && (
-        <Link to="/reservas/cancha/franjas" className={`mb-6 ${ENLACE_PRIMARIO} md:w-fit`}>
-          Definir franjas
-        </Link>
-      )}
 
       <MisReservas />
 
@@ -149,9 +139,7 @@ export function CanchaPage() {
             <div className={`mt-3 ${VACIO}`}>
               <p>La cancha no tiene horarios habilitados esta semana.</p>
               <p className="mt-2 text-base text-grafito">
-                {puedeGestionar
-                  ? 'Agrega franjas con “Definir franjas” para que la gente vea cuándo puede usarla.'
-                  : 'Mira la semana siguiente o pregunta en el área de deportes.'}
+                Mira la semana siguiente o pregunta en el área de deportes.
               </p>
             </div>
           ) : (

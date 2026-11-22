@@ -176,3 +176,21 @@ describe('rutas viejas del personal (GYMM-47)', () => {
     expect(screen.queryByRole('link', { name: /^Editar / })).not.toBeInTheDocument()
   })
 })
+
+describe('modo deportista sin accesos del personal (GYMM-47)', () => {
+  it('el instructor no ve los botones de franjas en las reservas', async () => {
+    falso().conSesion('instructor@gymtrack.test')
+    simularApi({ perfil: PERFIL_INSTRUCTOR })
+    renderApp('/reservas/gimnasio')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Gimnasio' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Configurar cupos' })).not.toBeInTheDocument()
+  })
+
+  it('el personal de deportes no ve "Definir franjas" en la cancha', async () => {
+    falso().conSesion('deportes@gymtrack.test')
+    simularApi({ perfil: PERFIL_DEPORTES })
+    renderApp('/reservas/cancha')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Cancha sintética' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Definir franjas' })).not.toBeInTheDocument()
+  })
+})
