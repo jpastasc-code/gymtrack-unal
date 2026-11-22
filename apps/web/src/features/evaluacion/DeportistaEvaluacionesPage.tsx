@@ -15,7 +15,7 @@ export function DeportistaEvaluacionesPage() {
   const nombre = deportista.data ? `${deportista.data.nombres} ${deportista.data.apellidos}` : 'Deportista'
 
   return (
-    <Pantalla titulo={nombre} volverA="/evaluaciones" estrecha>
+    <Pantalla titulo={nombre} volverA="/panel/evaluaciones" estrecha>
       {deportista.isError && (
         <p role="alert" className="rounded-xl bg-hueso p-5 font-medium text-alerta">
           {deportista.error.message}
@@ -31,7 +31,7 @@ export function DeportistaEvaluacionesPage() {
             </p>
           )}
           <Link
-            to={`/evaluaciones/${id}/nueva`}
+            to={`/panel/evaluaciones/${id}/nueva`}
             className={`mb-6 ${ENLACE_PRIMARIO}`}
           >
             Registrar evaluación

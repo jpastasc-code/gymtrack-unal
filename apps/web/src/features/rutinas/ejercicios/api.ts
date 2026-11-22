@@ -61,9 +61,6 @@ export interface DatosEjercicio {
   descripcion: string | null
 }
 
-/** Roles que pueden crear, editar y eliminar ejercicios (igual que en el API). */
-export const ROLES_EDITORES = ['INSTRUCTOR', 'ADMIN'] as const
-
 const CLAVE = ['ejercicios'] as const
 
 export function useEjercicios({ q, grupo, incluirInactivos }: FiltroEjercicios) {

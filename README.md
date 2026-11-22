@@ -42,8 +42,9 @@ Entra con cualquiera de estos usuarios, todos con la contraseña **`gymtrack-dem
 
 | Correo                     | Para probar |
 | -------------------------- | ----------- |
-| `deportista@gymtrack.test` | Inicio, perfil, catálogo de ejercicios |
-| `instructor@gymtrack.test` | Evaluaciones físicas, crear y editar ejercicios |
+| `deportista@gymtrack.test` | El modo deportista: Inicio, rutina, entrenar, reservas, perfil |
+| `instructor@gymtrack.test` | El panel del personal con sus 5 secciones (rutinas, evaluaciones, ejercicios, cupos y cancha) y el cambio al modo deportista |
+| `deportes@gymtrack.test`   | El panel del personal solo con cupos y cancha |
 | `admin@gymtrack.test`      | Todo lo anterior |
 
 Cómo funciona:
@@ -170,9 +171,9 @@ Nunca subas archivos `.env` al repositorio; usa los `.env.example` como plantill
 ## Frontend (`apps/web`)
 
 - **Stack:** React 19 + TypeScript + Vite, Tailwind CSS 4, React Router, TanStack Query y `vite-plugin-pwa`.
-- **Estructura por funcionalidad:** cada épica tiene su carpeta en `src/features/<épica>/` (`auth`, `evaluacion`, `rutinas`, `entrenamiento`, `nutricion`, `gimnasio`, `cancha`, `progreso`, además de `inicio`).
+- **Estructura por funcionalidad:** cada épica tiene su carpeta en `src/features/<épica>/` (`auth`, `evaluacion`, `rutinas`, `entrenamiento`, `nutricion`, `gimnasio`, `cancha`, `progreso`, además de `inicio` y `panel`).
   La configuración de la app (rutas, layout, TanStack Query) está en `src/app/`, los componentes compartidos en `src/components/` y el cliente HTTP en `src/lib/api/`.
-- **Rutas:** se declaran en `src/app/rutas.tsx`. `/login` va fuera del layout; el resto usa el layout móvil con barra de navegación inferior (Inicio, Rutina, Entrenar, Reservas, Perfil).
+- **Rutas:** se declaran en `src/app/rutas.tsx`. `/login` va fuera del layout. El modo deportista usa `AppLayout` (Inicio, Rutina, Entrenar, Reservas, Perfil) y el panel del personal, bajo `/panel`, usa `PanelLayout` con una pestaña por permiso ([DT-16](docs/wiki/Decisiones-tecnicas.md#dt-16--permisos-por-rol-y-panel-del-personal)).
 - **Llamadas al API:** usa `apiFetch` (`src/lib/api/client.ts`) dentro de hooks de TanStack Query; toma `VITE_API_URL`, envía el token de sesión cuando exista (lo conectará GYMM-10) y convierte los errores en `ApiError`.
 - **Diseño:** minimalista en blanco y negro con un solo acento, el verde UNAL. Los colores y la tipografía son tokens de Tailwind en `src/index.css` y las piezas reutilizables están en `src/components/`. Antes de hacer una pantalla lee el [Sistema de diseño](docs/wiki/Sistema-de-diseno.md).
 - **PWA:** la app se puede instalar desde el navegador del celular ("Agregar a pantalla de inicio") y abre sin conexión. Cuando se publica una versión nueva, muestra un aviso para actualizar en lugar de recargar a mitad de un entrenamiento. Los íconos se generan desde `public/logo.svg` con `pnpm --filter web generate-pwa-assets`.

@@ -127,7 +127,7 @@ export function NuevaEvaluacionPage() {
         observaciones: observaciones.trim() || null,
         medidas: resultado.lista,
       },
-      { onSuccess: () => void navigate(`/evaluaciones/${id}`, { state: { guardada: true } }) },
+      { onSuccess: () => void navigate(`/panel/evaluaciones/${id}`, { state: { guardada: true } }) },
     )
   }
 
@@ -135,7 +135,7 @@ export function NuevaEvaluacionPage() {
   const numErrores = Object.keys(errores).filter((k) => k !== 'general').length
 
   return (
-    <Pantalla titulo="Nueva evaluación" volverA={`/evaluaciones/${id}`} estrecha>
+    <Pantalla titulo="Nueva evaluación" volverA={`/panel/evaluaciones/${id}`} estrecha>
       {deportista.data && (
         <p className="-mt-3 mb-5 text-lg text-grafito">
           {deportista.data.nombres} {deportista.data.apellidos}

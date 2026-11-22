@@ -1,19 +1,15 @@
 import { Link } from 'react-router'
 import { IconoFlecha } from '../../components/iconos'
 import { useEstadoApi } from '../../lib/api/sistema'
+import { usePermisos } from '../auth/permisos'
 import { useSesion } from '../auth/sesion'
+import { FilaIrAlPanel } from '../panel/CambioModo'
 
 const SECCIONES = [
   { a: '/ficha', titulo: 'Ficha física', detalle: 'Tus evaluaciones con el instructor' },
   { a: '/nutricion', titulo: 'Nutrición', detalle: 'Calorías y macronutrientes para tu objetivo' },
   { a: '/progreso', titulo: 'Progreso', detalle: 'Cómo han cambiado tus cargas y medidas' },
   { a: '/ejercicios', titulo: 'Catálogo de ejercicios', detalle: 'Cómo se hace cada ejercicio, por grupo muscular' },
-]
-
-/** Solo para instructores y administradores. */
-const SECCIONES_INSTRUCTOR = [
-  { a: '/rutinas', titulo: 'Rutinas', detalle: 'Arma la rutina de un deportista y asígnasela' },
-  { a: '/evaluaciones', titulo: 'Evaluaciones', detalle: 'Registra las medidas y los tests de un deportista' },
 ]
 
 function saludo(fecha: Date): string {
@@ -25,8 +21,7 @@ function saludo(fecha: Date): string {
 
 export function InicioPage() {
   const { perfil } = useSesion()
-  const esInstructor = perfil?.rol === 'INSTRUCTOR' || perfil?.rol === 'ADMIN'
-  const secciones = esInstructor ? [...SECCIONES_INSTRUCTOR, ...SECCIONES] : SECCIONES
+  const { esPersonal } = usePermisos()
   const hoy = new Date()
   const fecha = new Intl.DateTimeFormat('es-CO', {
     weekday: 'long',
@@ -59,7 +54,12 @@ export function InicioPage() {
         <div className="md:mt-8 lg:col-span-5 lg:mt-0">
           <nav aria-label="Más secciones">
             <ul className="md:grid md:grid-cols-2 md:gap-x-8 md:border-t md:border-linea lg:block">
-              {secciones.map((s) => (
+              {esPersonal && (
+                <li className="border-b border-linea">
+                  <FilaIrAlPanel />
+                </li>
+              )}
+              {SECCIONES.map((s) => (
                 <li key={s.a} className="border-b border-linea">
                   <Link to={s.a} className="flex min-h-16 items-center gap-3 px-5 py-4 hover:bg-hueso md:px-1">
                     <div className="flex-1">

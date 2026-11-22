@@ -23,7 +23,7 @@ export function FranjasCanchaPage() {
     .filter((d) => d.franjas.length > 0)
 
   return (
-    <Pantalla titulo="Franjas de la cancha" volverA="/reservas/cancha" estrecha>
+    <Pantalla titulo="Franjas de la cancha" volverA="/panel" estrecha>
       <p className="text-lg text-grafito">
         Define en qué horarios se puede usar la cancha cada semana. Las franjas deshabilitadas no se muestran a los
         deportistas.

@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PERFIL_DEPORTES, renderApp, simularApi } from '../../test/renderApp'
@@ -74,7 +74,7 @@ describe('disponibilidad de la cancha: deportista (GYMM-20)', () => {
 
   it('no puede abrir la pantalla de franjas', async () => {
     simularApi()
-    renderApp('/reservas/cancha/franjas')
+    renderApp('/panel/cancha')
     expect(await screen.findByRole('heading', { name: 'No tienes permiso para ver esta pantalla' })).toBeInTheDocument()
   })
 })
@@ -86,8 +86,9 @@ describe('franjas de la cancha: personal de deportes (GYMM-20)', () => {
 
   it('habilita una franja nueva y la ve en la disponibilidad', async () => {
     simularApi({ perfil: PERFIL_DEPORTES })
-    const router = renderApp('/reservas/cancha')
-    await userEvent.click(await screen.findByRole('link', { name: 'Definir franjas' }))
+    const router = renderApp('/panel')
+    const secciones = await screen.findByRole('navigation', { name: 'Secciones del panel' })
+    await userEvent.click(within(secciones).getByRole('link', { name: /Cancha/ }))
 
     await userEvent.selectOptions(await screen.findByLabelText('Día'), '5')
     escribirHora('Desde', '16:00')
@@ -100,13 +101,14 @@ describe('franjas de la cancha: personal de deportes (GYMM-20)', () => {
     expect(screen.getByLabelText('Desde')).toHaveValue('17:00')
 
     await userEvent.click(screen.getByRole('link', { name: 'Volver' }))
-    await waitFor(() => expect(router.state.location.pathname).toBe('/reservas/cancha'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/panel'))
+    await act(() => router.navigate('/reservas/cancha'))
     expect(await screen.findByRole('region', { name: 'Viernes 23 de octubre' })).toHaveTextContent('16:00–17:00Libre')
   })
 
   it('valida las horas y muestra el cruce que responde el API', async () => {
     simularApi({ perfil: PERFIL_DEPORTES })
-    renderApp('/reservas/cancha/franjas')
+    renderApp('/panel/cancha')
     await userEvent.click(await screen.findByRole('button', { name: 'Agregar franja' }))
     expect(screen.getByText('Elige un día de la semana.')).toBeInTheDocument()
     expect(screen.getByText('Escribe la hora de inicio.')).toBeInTheDocument()
@@ -125,7 +127,7 @@ describe('franjas de la cancha: personal de deportes (GYMM-20)', () => {
 
   it('deshabilita, habilita y elimina una franja (con confirmación)', async () => {
     simularApi({ perfil: PERFIL_DEPORTES })
-    renderApp('/reservas/cancha/franjas')
+    renderApp('/panel/cancha')
 
     await userEvent.click(await screen.findByRole('button', { name: 'Deshabilitar miércoles de 18:00 a 19:00' }))
     expect(await screen.findByText('Franja deshabilitada: miércoles de 18:00 a 19:00.')).toBeInTheDocument()

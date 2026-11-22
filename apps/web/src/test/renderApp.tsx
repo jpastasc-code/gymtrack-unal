@@ -1,3 +1,4 @@
+import { permisosDe } from '@gymtrack/shared'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
@@ -20,6 +21,7 @@ export const PERFIL_DEPORTISTA: PerfilSesion = {
   nombres: 'Daniela',
   apellidos: 'Deportista Prueba',
   rol: 'DEPORTISTA',
+  permisos: [],
 }
 
 export const PERFIL_COMPLETO: Perfil = {
@@ -38,6 +40,7 @@ export const PERFIL_INSTRUCTOR: PerfilSesion = {
   nombres: 'Iván',
   apellidos: 'Instructor Prueba',
   rol: 'INSTRUCTOR',
+  permisos: [...permisosDe('INSTRUCTOR')],
 }
 
 export const PERFIL_DEPORTES: PerfilSesion = {
@@ -46,6 +49,7 @@ export const PERFIL_DEPORTES: PerfilSesion = {
   nombres: 'Paula',
   apellidos: 'Deportes Prueba',
   rol: 'PERSONAL_DEPORTES',
+  permisos: [...permisosDe('PERSONAL_DEPORTES')],
 }
 
 /** Franjas de la cancha de las pruebas: lunes y miércoles por la tarde, sábado temprano. */
@@ -164,6 +168,8 @@ export const RUTINA_VIGENTE: Rutina = {
 const sinTildes = (t: string) => t.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 
 interface OpcionesApi {
+  /** GET /api/auth/yo falla como si no hubiera señal (el perfil no carga). */
+  perfilSinConexion?: boolean
   /** Respuesta de GET /api/auth/yo: un perfil, o un código de error. */
   perfil?: PerfilSesion | number
   /** false simula que el servidor no responde. */
@@ -207,6 +213,7 @@ interface OpcionesApi {
 /** Simula el API: responde /auth/yo y /health según las opciones. */
 export function simularApi({
   perfil = PERFIL_DEPORTISTA,
+  perfilSinConexion = false,
   saludOk = true,
   respuestaPatchPerfil,
   ejerciciosEnUso = [],
@@ -358,7 +365,7 @@ export function simularApi({
       if (errorCancha) return json({ message: 'La cancha no está habilitada en este momento.' }, errorCancha)
       const datosPerfil = typeof perfil === 'object' ? perfil : null
       const gestor =
-        datosPerfil && ['PERSONAL_DEPORTES', 'ADMIN'].includes(datosPerfil.rol)
+        datosPerfil?.permisos.includes('GESTIONAR_CANCHA')
           ? { nombreMio: `${datosPerfil.nombres} ${datosPerfil.apellidos}` }
           : undefined
       return json(disponibilidadDe(franjas, searchParams.get('semana'), reservadasCancha, miasCancha, gestor))
@@ -370,9 +377,9 @@ export function simularApi({
     const cancelacion = pathname.match(/^\/api\/cancha\/reservas\/r-(.+)\/cancelar$/)
     if (cancelacion && metodo === 'POST') {
       const clave = decodeURIComponent(cancelacion[1])
-      const gestor = typeof perfil === 'object' && ['PERSONAL_DEPORTES', 'ADMIN'].includes(perfil.rol)
+      const gestor = typeof perfil === 'object' && perfil.permisos.includes('GESTIONAR_CANCHA')
       const lista = miasCancha.includes(clave) ? miasCancha : gestor && reservadasCancha.includes(clave) ? reservadasCancha : null
-      if (!lista) return json({ message: 'Solo quien hizo la reserva o el personal de deportes puede cancelarla.' }, 403)
+      if (!lista) return json({ message: 'Solo quien hizo la reserva o el personal del gimnasio puede cancelarla.' }, 403)
       lista.splice(lista.indexOf(clave), 1)
       return new Response(null, { status: 204 })
     }
@@ -440,6 +447,7 @@ export function simularApi({
       return new Response(JSON.stringify(perfilCompleto))
     }
     if (url.endsWith('/auth/yo')) {
+      if (perfilSinConexion) throw new TypeError('Failed to fetch')
       return typeof perfil === 'number'
         ? new Response(JSON.stringify({ message: 'Tu cuenta no tiene un perfil activo en GymTrack.' }), { status: perfil })
         : new Response(JSON.stringify(perfil))

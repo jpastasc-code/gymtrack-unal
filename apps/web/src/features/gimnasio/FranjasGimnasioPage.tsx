@@ -19,7 +19,7 @@ export function FranjasGimnasioPage() {
   const delDia = data?.filter((f) => f.diaSemana === dia) ?? []
 
   return (
-    <Pantalla titulo="Cupos del gimnasio" volverA="/reservas/gimnasio" estrecha>
+    <Pantalla titulo="Cupos del gimnasio" volverA="/panel" estrecha>
       <p className="text-lg">
         Cuántas personas pueden reservar cada franja. Bajar el cupo no cancela las reservas que ya existen.
       </p>

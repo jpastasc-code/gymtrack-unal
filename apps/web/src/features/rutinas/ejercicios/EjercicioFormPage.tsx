@@ -24,12 +24,12 @@ export function NuevoEjercicioPage() {
   const navigate = useNavigate()
   const crear = useCrearEjercicio()
   return (
-    <Pantalla titulo="Nuevo ejercicio" volverA="/ejercicios" estrecha>
+    <Pantalla titulo="Nuevo ejercicio" volverA="/panel/ejercicios" estrecha>
       <FormularioEjercicio
         textoGuardar="Agregar al catálogo"
         guardando={crear.isPending}
         error={crear.error}
-        onGuardar={(datos) => crear.mutate(datos, { onSuccess: () => void navigate('/ejercicios') })}
+        onGuardar={(datos) => crear.mutate(datos, { onSuccess: () => void navigate('/panel/ejercicios') })}
       />
     </Pantalla>
   )
@@ -41,7 +41,7 @@ export function EditarEjercicioPage() {
   const { data: ejercicio, isPending, isError, error } = useEjercicio(id)
 
   return (
-    <Pantalla titulo="Editar ejercicio" volverA="/ejercicios" estrecha>
+    <Pantalla titulo="Editar ejercicio" volverA="/panel/ejercicios" estrecha>
       {isPending && <p className="text-grafito" role="status">Cargando ejercicio…</p>}
       {isError && (
         <p role="alert" className="rounded-xl bg-hueso p-5 font-medium text-alerta">
@@ -59,7 +59,7 @@ function EdicionEjercicio({ ejercicio }: { ejercicio: Ejercicio }) {
   const eliminar = useEliminarEjercicio(ejercicio.id)
   const [confirmando, setConfirmando] = useState(false)
   const confirmacion = useRef<HTMLDivElement>(null)
-  const volver = () => void navigate('/ejercicios')
+  const volver = () => void navigate('/panel/ejercicios')
 
   // Al abrir la confirmación, el foco va a ella: queda a la vista (sobre la barra inferior) y el lector de pantalla la anuncia.
   useEffect(() => {
