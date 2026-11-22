@@ -42,8 +42,9 @@ Entra con cualquiera de estos usuarios, todos con la contraseña **`gymtrack-dem
 
 | Correo                     | Para probar |
 | -------------------------- | ----------- |
-| `deportista@gymtrack.test` | Inicio, perfil, catálogo de ejercicios |
-| `instructor@gymtrack.test` | Evaluaciones físicas, crear y editar ejercicios |
+| `deportista@gymtrack.test` | El modo deportista: Inicio, rutina, entrenar, reservas, perfil |
+| `instructor@gymtrack.test` | El panel del personal con sus 5 secciones (rutinas, evaluaciones, ejercicios, cupos y cancha) y el cambio al modo deportista |
+| `deportes@gymtrack.test`   | El panel del personal solo con cupos y cancha |
 | `admin@gymtrack.test`      | Todo lo anterior |
 
 Cómo funciona:
@@ -94,26 +95,45 @@ pnpm dev:web   # Frontend en http://localhost:5173
 | GET    | `/api/health`     | Salud del API y de la BD; 503 si la BD no responde (lo usa Render) |
 | GET    | `/api/docs`       | Documentación Swagger UI               |
 | GET    | `/api/docs-json`  | Especificación OpenAPI en JSON         |
-| GET    | `/api/auth/yo`    | Perfil y rol del usuario con sesión (requiere token) |
+| GET    | `/api/auth/yo`    | Perfil, rol y `permisos` del usuario con sesión (requiere token). La web decide con `permisos` qué mostrar. |
 | GET    | `/api/perfil`     | Mi perfil completo (datos personales, institucionales y de entrenamiento) |
 | PATCH  | `/api/perfil`     | Actualiza mis datos personales, objetivo y nivel de actividad. Documento, correo y rol no se pueden editar. |
-| GET    | `/api/ejercicios` | Catálogo de ejercicios. `?q=` busca en nombre y descripción sin importar tildes; `?grupo=ESPALDA` filtra por grupo muscular; `?incluirInactivos=true` (solo instructores) muestra los desactivados. |
+| GET    | `/api/ejercicios` | Catálogo de ejercicios. `?q=` busca en nombre y descripción sin importar tildes; `?grupo=ESPALDA` filtra por grupo muscular; `?incluirInactivos=true` (con `GESTIONAR_EJERCICIOS`) muestra los desactivados. |
 | GET    | `/api/ejercicios/:id` | Detalle de un ejercicio. |
-| POST   | `/api/ejercicios` | Crea un ejercicio (instructores). Nombre único sin importar tildes ni mayúsculas. |
-| PATCH  | `/api/ejercicios/:id` | Edita, desactiva (`activo: false`) o reactiva un ejercicio (instructores). |
-| DELETE | `/api/ejercicios/:id` | Elimina un ejercicio que nadie usa (instructores). Si está en rutinas o registros responde 409: hay que desactivarlo. |
-| GET    | `/api/deportistas` | Busca deportistas activos por nombre, documento o correo (instructores). |
-| GET    | `/api/deportistas/:id` | Datos básicos de un deportista (instructores). |
-| GET    | `/api/deportistas/:id/evaluaciones` | Historial de evaluaciones, de la más reciente a la más antigua (instructores). |
-| POST   | `/api/deportistas/:id/evaluaciones` | Registra una evaluación nueva; nunca modifica las anteriores. Valida rangos de peso, talla, % de grasa y de cada medida; los errores de una medida llegan como `medidas.<i>.valor` (instructores). |
-| GET    | `/api/cancha/disponibilidad` | Franjas de la cancha de una semana (`?semana=AAAA-MM-DD`) con su estado: `DISPONIBLE`, `RESERVADA`, `TUYA` o `PASADA`. Al personal de deportes cada franja ocupada le trae `reserva` (id y nombre de quien reservó). |
+| POST   | `/api/ejercicios` | Crea un ejercicio (`GESTIONAR_EJERCICIOS`). Nombre único sin importar tildes ni mayúsculas. |
+| PATCH  | `/api/ejercicios/:id` | Edita, desactiva (`activo: false`) o reactiva un ejercicio (`GESTIONAR_EJERCICIOS`). |
+| DELETE | `/api/ejercicios/:id` | Elimina un ejercicio que nadie usa (`GESTIONAR_EJERCICIOS`). Si está en rutinas o registros responde 409: hay que desactivarlo. |
+| GET    | `/api/deportistas` | Busca deportistas activos por nombre, documento o correo (`REGISTRAR_EVALUACIONES` o `GESTIONAR_RUTINAS`). |
+| GET    | `/api/deportistas/:id` | Datos básicos de un deportista (`REGISTRAR_EVALUACIONES` o `GESTIONAR_RUTINAS`). |
+| GET    | `/api/deportistas/:id/evaluaciones` | Historial de evaluaciones, de la más reciente a la más antigua (`REGISTRAR_EVALUACIONES`). |
+| POST   | `/api/deportistas/:id/evaluaciones` | Registra una evaluación nueva; nunca modifica las anteriores. Valida rangos de peso, talla, % de grasa y de cada medida; los errores de una medida llegan como `medidas.<i>.valor` (`REGISTRAR_EVALUACIONES`). |
+| GET    | `/api/deportistas/:id/rutinas` | Rutinas de un deportista: la vigente y las anteriores (`GESTIONAR_RUTINAS`). |
+| POST   | `/api/deportistas/:id/rutinas` | Arma y asigna una rutina; la anterior deja de estar vigente (`GESTIONAR_RUTINAS`). |
+| GET    | `/api/cancha/disponibilidad` | Franjas de la cancha de una semana (`?semana=AAAA-MM-DD`) con su estado: `DISPONIBLE`, `RESERVADA`, `TUYA` o `PASADA`. Con `GESTIONAR_CANCHA`, cada franja ocupada trae `reserva` (id y nombre de quien reservó). |
 | POST   | `/api/cancha/reservas` | Reserva una franja libre (`{ franjaId, fecha }`) a nombre de quien la pide. Si alguien la reservó primero, 409. |
 | GET    | `/api/cancha/reservas/mias` | Mis reservas de la cancha que todavía no terminan. |
-| POST   | `/api/cancha/reservas/:id/cancelar` | Cancela una reserva antes de que empiece (quien la hizo o el personal de deportes); la franja queda libre de inmediato. 204, también si ya estaba cancelada. |
+| POST   | `/api/cancha/reservas/:id/cancelar` | Cancela una reserva antes de que empiece (quien la hizo o quien tiene `GESTIONAR_CANCHA`); la franja queda libre de inmediato. 204, también si ya estaba cancelada. |
+| GET, POST | `/api/cancha/franjas` | Lista y crea las franjas semanales de la cancha (`GESTIONAR_CANCHA`). |
+| PATCH, DELETE | `/api/cancha/franjas/:id` | Habilita, deshabilita o elimina una franja de la cancha (`GESTIONAR_CANCHA`). |
+| POST   | `/api/gimnasio/reservas/:id/cancelar` | Cancela un cupo del gimnasio antes de que empiece la franja (quien lo reservó o quien tiene `GESTIONAR_CUPOS_GIMNASIO`). |
+| GET    | `/api/gimnasio/franjas` | Franjas del gimnasio con su cupo (`GESTIONAR_CUPOS_GIMNASIO`). |
+| PATCH  | `/api/gimnasio/franjas/:id` | Cambia el cupo de una franja del gimnasio (`GESTIONAR_CUPOS_GIMNASIO`). |
 
-Todas las rutas exigen `Authorization: Bearer <token de Supabase>` salvo las marcadas con `@Publico()` (`/api`, `/api/health`). Para restringir por rol usa `@Roles('INSTRUCTOR', …)`; el rol se lee de la tabla `usuario`. En Swagger, el botón **Authorize** acepta el token.
+Todas las rutas exigen `Authorization: Bearer <token de Supabase>` salvo las marcadas con `@Publico()` (`/api`, `/api/health`). Para restringir una ruta usa `@Permisos('GESTIONAR_RUTINAS', …)`: deja pasar a quien tenga al menos uno de esos permisos según su rol, que se lee de la tabla `usuario`. En Swagger, el botón **Authorize** acepta el token.
 
 Los errores de validación responden `400` con `{ message, errores: { campo: "mensaje en español" } }`, para que la web muestre cada error junto a su campo.
+
+### Roles y permisos
+
+Los permisos de cada rol están en `PERMISOS_POR_ROL` (`packages/shared/src/permisos.ts`, [DT-16](docs/wiki/Decisiones-tecnicas.md#dt-16--permisos-por-rol-y-panel-del-personal)). Para adaptar la app a otro gimnasio se cambia esa tabla, sin tocar pantallas ni endpoints.
+
+| Permiso | Qué deja hacer | Deportista | Instructor | Personal de deportes | Admin |
+| ------- | -------------- | :--------: | :--------: | :------------------: | :---: |
+| `GESTIONAR_RUTINAS` | Armar y asignar rutinas | | ✓ | | ✓ |
+| `REGISTRAR_EVALUACIONES` | Registrar evaluaciones físicas | | ✓ | | ✓ |
+| `GESTIONAR_EJERCICIOS` | Crear, editar y desactivar ejercicios del catálogo | | ✓ | | ✓ |
+| `GESTIONAR_CUPOS_GIMNASIO` | Cambiar el cupo de las franjas y cancelar cupos ajenos | | ✓ | ✓ | ✓ |
+| `GESTIONAR_CANCHA` | Definir el horario de la cancha y cancelar reservas ajenas | | ✓ | ✓ | ✓ |
 
 ## Variables de entorno
 
@@ -144,16 +164,16 @@ Nunca subas archivos `.env` al repositorio; usa los `.env.example` como plantill
 
 ## Código compartido (`packages/shared`)
 
-- Lo importan el API y la web como `@gymtrack/shared`. Por ahora tiene las fórmulas nutricionales de [DT-07](docs/wiki/Decisiones-tecnicas.md#dt-07--fórmulas-nutricionales), con sus pruebas (`pnpm --filter @gymtrack/shared test`).
+- Lo importan el API y la web como `@gymtrack/shared`. Tiene las fórmulas nutricionales de [DT-07](docs/wiki/Decisiones-tecnicas.md#dt-07--fórmulas-nutricionales), la mejor marca del progreso y los permisos por rol de [DT-16](docs/wiki/Decisiones-tecnicas.md#dt-16--permisos-por-rol-y-panel-del-personal), con sus pruebas (`pnpm --filter @gymtrack/shared test`).
 - Se compila a `packages/shared/dist/` al hacer `pnpm install`. Si lo cambias, vuelve a compilarlo con `pnpm --filter @gymtrack/shared build` (o déjalo compilando con `pnpm --filter @gymtrack/shared dev`) para que el API y la web vean el cambio.
 - No depende de NestJS, React ni Prisma: solo lógica que funcione igual en el servidor y en el navegador.
 
 ## Frontend (`apps/web`)
 
 - **Stack:** React 19 + TypeScript + Vite, Tailwind CSS 4, React Router, TanStack Query y `vite-plugin-pwa`.
-- **Estructura por funcionalidad:** cada épica tiene su carpeta en `src/features/<épica>/` (`auth`, `evaluacion`, `rutinas`, `entrenamiento`, `nutricion`, `gimnasio`, `cancha`, `progreso`, además de `inicio`).
+- **Estructura por funcionalidad:** cada épica tiene su carpeta en `src/features/<épica>/` (`auth`, `evaluacion`, `rutinas`, `entrenamiento`, `nutricion`, `gimnasio`, `cancha`, `progreso`, además de `inicio` y `panel`).
   La configuración de la app (rutas, layout, TanStack Query) está en `src/app/`, los componentes compartidos en `src/components/` y el cliente HTTP en `src/lib/api/`.
-- **Rutas:** se declaran en `src/app/rutas.tsx`. `/login` va fuera del layout; el resto usa el layout móvil con barra de navegación inferior (Inicio, Rutina, Entrenar, Reservas, Perfil).
+- **Rutas:** se declaran en `src/app/rutas.tsx`. `/login` va fuera del layout. El modo deportista usa `AppLayout` (Inicio, Rutina, Entrenar, Reservas, Perfil) y el panel del personal, bajo `/panel`, usa `PanelLayout` con una pestaña por permiso ([DT-16](docs/wiki/Decisiones-tecnicas.md#dt-16--permisos-por-rol-y-panel-del-personal)).
 - **Llamadas al API:** usa `apiFetch` (`src/lib/api/client.ts`) dentro de hooks de TanStack Query; toma `VITE_API_URL`, envía el token de sesión cuando exista (lo conectará GYMM-10) y convierte los errores en `ApiError`.
 - **Diseño:** minimalista en blanco y negro con un solo acento, el verde UNAL. Los colores y la tipografía son tokens de Tailwind en `src/index.css` y las piezas reutilizables están en `src/components/`. Antes de hacer una pantalla lee el [Sistema de diseño](docs/wiki/Sistema-de-diseno.md).
 - **PWA:** la app se puede instalar desde el navegador del celular ("Agregar a pantalla de inicio") y abre sin conexión. Cuando se publica una versión nueva, muestra un aviso para actualizar en lugar de recargar a mitad de un entrenamiento. Los íconos se generan desde `public/logo.svg` con `pnpm --filter web generate-pwa-assets`.

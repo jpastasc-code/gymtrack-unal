@@ -21,7 +21,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { Roles } from '../auth/auth.decorators';
+import { Permisos } from '../auth/auth.decorators';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
 import type { Usuario } from '../generated/prisma/client';
 import {
@@ -29,7 +29,6 @@ import {
   CrearReservaGimnasioDto,
 } from './gimnasio.dto';
 import {
-  GESTORES_GIMNASIO,
   GimnasioService,
   type DisponibilidadGimnasio,
   type FranjaGimnasioVista,
@@ -109,7 +108,8 @@ export class GimnasioController {
   @ApiNoContentResponse({ description: 'Cancelada.' })
   @ApiNotFoundResponse({ description: 'La reserva no existe.' })
   @ApiForbiddenResponse({
-    description: 'No es tu reserva y no eres personal de deportes.',
+    description:
+      'No es tu reserva y no tienes el permiso GESTIONAR_CUPOS_GIMNASIO.',
   })
   @ApiConflictResponse({ description: 'La franja ya empezó.' })
   cancelar(
@@ -120,20 +120,20 @@ export class GimnasioController {
   }
 
   @Get('franjas')
-  @Roles(...GESTORES_GIMNASIO)
+  @Permisos('GESTIONAR_CUPOS_GIMNASIO')
   @ApiOperation({
     summary: 'Franjas del gimnasio con su cupo (personal de deportes)',
     description: 'Incluye las deshabilitadas.',
   })
   @ApiForbiddenResponse({
-    description: 'Solo personal de deportes y administradores.',
+    description: 'Sin el permiso GESTIONAR_CUPOS_GIMNASIO.',
   })
   franjas(): Promise<FranjaGimnasioVista[]> {
     return this.gimnasio.franjas();
   }
 
   @Patch('franjas/:id')
-  @Roles(...GESTORES_GIMNASIO)
+  @Permisos('GESTIONAR_CUPOS_GIMNASIO')
   @ApiOperation({
     summary: 'Cambiar el cupo de una franja (personal de deportes)',
     description:
@@ -143,7 +143,7 @@ export class GimnasioController {
   @ApiBadRequestResponse({ description: 'Cupo no válido.' })
   @ApiNotFoundResponse({ description: 'La franja no existe.' })
   @ApiForbiddenResponse({
-    description: 'Solo personal de deportes y administradores.',
+    description: 'Sin el permiso GESTIONAR_CUPOS_GIMNASIO.',
   })
   actualizarFranja(
     @Param('id', uuidFranja) id: string,

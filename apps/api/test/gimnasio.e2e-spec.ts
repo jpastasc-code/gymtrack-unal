@@ -27,6 +27,7 @@ describe('Reserva de cupo en el gimnasio (e2e)', () => {
         { id: 'u-deportista', rol: 'DEPORTISTA', activo: true },
         { id: 'u-otra', rol: 'DEPORTISTA', activo: true },
         { id: 'u-personal', rol: 'PERSONAL_DEPORTES', activo: true },
+        { id: 'u-instructor', rol: 'INSTRUCTOR', activo: true },
       ],
       [
         {
@@ -190,5 +191,21 @@ describe('Reserva de cupo en el gimnasio (e2e)', () => {
         ]),
       );
     expect(await franjaDeManana('deportista')).toMatchObject({ libres: 40 });
+  });
+
+  it('el instructor, con GESTIONAR_CUPOS_GIMNASIO, configura el cupo y cancela reservas ajenas (GYMM-47)', async () => {
+    await como('instructor').get('/gimnasio/franjas').expect(200);
+    await como('instructor')
+      .patch(`/gimnasio/franjas/${FRANJA}`, { cupoMaximo: 25 })
+      .expect(200)
+      .expect(({ body }) => expect(body.cupoMaximo).toBe(25));
+
+    const { body: reserva } = await como('deportista')
+      .post('/gimnasio/reservas', { franjaId: FRANJA, fecha: MANANA })
+      .expect(201);
+    await como('instructor')
+      .post(`/gimnasio/reservas/${reserva.id}/cancelar`)
+      .expect(204);
+    await como('deportista').get('/gimnasio/reservas/mias').expect(200, []);
   });
 });

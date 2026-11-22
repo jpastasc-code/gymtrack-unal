@@ -74,9 +74,10 @@ describe('reserva de cupo en el gimnasio (GYMM-27)', () => {
 
   it('el personal de deportes cambia el cupo de una franja', async () => {
     const fetchMock = simularApi({ perfil: PERFIL_DEPORTES })
-    renderApp('/reservas/gimnasio')
+    renderApp('/panel')
 
-    await userEvent.click(await screen.findByRole('link', { name: 'Configurar cupos' }))
+    const secciones = await screen.findByRole('navigation', { name: 'Secciones del panel' })
+    await userEvent.click(within(secciones).getByRole('link', { name: /Cupos/ }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Cupos del gimnasio' })).toBeInTheDocument()
     expect(screen.getByText('30 personas')).toBeInTheDocument()
 

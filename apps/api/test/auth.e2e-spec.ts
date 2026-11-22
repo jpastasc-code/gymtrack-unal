@@ -4,19 +4,25 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { configureApp } from './../src/app.setup';
-import { Roles } from './../src/auth/auth.decorators';
+import { Permisos } from './../src/auth/auth.decorators';
 import {
   TokenInvalidoError,
   VerificadorToken,
 } from './../src/auth/verificador-token.service';
 import { PrismaService } from './../src/prisma/prisma.service';
 
-/** Ruta de prueba restringida a instructores, para ejercitar @Roles. */
-@Controller('prueba-roles')
-class PruebaRolesController {
-  @Get()
-  @Roles('INSTRUCTOR', 'ADMIN')
-  soloInstructores() {
+/** Rutas de prueba restringidas por permiso, para ejercitar @Permisos. */
+@Controller('prueba-permisos')
+class PruebaPermisosController {
+  @Get('rutinas')
+  @Permisos('GESTIONAR_RUTINAS')
+  rutinas() {
+    return { ok: true };
+  }
+
+  @Get('cancha-o-cupos')
+  @Permisos('GESTIONAR_CANCHA', 'GESTIONAR_CUPOS_GIMNASIO')
+  canchaOCupos() {
     return { ok: true };
   }
 }
@@ -36,6 +42,14 @@ const USUARIOS = {
     nombres: 'Iván',
     apellidos: 'Instructor Prueba',
     rol: 'INSTRUCTOR',
+    activo: true,
+  },
+  personal: {
+    id: 'u-personal',
+    correo: 'personal@gymtrack.test',
+    nombres: 'Pilar',
+    apellidos: 'Personal Prueba',
+    rol: 'PERSONAL_DEPORTES',
     activo: true,
   },
   inactivo: {
@@ -77,7 +91,7 @@ describe('Autenticación (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-      controllers: [PruebaRolesController],
+      controllers: [PruebaPermisosController],
     })
       .overrideProvider(PrismaService)
       .useValue(prisma)
@@ -125,7 +139,7 @@ describe('Autenticación (e2e)', () => {
     await conToken('/api/auth/yo', 'token-inactivo').expect(403);
   });
 
-  it('GET /api/auth/yo devuelve el perfil y el rol', async () => {
+  it('GET /api/auth/yo devuelve el perfil, el rol y ningún permiso al deportista', async () => {
     const res = await conToken('/api/auth/yo', 'token-deportista').expect(200);
     expect(res.body).toEqual({
       id: 'u-deportista',
@@ -133,16 +147,59 @@ describe('Autenticación (e2e)', () => {
       nombres: 'Daniela',
       apellidos: 'Deportista Prueba',
       rol: 'DEPORTISTA',
+      permisos: [],
     });
   });
 
-  it('@Roles deja pasar al rol permitido y bloquea a los demás', async () => {
-    await conToken('/api/prueba-roles', 'token-instructor').expect(200);
-    const res = await conToken('/api/prueba-roles', 'token-deportista').expect(
+  it('GET /api/auth/yo devuelve los permisos del rol', async () => {
+    const instructor = await conToken(
+      '/api/auth/yo',
+      'token-instructor',
+    ).expect(200);
+    expect(instructor.body.permisos).toEqual([
+      'GESTIONAR_RUTINAS',
+      'REGISTRAR_EVALUACIONES',
+      'GESTIONAR_EJERCICIOS',
+      'GESTIONAR_CUPOS_GIMNASIO',
+      'GESTIONAR_CANCHA',
+    ]);
+    const personal = await conToken('/api/auth/yo', 'token-personal').expect(
+      200,
+    );
+    expect(personal.body.permisos).toEqual([
+      'GESTIONAR_CUPOS_GIMNASIO',
+      'GESTIONAR_CANCHA',
+    ]);
+  });
+
+  it('@Permisos deja pasar a quien tiene el permiso y bloquea a los demás', async () => {
+    await conToken('/api/prueba-permisos/rutinas', 'token-instructor').expect(
+      200,
+    );
+    await conToken('/api/prueba-permisos/rutinas', 'token-personal').expect(
       403,
     );
+    const res = await conToken(
+      '/api/prueba-permisos/rutinas',
+      'token-deportista',
+    ).expect(403);
     expect(res.body).toMatchObject({
       message: 'No tienes permiso para esta acción.',
     });
+  });
+
+  it('@Permisos con varios permisos exige al menos uno', async () => {
+    await conToken(
+      '/api/prueba-permisos/cancha-o-cupos',
+      'token-personal',
+    ).expect(200);
+    await conToken(
+      '/api/prueba-permisos/cancha-o-cupos',
+      'token-instructor',
+    ).expect(200);
+    await conToken(
+      '/api/prueba-permisos/cancha-o-cupos',
+      'token-deportista',
+    ).expect(403);
   });
 });

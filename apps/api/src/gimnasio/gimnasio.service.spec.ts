@@ -224,6 +224,14 @@ describe('GimnasioService', () => {
       ]);
     });
 
+    it('el instructor, con GESTIONAR_CUPOS_GIMNASIO, también cancela una reserva ajena', async () => {
+      const { db, servicio } = montar([
+        reserva('r1', 'otra', JUEVES_7, JUEVES),
+      ]);
+      await servicio.cancelar('r1', { id: 'i', rol: 'INSTRUCTOR' }, AHORA);
+      expect(db.reservas()[0].estado).toBe('CANCELADA');
+    });
+
     it('no deja cancelar cuando la franja ya empezó', async () => {
       const { servicio } = montar([reserva('r1', 'yo', TARDE_MIE, HOY)]);
       const enCurso = new Date('2026-11-11T23:20:00Z');

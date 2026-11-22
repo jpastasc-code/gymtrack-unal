@@ -100,20 +100,20 @@ describe('inicio de sesión (GYMM-10)', () => {
   })
 })
 
-describe('RutaProtegida con roles', () => {
-  it('bloquea a un rol que no está permitido', async () => {
+describe('RutaProtegida con permisos', () => {
+  it('bloquea a quien no tiene el permiso', async () => {
     const { rutas } = await import('../../app/rutas')
     rutas.push({
-      path: '/solo-instructores',
+      path: '/solo-rutinas',
       element: (
-        <RutaProtegida roles={['INSTRUCTOR']}>
+        <RutaProtegida permiso="GESTIONAR_RUTINAS">
           <p>Contenido de instructores</p>
         </RutaProtegida>
       ),
     })
     falso().conSesion()
     simularApi()
-    renderApp('/solo-instructores')
+    renderApp('/solo-rutinas')
     expect(await screen.findByRole('heading', { name: 'No tienes permiso para ver esta pantalla' })).toBeInTheDocument()
     expect(screen.queryByText('Contenido de instructores')).not.toBeInTheDocument()
     rutas.pop()

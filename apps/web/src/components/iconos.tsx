@@ -105,3 +105,35 @@ export function IconoAtras(props: PropsIcono) {
     </Base>
   )
 }
+
+/** Panel del personal: cuatro bloques. */
+export function IconoPanel(props: PropsIcono) {
+  return (
+    <Base {...props}>
+      <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
+      <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+      <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
+      <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+    </Base>
+  )
+}
+
+/** Evaluaciones físicas: una línea de pulso. */
+export function IconoEvaluacion(props: PropsIcono) {
+  return (
+    <Base {...props}>
+      <path d="M3 12h4l2.5-6 5 12 2.5-6h4" />
+    </Base>
+  )
+}
+
+/** Cancha sintética: el campo con su línea y círculo central. */
+export function IconoCancha(props: PropsIcono) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="1.5" />
+      <path d="M12 5v14" />
+      <circle cx="12" cy="12" r="2.5" />
+    </Base>
+  )
+}

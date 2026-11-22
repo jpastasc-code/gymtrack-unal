@@ -71,9 +71,6 @@ export interface NuevaFranja {
   horaFin: string
 }
 
-/** Roles que definen el horario de la cancha (igual que en el API). */
-export const ROLES_GESTORES = ['PERSONAL_DEPORTES', 'ADMIN'] as const
-
 const CLAVE = ['cancha'] as const
 
 /** `semana`: cualquier día de la semana que se quiere ver; null = la actual. */

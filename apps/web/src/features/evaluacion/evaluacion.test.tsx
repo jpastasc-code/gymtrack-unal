@@ -30,19 +30,20 @@ describe('registro de evaluación (GYMM-13)', () => {
   it('un deportista no puede entrar a las evaluaciones', async () => {
     supabaseFalso.actual!.conSesion()
     simularApi()
-    renderApp('/evaluaciones')
+    renderApp('/panel/evaluaciones')
     expect(await screen.findByRole('heading', { name: 'No tienes permiso para ver esta pantalla' })).toBeInTheDocument()
   })
 
-  it('el instructor ve el acceso en Inicio, busca al deportista y ve su historial', async () => {
+  it('el instructor entra desde su panel, busca al deportista y ve su historial', async () => {
     simularApi({ perfil: PERFIL_INSTRUCTOR })
-    const router = renderApp('/')
-    await userEvent.click(await screen.findByRole('link', { name: /Evaluaciones/ }))
+    const router = renderApp('/panel')
+    const secciones = await screen.findByRole('navigation', { name: 'Secciones del panel' })
+    await userEvent.click(within(secciones).getByRole('link', { name: /Evaluaciones/ }))
     await userEvent.type(screen.getByLabelText('Buscar deportista'), 'santiago')
     await waitFor(() => expect(within(screen.getByRole('list', { name: 'Deportistas' })).getAllByRole('listitem')).toHaveLength(1))
     await userEvent.clear(screen.getByLabelText('Buscar deportista'))
     await userEvent.click(await screen.findByRole('link', { name: /Daniela Deportista Prueba/ }))
-    expect(router.state.location.pathname).toBe('/evaluaciones/d1')
+    expect(router.state.location.pathname).toBe('/panel/evaluaciones/d1')
     const historial = await screen.findByRole('list', { name: 'Evaluaciones' })
     expect(within(historial).getByRole('heading', { name: /Evaluación inicial, 22 de septiembre de 2026/ })).toBeInTheDocument()
     expect(within(historial).getByText('Cintura')).toBeInTheDocument()
@@ -50,7 +51,7 @@ describe('registro de evaluación (GYMM-13)', () => {
 
   it('valida rangos antes de enviar, junto a cada campo', async () => {
     const fetchMock = simularApi({ perfil: PERFIL_INSTRUCTOR })
-    renderApp('/evaluaciones/d1/nueva')
+    renderApp('/panel/evaluaciones/d1/nueva')
     await llenarBasicos('500', '1,70')
     expect(screen.queryByText(/IMC/)).not.toBeInTheDocument()
     await userEvent.type(screen.getByLabelText('Cintura'), '5')
@@ -67,7 +68,7 @@ describe('registro de evaluación (GYMM-13)', () => {
 
   it('pide el peso y la talla si faltan, y los ejemplos no parecen datos ya llenos', async () => {
     const fetchMock = simularApi({ perfil: PERFIL_INSTRUCTOR })
-    renderApp('/evaluaciones/d1/nueva')
+    renderApp('/panel/evaluaciones/d1/nueva')
     // El texto de ejemplo empieza por "Ej.:" para que no se confunda con un valor escrito.
     expect(await screen.findByLabelText('Talla')).toHaveAttribute('placeholder', 'Ej.: 165')
     await userEvent.click(screen.getByRole('button', { name: 'Guardar evaluación' }))
@@ -79,7 +80,7 @@ describe('registro de evaluación (GYMM-13)', () => {
 
   it('guarda una evaluación nueva con solo las medidas llenas y la suma al historial', async () => {
     const fetchMock = simularApi({ perfil: PERFIL_INSTRUCTOR })
-    const router = renderApp('/evaluaciones/d1/nueva')
+    const router = renderApp('/panel/evaluaciones/d1/nueva')
     await llenarBasicos('61,8', '165')
     expect(await screen.findByText('22,7')).toBeInTheDocument() // IMC en vivo
     await userEvent.type(screen.getByLabelText('Porcentaje de grasa (opcional)'), '23,9')
@@ -87,7 +88,7 @@ describe('registro de evaluación (GYMM-13)', () => {
     await userEvent.type(screen.getByLabelText('Flexiones en 1 minuto'), '21')
     await userEvent.click(screen.getByRole('button', { name: 'Guardar evaluación' }))
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/evaluaciones/d1'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/panel/evaluaciones/d1'))
     expect(await screen.findByText('Evaluación guardada.')).toBeInTheDocument()
     expect(cuerpoPost(fetchMock)).toEqual({
       pesoKg: 61.8,
@@ -115,7 +116,7 @@ describe('registro de evaluación (GYMM-13)', () => {
           { status: 400 },
         ),
     })
-    renderApp('/evaluaciones/d1/nueva')
+    renderApp('/panel/evaluaciones/d1/nueva')
     await llenarBasicos('62', '165')
     await userEvent.type(screen.getByLabelText('Cintura'), '70')
     await userEvent.type(screen.getByLabelText('Salto horizontal'), '300')

@@ -36,14 +36,15 @@ describe('armar y asignar una rutina (GYMM-21)', () => {
   it('un deportista no puede entrar a asignar rutinas', async () => {
     supabaseFalso.actual!.conSesion()
     simularApi()
-    renderApp('/rutinas/d1/nueva')
+    renderApp('/panel/rutinas/d1/nueva')
     expect(await screen.findByRole('heading', { name: 'No tienes permiso para ver esta pantalla' })).toBeInTheDocument()
   })
 
   it('el instructor arma la rutina por días, en orden, y se la asigna al deportista', async () => {
     const fetchMock = simularApi({ perfil: PERFIL_INSTRUCTOR })
-    const router = renderApp('/')
-    await userEvent.click(await screen.findByRole('link', { name: /Rutinas/ }))
+    const router = renderApp('/panel')
+    const secciones = await screen.findByRole('navigation', { name: 'Secciones del panel' })
+    await userEvent.click(within(secciones).getByRole('link', { name: /Rutinas/ }))
     await userEvent.click(await screen.findByRole('link', { name: /Daniela Deportista Prueba/ }))
     expect(await screen.findByText(/No tiene una rutina vigente/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('link', { name: 'Asignar rutina' }))
@@ -68,7 +69,7 @@ describe('armar y asignar una rutina (GYMM-21)', () => {
     await userEvent.selectOptions(screen.getByLabelText('Método de Remo con barra, día 2'), 'PIRAMIDE')
     await userEvent.click(screen.getByRole('button', { name: 'Asignar rutina' }))
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/rutinas/d1'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/panel/rutinas/d1'))
     expect(cuerpoPost(fetchMock)).toEqual({
       nombre: 'Fase 1 – 2 días',
       descripcion: null,
@@ -87,7 +88,7 @@ describe('armar y asignar una rutina (GYMM-21)', () => {
 
   it('valida antes de enviar: nombre, días vacíos y series fuera de rango', async () => {
     const fetchMock = simularApi({ perfil: PERFIL_INSTRUCTOR })
-    renderApp('/rutinas/d1/nueva')
+    renderApp('/panel/rutinas/d1/nueva')
     await screen.findByLabelText('Nombre de la rutina')
     await userEvent.click(screen.getByRole('button', { name: 'Asignar rutina' }))
     expect(screen.getByText('Escribe un nombre de al menos 3 caracteres.')).toBeInTheDocument()
@@ -105,7 +106,7 @@ describe('armar y asignar una rutina (GYMM-21)', () => {
 
   it('no deja agregar el mismo ejercicio dos veces al mismo día', async () => {
     simularApi({ perfil: PERFIL_INSTRUCTOR })
-    renderApp('/rutinas/d1/nueva')
+    renderApp('/panel/rutinas/d1/nueva')
     await userEvent.click(await screen.findByRole('button', { name: 'Agregar ejercicio al día 1' }))
     const panel = screen.getByRole('group', { name: 'Agregar ejercicios al día 1' })
     await userEvent.click(await within(panel).findByRole('button', { name: 'Agregar Remo con barra' }))
@@ -114,7 +115,7 @@ describe('armar y asignar una rutina (GYMM-21)', () => {
 
   it('con rutina vigente: avisa que deja de estar vigente, permite copiarla y la pasa a anteriores', async () => {
     const fetchMock = simularApi({ perfil: PERFIL_INSTRUCTOR, rutinas: { d1: [RUTINA_VIGENTE] } })
-    const router = renderApp('/rutinas/d1')
+    const router = renderApp('/panel/rutinas/d1')
     const vigente = await screen.findByRole('article', { name: 'Fase 1' })
     expect(within(vigente).getByText('3 × 10-12')).toBeInTheDocument()
 
@@ -126,7 +127,7 @@ describe('armar y asignar una rutina (GYMM-21)', () => {
 
     await userEvent.type(screen.getByLabelText('Nombre de la rutina'), 'Fase 2')
     await userEvent.click(screen.getByRole('button', { name: 'Asignar rutina' }))
-    await waitFor(() => expect(router.state.location.pathname).toBe('/rutinas/d1'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/panel/rutinas/d1'))
     expect(cuerpoPost(fetchMock).ejercicios).toEqual([
       { ejercicioId: 'e3', dia: 1, series: 3, repeticionesObjetivo: '10-12', metodo: 'TRADICIONAL', descansoSegundos: 60 },
     ])
@@ -146,7 +147,7 @@ describe('armar y asignar una rutina (GYMM-21)', () => {
           { status: 400 },
         ),
     })
-    renderApp('/rutinas/d1/nueva')
+    renderApp('/panel/rutinas/d1/nueva')
     await userEvent.type(await screen.findByLabelText('Nombre de la rutina'), 'Fase 1')
     await agregarAlDia(1, 'Remo con barra')
     await userEvent.click(screen.getByRole('button', { name: 'Asignar rutina' }))

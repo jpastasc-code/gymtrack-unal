@@ -18,7 +18,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { Roles } from '../auth/auth.decorators';
+import { Permisos } from '../auth/auth.decorators';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
 import type { Usuario } from '../generated/prisma/client';
 import { CrearRutinaDto } from './rutinas.dto';
@@ -45,12 +45,12 @@ export class RutinasController {
   }
 
   @Get('deportistas/:id/rutinas')
-  @Roles('INSTRUCTOR', 'ADMIN')
+  @Permisos('GESTIONAR_RUTINAS')
   @ApiOperation({
     summary: 'Rutinas de un deportista (instructores)',
     description: 'Primero la vigente y luego las anteriores.',
   })
-  @ApiForbiddenResponse({ description: 'Solo instructores y administradores.' })
+  @ApiForbiddenResponse({ description: 'Sin el permiso GESTIONAR_RUTINAS.' })
   @ApiNotFoundResponse({
     description: 'El deportista no existe o no está activo.',
   })
@@ -59,7 +59,7 @@ export class RutinasController {
   }
 
   @Post('deportistas/:id/rutinas')
-  @Roles('INSTRUCTOR', 'ADMIN')
+  @Permisos('GESTIONAR_RUTINAS')
   @ApiOperation({
     summary: 'Armar y asignar una rutina (instructores)',
     description:
@@ -73,7 +73,7 @@ export class RutinasController {
   @ApiConflictResponse({
     description: 'Otra persona asignó una rutina al mismo deportista a la vez.',
   })
-  @ApiForbiddenResponse({ description: 'Solo instructores y administradores.' })
+  @ApiForbiddenResponse({ description: 'Sin el permiso GESTIONAR_RUTINAS.' })
   asignar(
     @Param('id', idDeportista) id: string,
     @Body() dto: CrearRutinaDto,

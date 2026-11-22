@@ -7,9 +7,10 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import type { Rol, Usuario } from '../generated/prisma/client';
+import { tienePermiso, type Permiso } from '@gymtrack/shared';
+import type { Usuario } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CLAVE_PUBLICO, CLAVE_ROLES } from './auth.decorators';
+import { CLAVE_PERMISOS, CLAVE_PUBLICO } from './auth.decorators';
 import {
   TokenInvalidoError,
   VerificadorToken,
@@ -21,8 +22,8 @@ export interface RequestConUsuario extends Request {
 
 /**
  * Guard global: toda ruta exige un token válido de Supabase Auth, salvo las marcadas
- * con @Publico(). El rol se lee de la tabla `usuario` (fuente de verdad, DT-05) y se
- * compara con @Roles(...) cuando la ruta lo declara.
+ * con @Publico(). El rol se lee de la tabla `usuario` (fuente de verdad, DT-05) y, si la
+ * ruta declara @Permisos(...), debe tener al menos uno de ellos (DT-16).
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -65,11 +66,14 @@ export class AuthGuard implements CanActivate {
     }
     request.usuario = usuario;
 
-    const roles = this.reflector.getAllAndOverride<Rol[] | undefined>(
-      CLAVE_ROLES,
+    const permisos = this.reflector.getAllAndOverride<Permiso[] | undefined>(
+      CLAVE_PERMISOS,
       objetivos,
     );
-    if (roles?.length && !roles.includes(usuario.rol)) {
+    if (
+      permisos?.length &&
+      !permisos.some((permiso) => tienePermiso(usuario.rol, permiso))
+    ) {
       throw new ForbiddenException('No tienes permiso para esta acción.');
     }
     return true;

@@ -57,7 +57,7 @@ describe('catálogo de ejercicios: deportista (GYMM-12)', () => {
 
   it('no puede abrir el formulario de nuevo ejercicio', async () => {
     simularApi()
-    renderApp('/ejercicios/nuevo')
+    renderApp('/panel/ejercicios/nuevo')
     expect(await screen.findByRole('heading', { name: 'No tienes permiso para ver esta pantalla' })).toBeInTheDocument()
   })
 })
@@ -67,18 +67,18 @@ describe('catálogo de ejercicios: instructor (GYMM-12)', () => {
 
   it('agrega un ejercicio y vuelve al catálogo', async () => {
     simularApi({ perfil: PERFIL_INSTRUCTOR })
-    const router = renderApp('/ejercicios')
+    const router = renderApp('/panel/ejercicios')
     await userEvent.click(await screen.findByRole('link', { name: 'Agregar ejercicio' }))
     await userEvent.type(await screen.findByLabelText('Nombre'), 'Hip thrust con barra')
     await userEvent.selectOptions(screen.getByLabelText('Grupo muscular'), 'GLUTEOS')
     await userEvent.click(screen.getByRole('button', { name: 'Agregar al catálogo' }))
-    await waitFor(() => expect(router.state.location.pathname).toBe('/ejercicios'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/panel/ejercicios'))
     expect(await screen.findByText('Hip thrust con barra')).toBeInTheDocument()
   })
 
   it('valida antes de enviar y muestra el nombre repetido que responde el API', async () => {
     simularApi({ perfil: PERFIL_INSTRUCTOR })
-    renderApp('/ejercicios/nuevo')
+    renderApp('/panel/ejercicios/nuevo')
     await userEvent.click(await screen.findByRole('button', { name: 'Agregar al catálogo' }))
     expect(screen.getByText('El nombre debe tener al menos 3 caracteres.')).toBeInTheDocument()
     expect(screen.getByText('Elige un grupo muscular.')).toBeInTheDocument()
@@ -91,7 +91,7 @@ describe('catálogo de ejercicios: instructor (GYMM-12)', () => {
 
   it('edita un ejercicio desde el catálogo', async () => {
     const fetchMock = simularApi({ perfil: PERFIL_INSTRUCTOR })
-    renderApp('/ejercicios')
+    renderApp('/panel/ejercicios')
     await userEvent.click(await screen.findByRole('link', { name: 'Editar Remo con barra' }))
     const descripcion = await screen.findByLabelText('Descripción (opcional)')
     await userEvent.type(descripcion, 'Espalda recta.')
@@ -103,7 +103,7 @@ describe('catálogo de ejercicios: instructor (GYMM-12)', () => {
 
   it('desactiva un ejercicio y lo ve solo al mostrar los desactivados', async () => {
     simularApi({ perfil: PERFIL_INSTRUCTOR })
-    renderApp('/ejercicios/e2/editar')
+    renderApp('/panel/ejercicios/e2/editar')
     await userEvent.click(await screen.findByRole('button', { name: 'Desactivar ejercicio' }))
     await screen.findByText('2 ejercicios')
     await userEvent.click(screen.getByLabelText('Mostrar ejercicios desactivados'))
@@ -113,7 +113,7 @@ describe('catálogo de ejercicios: instructor (GYMM-12)', () => {
 
   it('pide confirmación para eliminar y explica si el ejercicio está en uso', async () => {
     simularApi({ perfil: PERFIL_INSTRUCTOR, ejerciciosEnUso: ['e3'] })
-    renderApp('/ejercicios/e3/editar')
+    renderApp('/panel/ejercicios/e3/editar')
     await userEvent.click(await screen.findByRole('button', { name: 'Eliminar ejercicio' }))
     expect(screen.getByRole('alertdialog')).toHaveTextContent('¿Eliminar “Sentadilla con barra”?')
     await userEvent.click(screen.getByRole('button', { name: 'Sí, eliminar' }))
@@ -122,10 +122,10 @@ describe('catálogo de ejercicios: instructor (GYMM-12)', () => {
 
   it('elimina un ejercicio sin uso', async () => {
     simularApi({ perfil: PERFIL_INSTRUCTOR })
-    const router = renderApp('/ejercicios/e2/editar')
+    const router = renderApp('/panel/ejercicios/e2/editar')
     await userEvent.click(await screen.findByRole('button', { name: 'Eliminar ejercicio' }))
     await userEvent.click(screen.getByRole('button', { name: 'Sí, eliminar' }))
-    await waitFor(() => expect(router.state.location.pathname).toBe('/ejercicios'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/panel/ejercicios'))
     await screen.findByText('2 ejercicios')
     expect(screen.queryByText('Remo con barra')).not.toBeInTheDocument()
   })
