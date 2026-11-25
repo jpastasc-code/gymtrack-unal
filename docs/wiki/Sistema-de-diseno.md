@@ -79,6 +79,13 @@ Formas:
 - Campos, avisos, opciones y tarjetas: `rounded-xl`.
 - No hay sombras salvo en avisos flotantes. La separación se logra con espacio y líneas (`border-linea`), no con cajas.
 
+Gráficas (Recharts, como en `features/progreso/EvolucionEjercicio.tsx`):
+- Línea negra de 3 px con puntos negros, cuadrícula horizontal en `linea` y ejes en `grafito`. Los colores van con las variables de los tokens (`var(--color-negro)`), nunca sueltos. Sin verde: no es algo que la persona eligió.
+- Línea recta entre puntos (`type="linear"`): una curva suavizada inventa picos que no existen.
+- La unidad va una vez, encima del eje vertical, no en cada marca.
+- Un texto visible resume lo que muestra la gráfica (de cuánto a cuánto), y una tabla `sr-only` repite los datos para lectores de pantalla; el dibujo va con `aria-hidden`.
+- Recharts pesa: carga la gráfica con `lazy` para que no engorde el arranque de la app.
+
 ## Patrones de pantalla
 
 Pantallas de referencia para copiar: [`CatalogoPage`](../../apps/web/src/features/rutinas/ejercicios/CatalogoPage.tsx) (lista con buscador, filtros y estados) y [`PerfilPage`](../../apps/web/src/features/auth/PerfilPage.tsx) (formulario).

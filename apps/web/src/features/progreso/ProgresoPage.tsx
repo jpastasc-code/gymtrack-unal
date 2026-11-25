@@ -7,7 +7,7 @@ import { Pantalla } from '../../components/Pantalla'
 import { NOMBRE_GRUPO } from '../rutinas/ejercicios/api'
 import { formatoFecha, formatoSerie, useEjerciciosConHistorico, type EjercicioConHistorico } from './api'
 
-/** Progreso: los ejercicios que he hecho con su mejor marca (GYMM-31). */
+/** Progreso: los ejercicios que he hecho con su mejor marca (GYMM-31); cada uno abre su evolución (GYMM-34). */
 export function ProgresoPage() {
   const { data: ejercicios, isPending, isError, error, refetch } = useEjerciciosConHistorico()
 
@@ -17,7 +17,7 @@ export function ProgresoPage() {
         <h2 id="titulo-ejercicios" className="titular mb-1 text-3xl">
           Tus ejercicios
         </h2>
-        <p className="mb-4 text-grafito">Elige uno para ver tus cargas y repeticiones, sesión por sesión.</p>
+        <p className="mb-4 text-grafito">Elige uno para ver cómo han evolucionado tus cargas, sesión por sesión.</p>
 
         {isPending && (
           <p className="text-grafito" role="status">
@@ -56,7 +56,7 @@ export function ProgresoPage() {
 
       <section className="mt-10">
         <EnConstruccion
-          historia="GYMM-34 y GYMM-35"
+          historia="GYMM-35"
           descripcion="Pronto verás también cómo cambian tus medidas corporales entre evaluaciones."
         />
       </section>
