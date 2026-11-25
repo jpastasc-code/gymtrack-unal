@@ -25,6 +25,7 @@ Cada decisión que afecta a todo el equipo queda aquí: qué se decidió, por qu
 | DT-14 | Registro de series sin conexión e idempotente | Propuesta | 2026-11-04 |
 | DT-15 | Reglas de la reserva de cupo en el gimnasio | Propuesta | 2026-11-10 |
 | DT-16 | Permisos por rol y panel del personal | Propuesta | 2026-11-21 |
+| DT-17 | Gráficas de progreso con Recharts, calculadas en la web | Aceptada | 2026-11-25 |
 
 ---
 
@@ -350,3 +351,19 @@ Ejemplo, con la deportista del seed: 62,5 kg, 24,5 % de grasa, actividad moderad
 - El decorador `@Roles` desaparece: ninguna ruta pide un rol.
 - Con GYMM-47 el instructor ya puede configurar los cupos del gimnasio, el horario de la cancha y cancelar reservas ajenas.
 - Excepción acordada: cancelar reservas ajenas de la cancha se sigue haciendo desde la pantalla Cancha (`/reservas/cancha`), donde está la semana con las reservas. Solo lo ve quien tiene `GESTIONAR_CANCHA`, también en el modo deportista.
+
+## DT-17 · Gráficas de progreso con Recharts, calculadas en la web
+
+**Decisión:**
+- Las gráficas de progreso usan **Recharts** (GYMM-34), como pedía la historia.
+- La evolución de un ejercicio (carga máxima y volumen total por sesión) se calcula en la web con `evolucionPorSesion` (`packages/shared/src/progreso.ts`) a partir de `GET /api/progreso/ejercicios/:id`, que ya trae todas las series. No hay endpoint nuevo.
+- **Volumen total** = suma de repeticiones × carga de cada serie de la sesión (con series iguales, series × repeticiones × carga), redondeado a un decimal.
+- La gráfica se carga con `lazy`: Recharts queda en un archivo aparte (≈ 400 kB) que solo se descarga al abrir un histórico.
+
+**Por qué:**
+- El histórico ya entrega los datos; calcularlos otra vez en el API duplicaría la consulta sin ganar nada. Al estar en `shared`, el API puede reutilizar la misma función si algún día la necesita.
+- Recharts funciona con componentes de React y deja dar estilo con los tokens del sistema de diseño (`var(--color-negro)`).
+
+**Implica:**
+- GYMM-35 (evolución de medidas corporales) debería usar la misma librería y las pautas de gráficas de [Sistema de diseño](Sistema-de-diseno.md).
+- Un ejercicio sin carga (peso corporal) no tiene gráfica de kilos: la pantalla lo explica y remite a las repeticiones.
