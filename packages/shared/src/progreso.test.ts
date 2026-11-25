@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mejorMarca, type SerieHecha } from './progreso.js'
+import { evolucionPorSesion, mejorMarca, type SerieHecha } from './progreso.js'
 
 const serie = (cargaKg: number, repeticiones: number, fecha: string): SerieHecha => ({ cargaKg, repeticiones, fecha })
 
@@ -31,5 +31,41 @@ describe('mejorMarca', () => {
 
   it('sin series no hay marca', () => {
     expect(mejorMarca([])).toBeNull()
+  })
+})
+
+describe('evolucionPorSesion', () => {
+  const series = (...pares: [number, number][]) => pares.map(([cargaKg, repeticiones]) => ({ cargaKg, repeticiones }))
+
+  it('da la carga máxima y el volumen de cada sesión, de la más antigua a la más reciente', () => {
+    const evolucion = evolucionPorSesion([
+      { fecha: '2026-11-05T13:00:00.000Z', series: series([50, 8], [50, 6], [45, 10]) },
+      { fecha: '2026-11-02T13:00:00.000Z', series: series([40, 12], [42.5, 10]) },
+    ])
+    expect(evolucion).toEqual([
+      { fecha: '2026-11-02T13:00:00.000Z', cargaMaximaKg: 42.5, volumenKg: 905 },
+      { fecha: '2026-11-05T13:00:00.000Z', cargaMaximaKg: 50, volumenKg: 1150 },
+    ])
+  })
+
+  it('el volumen es series × repeticiones × carga cuando todas las series son iguales', () => {
+    const [punto] = evolucionPorSesion([{ fecha: '2026-11-02', series: series([50, 10], [50, 10], [50, 10]) }])
+    expect(punto.volumenKg).toBe(3 * 10 * 50)
+  })
+
+  it('redondea el volumen a un decimal', () => {
+    const [punto] = evolucionPorSesion([{ fecha: '2026-11-02', series: series([0.1, 1], [0.2, 1]) }])
+    expect(punto.volumenKg).toBe(0.3)
+  })
+
+  it('en un ejercicio sin peso la carga y el volumen son 0', () => {
+    expect(evolucionPorSesion([{ fecha: '2026-11-02', series: series([0, 20]) }])).toEqual([
+      { fecha: '2026-11-02', cargaMaximaKg: 0, volumenKg: 0 },
+    ])
+  })
+
+  it('ignora las sesiones sin series y no falla sin sesiones', () => {
+    expect(evolucionPorSesion([{ fecha: '2026-11-02', series: [] }])).toEqual([])
+    expect(evolucionPorSesion([])).toEqual([])
   })
 })
